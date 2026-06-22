@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <!-- Inject global error interceptors as early as possible to capture and suppress third-party cross-origin Script errors -->
+    <script type="text/javascript">
+      (function() {
+        var suppress = function(msg, src) {
+          var m = String(msg || '').toLowerCase();
+          var s = String(src || '').toLowerCase();
+          return !msg || 
+                 m.indexOf('script error') !== -1 || 
+                 m.indexOf('error') !== -1 ||
+                 s.indexOf('google') !== -1 || 
+                 s.indexOf('vlibras') !== -1 || 
+                 s.indexOf('onertravel') !== -1;
+        };
+
+        window.addEventListener('error', function(e) {
+          if (suppress(e.message, e.filename)) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }, true);
+
+        var prevOnError = window.onerror;
+        window.onerror = function(message, source, lineno, colno, error) {
+          if (suppress(message, source)) {
+            return true;
+          }
+          if (prevOnError) {
+            return prevOnError.apply(window, arguments);
+          }
+          return false;
+        };
+
+        window.addEventListener('unhandledrejection', function(e) {
+          var reason = e.reason ? (e.reason.message || String(e.reason)) : '';
+          if (suppress(reason, '')) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }, true);
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arcadane Viagens | Consultoria de Experiências sob Medida</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://static.onertravel.com/widget/search/production/styles.css" />
+    <script type="text/javascript" src="https://static.onertravel.com/widget/search/production/widget-befly.js" defer></script>
+  </head>
+  <body>
+    <div id="google_translate_element" style="position: absolute; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; z-index: -9999;"></div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

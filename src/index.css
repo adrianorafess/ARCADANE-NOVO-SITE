@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Alex+Brush&family=Pinyon+Script&family=Mr+De+Haviland&family=Ms+Madi&family=WindSong&family=Birthstone+Bounce&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Montserrat", "Cormorant Garamond", Georgia, serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-signature: "WindSong", "Ms Madi", "Birthstone Bounce", "Mr De Haviland", "Pinyon Script", "Alex Brush", cursive;
+  --color-brand-primary: #3B5EA4;
+  --color-brand-secondary: #AF4934;
+  --color-brand-chocolate: #6F5B4E;
+  --color-brand-dark: #3A2F28;
+  --color-brand-light: #FDFBF6;
+  --color-brand-beige: #F3EEE3;
+  --color-brand-border: #DCCFC1;
+  --color-brand-blue: #3B5EA4;
+  --shadow-card: 0 10px 30px -10px rgba(59, 94, 164, 0.12);
+  
+  --animate-luxury-flash: luxury-flash 1.6s infinite ease-in-out;
+
+  @keyframes luxury-flash {
+    0%, 100% {
+      opacity: 1;
+      filter: drop-shadow(0 0 4px rgba(59, 94, 164, 0.3));
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      filter: drop-shadow(0 0 16px rgba(59, 94, 164, 0.95));
+      transform: scale(1.05);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: var(--font-sans);
+  }
+  
+  body {
+    background-color: var(--color-brand-light);
+    color: var(--color-brand-dark);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display) !important;
+  }
+
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #fbf9f6;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #DCCFC1;
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #AF4934;
+  }
+}
+
+.glass-nav {
+  background-color: rgba(253, 252, 251, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-brand-border);
+}
+
+.glass-card {
+  background-color: rgba(253, 252, 251, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--color-brand-border);
+}
+

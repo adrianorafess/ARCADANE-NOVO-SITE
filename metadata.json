@@ -1,0 +1,6 @@
+{
+  "name": "Arcadane Viagens",
+  "description": "Consultoria especializada em experiências sob medida e roteiros de viagens personalizados de alto padrão com sede em Balneário Camboriú, SC.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
