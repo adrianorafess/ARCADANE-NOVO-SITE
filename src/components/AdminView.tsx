@@ -10,7 +10,7 @@ import {
   getBlogPosts, saveBlogPosts, getTestimonials, saveTestimonials, 
   getSeoSettings, saveSeoSettings, getHomeSettings, saveHomeSettings, 
   getPromoPackages, savePromoPackages, PromoPackage, DEFAULT_PROMO_PACKAGES,
-  resetCmsToDefault, SeoSettings, HomeSettings 
+  resetCmsToDefault, SeoSettings, HomeSettings, getFoundersPhoto 
 } from '../utils/cmsStore';
 import { ServiceItem, PackageItem, BlogPost, TestimonialItem } from '../types';
 import { compressImage } from '../utils/imageCompressor';
@@ -35,7 +35,7 @@ export default function AdminView() {
 
   // Founders Photo Admin State
   const [foundersPhoto, setFoundersPhoto] = useState<string | null>(() => {
-    return localStorage.getItem('arcadane_founders_photo');
+    return getFoundersPhoto();
   });
 
   // Trajectory Photo Admin State
@@ -123,6 +123,47 @@ export default function AdminView() {
     e.preventDefault();
     saveServices(services);
     showFeedback('Grade de Serviços atualizada no banco local!');
+  };
+
+  // Sync state to actual source files on the server (for Hostinger & GitHub)
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncToWorkspace = async () => {
+    setIsSyncing(true);
+    try {
+      const dataToSync = {
+        arcadane_cms_services: JSON.parse(localStorage.getItem('arcadane_cms_services') || 'null'),
+        arcadane_cms_packages: JSON.parse(localStorage.getItem('arcadane_cms_packages') || 'null'),
+        arcadane_cms_promo_packages: JSON.parse(localStorage.getItem('arcadane_cms_promo_packages') || 'null'),
+        arcadane_cms_blog_posts: JSON.parse(localStorage.getItem('arcadane_cms_blog_posts') || 'null'),
+        arcadane_cms_testimonials: JSON.parse(localStorage.getItem('arcadane_cms_testimonials') || 'null'),
+        arcadane_cms_seo_settings: JSON.parse(localStorage.getItem('arcadane_cms_seo_settings') || 'null'),
+        arcadane_cms_home_settings: JSON.parse(localStorage.getItem('arcadane_cms_home_settings') || 'null'),
+        arcadane_cms_luxury_trips: JSON.parse(localStorage.getItem('arcadane_cms_luxury_trips') || 'null'),
+        arcadane_founders_photo: localStorage.getItem('arcadane_founders_photo'),
+        arcadane_trajectory_photo: localStorage.getItem('arcadane_trajectory_photo')
+      };
+
+      const response = await fetch('/api/save-cms-state', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSync),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        showFeedback('UAU! 🎉 Configurações e Imagens salvas nos arquivos do projeto de forma PERMANENTE para GitHub/Hostinger!');
+      } else {
+        showFeedback('Erro ao persistir no servidor: ' + result.error, 'error');
+      }
+    } catch (error: any) {
+      console.error('Error syncing CMS state:', error);
+      showFeedback('Erro de rede: certifique-se de que o servidor está rodando.', 'error');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // Package CRUD operations
@@ -374,6 +415,14 @@ export default function AdminView() {
 
           <div className="flex items-center gap-2.5 self-start md:self-center">
             <button
+              onClick={handleSyncToWorkspace}
+              disabled={isSyncing}
+              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-mono text-[10px] uppercase font-bold tracking-wider px-3.5 py-2.5 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-md flex-shrink-0"
+            >
+              <Server className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Salvando...' : 'Salvar p/ Hostinger'}
+            </button>
+            <button
               onClick={() => {
                 // Return to Website
                 const clickEvent = new Event('click');
@@ -392,6 +441,27 @@ export default function AdminView() {
               Sair
             </button>
           </div>
+        </div>
+
+        {/* Warning Banner about Hostinger & GitHub deployment persistence */}
+        <div className="bg-amber-500/15 border border-amber-500/30 text-stone-200 p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-inner">
+          <div className="space-y-1.5">
+            <h4 className="text-sm font-bold font-display text-amber-400 flex items-center gap-2">
+              <Server className="w-4.5 h-4.5 shrink-0 text-amber-500" />
+              Sincronização para Produção (Hostinger & GitHub)
+            </h4>
+            <p className="text-xs text-stone-300 font-sans leading-relaxed">
+              O navegador armazena suas alterações de textos e fotos apenas no seu cache local nesta tela. Para salvar suas modificações, as fotos de depoimentos e imagens enviadas diretamente nos arquivos do projeto (para que fiquem salvas para sempre no GitHub e entrem em produção no seu link da Hostinger), você <strong>DEVE</strong> clicar em <strong className="text-emerald-400">"Sincronizar Banco"</strong> no botão à direita!
+            </p>
+          </div>
+          <button
+            onClick={handleSyncToWorkspace}
+            disabled={isSyncing}
+            className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-mono text-[11px] uppercase font-bold tracking-widest px-5 py-3 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-lg shrink-0 hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <Server className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'SINCRONIZANDO...' : 'SINCRONIZAR BANCO'}
+          </button>
         </div>
 
         {/* Dashboard layout splits */}

@@ -1,5 +1,6 @@
 import { ServiceItem, TestimonialItem, PackageItem, BlogPost, LuxuryTrip } from '../types';
 import { SERVICES as DEFAULT_SERVICES, TESTIMONIALS as DEFAULT_TESTIMONIALS, PACKAGES as DEFAULT_PACKAGES, BLOG_POSTS as DEFAULT_BLOG_POSTS } from '../data';
+import fallbackData from './cmsStoreFallback.json';
 
 export interface SeoSettings {
   siteTitle: string;
@@ -316,12 +317,30 @@ const KEYS = {
 };
 
 // Helpers
+const fallbackServices = fallbackData.arcadane_cms_services as ServiceItem[] | null;
+const fallbackPackages = fallbackData.arcadane_cms_packages as PackageItem[] | null;
+const fallbackPromoPackages = fallbackData.arcadane_cms_promo_packages as PromoPackage[] | null;
+const fallbackBlogPosts = fallbackData.arcadane_cms_blog_posts as BlogPost[] | null;
+const fallbackTestimonials = fallbackData.arcadane_cms_testimonials as TestimonialItem[] | null;
+const fallbackSeoSettings = fallbackData.arcadane_cms_seo_settings as SeoSettings | null;
+const fallbackHomeSettings = fallbackData.arcadane_cms_home_settings as HomeSettings | null;
+const fallbackLuxuryTrips = fallbackData.arcadane_cms_luxury_trips as LuxuryTrip[] | null;
+
+const FALLBACK_SERVICES = fallbackServices && fallbackServices.length > 0 ? fallbackServices : DEFAULT_SERVICES;
+const FALLBACK_PACKAGES = fallbackPackages && fallbackPackages.length > 0 ? fallbackPackages : DEFAULT_PACKAGES;
+const FALLBACK_PROMO_PACKAGES = fallbackPromoPackages && fallbackPromoPackages.length > 0 ? fallbackPromoPackages : DEFAULT_PROMO_PACKAGES;
+const FALLBACK_BLOG_POSTS = fallbackBlogPosts && fallbackBlogPosts.length > 0 ? fallbackBlogPosts : DEFAULT_BLOG_POSTS;
+const FALLBACK_TESTIMONIALS = fallbackTestimonials && fallbackTestimonials.length > 0 ? fallbackTestimonials : DEFAULT_TESTIMONIALS;
+const FALLBACK_SEO_SETTINGS = fallbackSeoSettings ? { ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings } : DEFAULT_SEO_SETTINGS;
+const FALLBACK_HOME_SETTINGS = fallbackHomeSettings ? { ...DEFAULT_HOME_SETTINGS, ...fallbackHomeSettings } : DEFAULT_HOME_SETTINGS;
+const FALLBACK_LUXURY_TRIPS = fallbackLuxuryTrips && fallbackLuxuryTrips.length > 0 ? fallbackLuxuryTrips : DEFAULT_LUXURY_TRIPS;
+
 export function getServices(): ServiceItem[] {
-  if (typeof window === 'undefined') return DEFAULT_SERVICES;
+  if (typeof window === 'undefined') return FALLBACK_SERVICES;
   const data = localStorage.getItem(KEYS.SERVICES);
   if (!data) {
-    localStorage.setItem(KEYS.SERVICES, JSON.stringify(DEFAULT_SERVICES));
-    return DEFAULT_SERVICES;
+    localStorage.setItem(KEYS.SERVICES, JSON.stringify(FALLBACK_SERVICES));
+    return FALLBACK_SERVICES;
   }
   return JSON.parse(data);
 }
@@ -332,11 +351,11 @@ export function saveServices(services: ServiceItem[]): void {
 }
 
 export function getPackages(): PackageItem[] {
-  if (typeof window === 'undefined') return DEFAULT_PACKAGES;
+  if (typeof window === 'undefined') return FALLBACK_PACKAGES;
   const data = localStorage.getItem(KEYS.PACKAGES);
   if (!data) {
-    localStorage.setItem(KEYS.PACKAGES, JSON.stringify(DEFAULT_PACKAGES));
-    return DEFAULT_PACKAGES;
+    localStorage.setItem(KEYS.PACKAGES, JSON.stringify(FALLBACK_PACKAGES));
+    return FALLBACK_PACKAGES;
   }
   return JSON.parse(data);
 }
@@ -347,17 +366,17 @@ export function savePackages(packages: PackageItem[]): void {
 }
 
 export function getPromoPackages(): PromoPackage[] {
-  if (typeof window === 'undefined') return DEFAULT_PROMO_PACKAGES;
+  if (typeof window === 'undefined') return FALLBACK_PROMO_PACKAGES;
   const data = localStorage.getItem(KEYS.PROMO_PACKAGES);
   if (!data) {
-    localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(DEFAULT_PROMO_PACKAGES));
-    return DEFAULT_PROMO_PACKAGES;
+    localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(FALLBACK_PROMO_PACKAGES));
+    return FALLBACK_PROMO_PACKAGES;
   }
   
   let parsed = JSON.parse(data) as PromoPackage[];
   
-  // Rule out any legacy default promo packages that are no longer in DEFAULT_PROMO_PACKAGES
-  const defaultIds = DEFAULT_PROMO_PACKAGES.map(d => d.id);
+  // Rule out any legacy default promo packages that are no longer in FALLBACK_PROMO_PACKAGES
+  const defaultIds = FALLBACK_PROMO_PACKAGES.map(d => d.id);
   
   let hasChanges = false;
   const updatedList = parsed.filter(item => {
@@ -370,7 +389,7 @@ export function getPromoPackages(): PromoPackage[] {
   }
   
   const merged = [...updatedList];
-  DEFAULT_PROMO_PACKAGES.forEach(def => {
+  FALLBACK_PROMO_PACKAGES.forEach(def => {
     if (!merged.some(m => m.id === def.id)) {
       merged.push(def);
       hasChanges = true;
@@ -400,11 +419,11 @@ export function savePromoPackages(promos: PromoPackage[]): void {
 }
 
 export function getBlogPosts(): BlogPost[] {
-  if (typeof window === 'undefined') return DEFAULT_BLOG_POSTS;
+  if (typeof window === 'undefined') return FALLBACK_BLOG_POSTS;
   const data = localStorage.getItem(KEYS.BLOG_POSTS);
   if (!data) {
-    localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(DEFAULT_BLOG_POSTS));
-    return DEFAULT_BLOG_POSTS;
+    localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(FALLBACK_BLOG_POSTS));
+    return FALLBACK_BLOG_POSTS;
   }
   return JSON.parse(data);
 }
@@ -415,22 +434,22 @@ export function saveBlogPosts(posts: BlogPost[]): void {
 }
 
 export function getTestimonials(): TestimonialItem[] {
-  if (typeof window === 'undefined') return DEFAULT_TESTIMONIALS;
+  if (typeof window === 'undefined') return FALLBACK_TESTIMONIALS;
   const data = localStorage.getItem(KEYS.TESTIMONIALS);
   if (!data) {
-    localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(DEFAULT_TESTIMONIALS));
-    return DEFAULT_TESTIMONIALS;
+    localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(FALLBACK_TESTIMONIALS));
+    return FALLBACK_TESTIMONIALS;
   }
   try {
     const list = JSON.parse(data) as TestimonialItem[];
     if (list.length === 0) {
-      localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(DEFAULT_TESTIMONIALS));
-      return DEFAULT_TESTIMONIALS;
+      localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(FALLBACK_TESTIMONIALS));
+      return FALLBACK_TESTIMONIALS;
     }
     return list;
   } catch (e) {
-    localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(DEFAULT_TESTIMONIALS));
-    return DEFAULT_TESTIMONIALS;
+    localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(FALLBACK_TESTIMONIALS));
+    return FALLBACK_TESTIMONIALS;
   }
 }
 
@@ -449,13 +468,13 @@ export function saveTestimonials(testimonials: TestimonialItem[]): void {
 }
 
 export function getSeoSettings(): SeoSettings {
-  if (typeof window === 'undefined') return DEFAULT_SEO_SETTINGS;
+  if (typeof window === 'undefined') return FALLBACK_SEO_SETTINGS;
   const data = localStorage.getItem(KEYS.SEO);
   if (!data) {
-    localStorage.setItem(KEYS.SEO, JSON.stringify(DEFAULT_SEO_SETTINGS));
-    return DEFAULT_SEO_SETTINGS;
+    localStorage.setItem(KEYS.SEO, JSON.stringify(FALLBACK_SEO_SETTINGS));
+    return FALLBACK_SEO_SETTINGS;
   }
-  return { ...DEFAULT_SEO_SETTINGS, ...JSON.parse(data) };
+  return { ...FALLBACK_SEO_SETTINGS, ...JSON.parse(data) };
 }
 
 export function saveSeoSettings(settings: SeoSettings): void {
@@ -465,13 +484,13 @@ export function saveSeoSettings(settings: SeoSettings): void {
 }
 
 export function getHomeSettings(): HomeSettings {
-  if (typeof window === 'undefined') return DEFAULT_HOME_SETTINGS;
+  if (typeof window === 'undefined') return FALLBACK_HOME_SETTINGS;
   const data = localStorage.getItem(KEYS.HOME);
   if (!data) {
-    localStorage.setItem(KEYS.HOME, JSON.stringify(DEFAULT_HOME_SETTINGS));
-    return DEFAULT_HOME_SETTINGS;
+    localStorage.setItem(KEYS.HOME, JSON.stringify(FALLBACK_HOME_SETTINGS));
+    return FALLBACK_HOME_SETTINGS;
   }
-  return { ...DEFAULT_HOME_SETTINGS, ...JSON.parse(data) };
+  return { ...FALLBACK_HOME_SETTINGS, ...JSON.parse(data) };
 }
 
 export function saveHomeSettings(settings: HomeSettings): void {
@@ -480,28 +499,54 @@ export function saveHomeSettings(settings: HomeSettings): void {
 }
 
 export function getLuxuryItineraries(): LuxuryTrip[] {
-  if (typeof window === 'undefined') return DEFAULT_LUXURY_TRIPS;
+  if (typeof window === 'undefined') return FALLBACK_LUXURY_TRIPS;
   const data = localStorage.getItem(KEYS.LUXURY_TRIPS);
   if (!data) {
-    localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(DEFAULT_LUXURY_TRIPS));
-    return DEFAULT_LUXURY_TRIPS;
+    localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(FALLBACK_LUXURY_TRIPS));
+    return FALLBACK_LUXURY_TRIPS;
   }
   try {
     const list = JSON.parse(data) as LuxuryTrip[];
     if (list.length === 0) {
-      localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(DEFAULT_LUXURY_TRIPS));
-      return DEFAULT_LUXURY_TRIPS;
+      localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(FALLBACK_LUXURY_TRIPS));
+      return FALLBACK_LUXURY_TRIPS;
     }
     return list;
   } catch (e) {
-    localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(DEFAULT_LUXURY_TRIPS));
-    return DEFAULT_LUXURY_TRIPS;
+    localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(FALLBACK_LUXURY_TRIPS));
+    return FALLBACK_LUXURY_TRIPS;
   }
 }
 
 export function saveLuxuryItineraries(trips: LuxuryTrip[]): void {
   localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(trips));
   broadcastChange();
+}
+
+export function getFoundersPhoto(): string | null {
+  if (typeof window === 'undefined') return fallbackData.arcadane_founders_photo || null;
+  const data = localStorage.getItem('arcadane_founders_photo');
+  if (!data) {
+    if (fallbackData.arcadane_founders_photo) {
+      localStorage.setItem('arcadane_founders_photo', fallbackData.arcadane_founders_photo);
+      return fallbackData.arcadane_founders_photo;
+    }
+    return null;
+  }
+  return data;
+}
+
+export function getTrajectoryPhoto(): string | null {
+  if (typeof window === 'undefined') return fallbackData.arcadane_trajectory_photo || null;
+  const data = localStorage.getItem('arcadane_trajectory_photo');
+  if (!data) {
+    if (fallbackData.arcadane_trajectory_photo) {
+      localStorage.setItem('arcadane_trajectory_photo', fallbackData.arcadane_trajectory_photo);
+      return fallbackData.arcadane_trajectory_photo;
+    }
+    return null;
+  }
+  return data;
 }
 
 // Reset entire database to defaults

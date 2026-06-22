@@ -3,16 +3,17 @@ import { Compass, Sparkles, Shield, Heart, ArrowUpRight, Award, User, Quote, Map
 import { motion } from 'motion/react';
 import { compressImage } from '../utils/imageCompressor';
 import { useRafesEditor } from './RafesVisualBuilder';
+import { getFoundersPhoto } from '../utils/cmsStore';
 
 export default function AboutView() {
   const { rafesOpen } = useRafesEditor();
   const [foundersPhoto, setFoundersPhoto] = useState<string | null>(() => {
-    return localStorage.getItem('arcadane_founders_photo');
+    return getFoundersPhoto();
   });
 
   useEffect(() => {
     const handleCmsChange = () => {
-      setFoundersPhoto(localStorage.getItem('arcadane_founders_photo'));
+      setFoundersPhoto(getFoundersPhoto());
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
     return () => {

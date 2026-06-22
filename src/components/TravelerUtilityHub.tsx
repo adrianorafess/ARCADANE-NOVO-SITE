@@ -406,9 +406,10 @@ export default function TravelerUtilityHub() {
         selectElement.dispatchEvent(new Event('change', { bubbles: true }));
       }
       
-      // INSTEAD OF RELOADING THE PAGE (which resets state and fails inside cross-domain iframe sandboxes),
-      // we allow Google Translate to perform live dynamic DOM translation immediately in-place,
-      // and our continuous polling hook will keep it active.
+      // Force instant page reload (F5) as requested by user to apply target language translation reliably!
+      setTimeout(() => {
+        window.location.reload();
+      }, 150);
     } catch (err) {
       console.warn("Language transformation error", err);
     }

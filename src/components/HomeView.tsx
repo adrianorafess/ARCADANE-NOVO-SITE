@@ -4,7 +4,7 @@ import { BLOG_POSTS } from '../data';
 import TestimonialsCarousel from './TestimonialsCarousel';
 import LuxuryItineraries from './LuxuryItineraries';
 import PromotionalPackages from './PromotionalPackages';
-import { getHomeSettings, saveHomeSettings, getServices, saveServices, getSeoSettings } from '../utils/cmsStore';
+import { getHomeSettings, saveHomeSettings, getServices, saveServices, getSeoSettings, getTrajectoryPhoto } from '../utils/cmsStore';
 import { compressImage } from '../utils/imageCompressor';
 import { useRafesEditor } from './RafesVisualBuilder';
 import { 
@@ -18,6 +18,117 @@ import { motion, AnimatePresence } from 'motion/react';
 interface HomeViewProps {
   setActivePage: (page: PageId) => void;
 }
+
+const BeflySearchWidget = React.memo(() => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '<befly-widget language="pt-br" new-tab="true"></befly-widget>';
+    }
+  }, []);
+
+  return (
+    <div 
+      ref={containerRef}
+      className="w-full min-h-[140px]" 
+    />
+  );
+}, () => true);
+
+interface TypewriterTitleProps {
+  rafesOpen: boolean;
+  editField: any;
+}
+
+const TypewriterTitle = React.memo(({ rafesOpen, editField }: TypewriterTitleProps) => {
+  const [endings, setEndings] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('arcadane_typewriter_endings');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {}
+      }
+    }
+    return ENDINGS_LIST;
+  });
+
+  const [currentEndingIndex, setCurrentEndingIndex] = useState(0);
+  const [currentText, setCurrentText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const handleCmsChange = () => {
+      const saved = localStorage.getItem('arcadane_typewriter_endings');
+      if (saved) {
+        try {
+          setEndings(JSON.parse(saved));
+        } catch (e) {}
+      }
+    };
+    window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
+    return () => window.removeEventListener('arcadane_cms_data_changed', handleCmsChange);
+  }, []);
+
+  useEffect(() => {
+    let timer: any;
+    const currentList = endings.length > 0 ? endings : ENDINGS_LIST;
+    const safeIndex = currentEndingIndex % currentList.length;
+    const fullText = currentList[safeIndex] || "o mundo.";
+    
+    const tick = () => {
+      if (!isDeleting) {
+        const nextText = fullText.slice(0, currentText.length + 1);
+        setCurrentText(nextText);
+        
+        if (nextText === fullText) {
+          timer = setTimeout(() => {
+            setIsDeleting(true);
+          }, 3000);
+        } else {
+          timer = setTimeout(tick, 90);
+        }
+      } else {
+        const nextText = fullText.slice(0, currentText.length - 1);
+        setCurrentText(nextText);
+        
+        if (nextText === "") {
+          setIsDeleting(false);
+          setCurrentEndingIndex((prev) => (prev + 1) % currentList.length);
+          timer = setTimeout(tick, 400);
+        } else {
+          timer = setTimeout(tick, 40);
+        }
+      }
+    };
+    
+    timer = setTimeout(tick, isDeleting ? 40 : 90);
+    return () => clearTimeout(timer);
+  }, [currentText, isDeleting, currentEndingIndex, endings]);
+
+  return (
+    <h1 
+      className={`font-display font-medium text-4xl sm:text-5.5xl md:text-6.5xl lg:text-[5rem] xl:text-[5.5rem] tracking-tight leading-[1.1] text-white min-h-[3.3em] md:min-h-[2.2em] lg:min-h-0 select-none ${
+        rafesOpen ? 'border border-dashed border-amber-500 bg-amber-500/15 p-2 rounded-2xl cursor-pointer hover:bg-amber-500/10' : ''
+      }`}
+      onClick={() => {
+        if (rafesOpen) {
+          const saved = localStorage.getItem('arcadane_typewriter_endings');
+          const currentList = saved ? JSON.parse(saved) : ENDINGS_LIST;
+          editField('typewriter-endings', 'Frases do Tipo Escritor da Hero (Separadas por vírgulas)', currentList.join(', '), false, (newVal: string) => {
+            const parsed = newVal.split(',').map(s => s.trim()).filter(Boolean);
+            localStorage.setItem('arcadane_typewriter_endings', JSON.stringify(parsed));
+            window.dispatchEvent(new Event('arcadane_cms_data_changed'));
+          });
+        }
+      }}
+      title={rafesOpen ? "Clique para editar as frases rotativas do topo estilo Rafes!" : undefined}
+    >
+      “Viajar é descobrir <span className="text-brand-secondary inline-block relative after:content-[''] after:inline-block after:w-[2px] after:h-[0.8em] after:bg-brand-secondary/80 after:ml-0.5 after:animate-[pulse_1s_infinite]">{currentText}</span>”
+    </h1>
+  );
+});
 
 interface DestinationBento {
   id: number;
@@ -227,23 +338,6 @@ const ENDINGS_LIST = [
 
 export default function HomeView({ setActivePage }: HomeViewProps) {
   const { rafesOpen, editField } = useRafesEditor();
-  
-  const [endings, setEndings] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('arcadane_typewriter_endings');
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {}
-      }
-    }
-    return ENDINGS_LIST;
-  });
-
-  // Typewriter typewriter animation state
-  const [currentEndingIndex, setCurrentEndingIndex] = useState(0);
-  const [currentText, setCurrentText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Contact Modal States
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -293,42 +387,6 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
     setModalPreMessage(initialMessage);
     setIsContactModalOpen(true);
   };
-
-  useEffect(() => {
-    let timer: any;
-    const currentList = endings.length > 0 ? endings : ENDINGS_LIST;
-    const safeIndex = currentEndingIndex % currentList.length;
-    const fullText = currentList[safeIndex] || "o mundo.";
-    
-    const tick = () => {
-      if (!isDeleting) {
-        const nextText = fullText.slice(0, currentText.length + 1);
-        setCurrentText(nextText);
-        
-        if (nextText === fullText) {
-          timer = setTimeout(() => {
-            setIsDeleting(true);
-          }, 3000); // 3 seconds static delay as requested ("a cada X segundos ir trocando")
-        } else {
-          timer = setTimeout(tick, 90);
-        }
-      } else {
-        const nextText = fullText.slice(0, currentText.length - 1);
-        setCurrentText(nextText);
-        
-        if (nextText === "") {
-          setIsDeleting(false);
-          setCurrentEndingIndex((prev) => (prev + 1) % currentList.length);
-          timer = setTimeout(tick, 400); // stable transition delay
-        } else {
-          timer = setTimeout(tick, 40);
-        }
-      }
-    };
-    
-    timer = setTimeout(tick, isDeleting ? 40 : 90);
-    return () => clearTimeout(timer);
-  }, [currentText, isDeleting, currentEndingIndex, endings]);
 
   // Extract YouTube ID if present
   const getYouTubeId = (url: string) => {
@@ -384,7 +442,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
 
   // Trajectory Photo & Home Settings CMS States
   const [trajectoryPhoto, setTrajectoryPhoto] = useState<string | null>(() => {
-    return localStorage.getItem('arcadane_trajectory_photo');
+    return getTrajectoryPhoto();
   });
   const [homeSettings, setHomeSettings] = useState(() => getHomeSettings());
   const [services, setServices] = useState<ServiceItem[]>(() => getServices());
@@ -392,7 +450,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
 
   useEffect(() => {
     const handleCmsChange = () => {
-      setTrajectoryPhoto(localStorage.getItem('arcadane_trajectory_photo'));
+      setTrajectoryPhoto(getTrajectoryPhoto());
       setHomeSettings(getHomeSettings());
       setServices(getServices());
       setSeo(getSeoSettings());
@@ -633,25 +691,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
             </a>
 
             {/* Immersive Title with Elegant Hand-picked Fonts and Typewriter Animation */}
-            <h1 
-              className={`font-display font-medium text-4xl sm:text-5.5xl md:text-6.5xl lg:text-[5rem] xl:text-[5.5rem] tracking-tight leading-[1.1] text-white min-h-[3.3em] md:min-h-[2.2em] lg:min-h-0 select-none ${
-                rafesOpen ? 'border border-dashed border-amber-500 bg-amber-500/15 p-2 rounded-2xl cursor-pointer hover:bg-amber-500/10' : ''
-              }`}
-              onClick={() => {
-                if (rafesOpen) {
-                  const saved = localStorage.getItem('arcadane_typewriter_endings');
-                  const currentList = saved ? JSON.parse(saved) : ENDINGS_LIST;
-                  editField('typewriter-endings', 'Frases do Tipo Escritor da Hero (Separadas por vírgulas)', currentList.join(', '), false, (newVal) => {
-                    const parsed = newVal.split(',').map(s => s.trim()).filter(Boolean);
-                    localStorage.setItem('arcadane_typewriter_endings', JSON.stringify(parsed));
-                    window.dispatchEvent(new Event('arcadane_cms_data_changed'));
-                  });
-                }
-              }}
-              title={rafesOpen ? "Clique para editar as frases rotativas do topo estilo Rafes!" : undefined}
-            >
-              “Viajar é descobrir <span className="text-brand-secondary inline-block relative after:content-[''] after:inline-block after:w-[2px] after:h-[0.8em] after:bg-brand-secondary/80 after:ml-0.5 after:animate-[pulse_1s_infinite]">{currentText}</span>”
-            </h1>
+            <TypewriterTitle rafesOpen={rafesOpen} editField={editField} />
 
 
 
@@ -670,7 +710,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
         </div>
 
         {/* Floating Custom Booking Engine & Search Bar (Aligned Bottom of Hero) */}
-        <div className="w-full max-w-6xl mx-auto px-4 pb-8 relative z-10 -mt-10 sm:-mt-16 lg:-mt-24" id="booking-area">
+        <div className="w-full max-w-6xl mx-auto px-4 pb-8 relative z-10 -mt-20 sm:-mt-28 lg:-mt-36 xl:-mt-44" id="booking-area">
           
           {/* Real Live Befly Widget Container */}
           <div className="bg-white rounded-2xl shadow-2xl border border-brand-border p-4.5 sm:p-5 lg:p-7 text-brand-dark max-w-6xl mx-auto text-left relative">
@@ -678,13 +718,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
             {/* Perfect Responsive Wrapper: Horizontal Scroll only on Mobile, Native Widths on PC */}
             <div className="w-full overflow-x-auto overflow-y-hidden pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
               <div className="min-w-[850px] lg:min-w-0 pr-4 sm:pr-0">
-                <div 
-                  id="wrapper" 
-                  className="w-full min-h-[140px]" 
-                  dangerouslySetInnerHTML={{ 
-                    __html: '<befly-widget language="pt-br" new-tab="true"></befly-widget>' 
-                  }} 
-                />
+                <BeflySearchWidget />
               </div>
             </div>
 
