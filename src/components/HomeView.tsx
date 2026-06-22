@@ -618,7 +618,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
         </div>
 
         {/* Hero Central Text Callout */}
-        <div className="flex-grow flex items-center justify-center pt-28 sm:pt-36 pb-12">
+        <div className="flex-grow flex items-center justify-center pt-24 sm:pt-32 pb-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-7">
             
             {/* Tag badge with link to Instagram */}
@@ -670,55 +670,11 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
         </div>
 
         {/* Floating Custom Booking Engine & Search Bar (Aligned Bottom of Hero) */}
-        <div className="w-full max-w-6xl mx-auto px-4 pb-8 relative z-10" id="booking-area">
+        <div className="w-full max-w-6xl mx-auto px-4 pb-8 relative z-10 -mt-10 sm:-mt-16 lg:-mt-24" id="booking-area">
           
-          {/* Tabs Pill List */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-3 max-w-3xl mx-auto">
-            {[
-              { id: 'voos', label: 'Voos', icon: <Plane className="w-3.5 h-3.5" /> },
-              { id: 'hoteis', label: 'Hotéis', icon: <Hotel className="w-3.5 h-3.5" /> },
-              { id: 'pacotes', label: 'Pacotes (Voo+Hotel)', icon: <Ticket className="w-3.5 h-3.5" /> },
-              { id: 'carros', label: 'Carros', icon: <Car className="w-3.5 h-3.5" /> },
-              { id: 'exclusivos', label: 'Exclusivos', icon: <Sparkles className="w-3.5 h-3.5" /> },
-              { id: 'seguros', label: 'Seguros', icon: <ShieldCheck className="w-3.5 h-3.5" /> }
-            ].map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id as any);
-                    // Reset or initialize count based on selection default
-                    if (tab.id === 'carros') setOptionCount('Econômico');
-                    else if (tab.id === 'exclusivos') setOptionCount('Viagem de Luxo / Sob Medida');
-                    else setOptionCount('1');
-                  }}
-                  className={`flex items-center gap-1.5 px-4.5 py-2.5 rounded-full text-[11px] font-sans font-bold tracking-wide uppercase transition-all duration-300 ${
-                    isActive 
-                      ? 'bg-white text-brand-dark shadow-md border-b-2 border-brand-primary' 
-                      : 'bg-black/35 hover:bg-black/50 text-white border border-white/5'
-                  }`}
-                >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Real Live Befly Widget Container (Visible on Standard Tabs) */}
-          <div className={`${activeTab !== 'exclusivos' ? 'block' : 'hidden'} bg-white rounded-2xl shadow-xl border border-brand-border p-4.5 sm:p-5 lg:p-7 text-brand-dark max-w-6xl mx-auto text-left relative`}>
+          {/* Real Live Befly Widget Container */}
+          <div className="bg-white rounded-2xl shadow-2xl border border-brand-border p-4.5 sm:p-5 lg:p-7 text-brand-dark max-w-6xl mx-auto text-left relative">
             
-            {/* Header Badge */}
-            <div className="flex items-center justify-between pb-3 mb-5 border-b border-gray-100 select-none">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
-                <span className="text-[10px] uppercase tracking-widest text-[#AF4934] font-mono font-bold">
-                  Buscador Oficial • Tarifas BeFly & Onertravel em Tempo Real
-                </span>
-              </div>
-            </div>
-
             {/* Perfect Responsive Wrapper: Horizontal Scroll only on Mobile, Native Widths on PC */}
             <div className="w-full overflow-x-auto overflow-y-hidden pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
               <div className="min-w-[850px] lg:min-w-0 pr-4 sm:pr-0">
@@ -738,96 +694,6 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
                 ↔ Deslize para as laterais se precisar preencher todos os campos
               </span>
             </div>
-          </div>
-
-          {/* Premium Tailored Custom Plan Request Panel (Exclusivos) */}
-          <div className={`${activeTab === 'exclusivos' ? 'block' : 'hidden'}`}>
-            <form 
-              onSubmit={handleBookingSearch}
-              className="bg-white rounded-2xl shadow-xl border border-brand-border p-5 lg:p-7 text-brand-dark space-y-4 max-w-6xl mx-auto text-left relative overflow-hidden"
-            >
-              {/* Upper row: Specifier / Dropdown Option and Label */}
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                <span className="text-[10px] uppercase tracking-wider text-[#AF4934] font-mono font-bold flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-brand-secondary" /> 
-                  Premium • Curadoria Estilizada de Viagens Sob Medida
-                </span>
-
-                <div className="relative inline-flex items-center">
-                  <select
-                    value={optionCount}
-                    onChange={(e) => setOptionCount(e.target.value)}
-                    className="bg-stone-50 border border-brand-border rounded-lg text-xs font-semibold px-4 py-1.5 pr-8 text-brand-dark hover:border-brand-primary transition-colors focus:ring-1 focus:ring-brand-primary focus:outline-hidden cursor-pointer appearance-none"
-                  >
-                    {getDropdownOptions().map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Main Action Field Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                
-                {/* Destination Column */}
-                <div className="md:col-span-5 space-y-2 text-left">
-                  <label className="text-[10px] font-mono uppercase tracking-wider text-gray-500 block font-bold">Destino Desejado</label>
-                  <div className="relative flex items-center">
-                    <MapPin className="w-4 h-4 text-brand-primary absolute left-3.5" />
-                    <input
-                      type="text"
-                      value={destino}
-                      onChange={(e) => setDestino(e.target.value)}
-                      placeholder="Ex: Maldivas, Safari de Luxo, Costa Amalfitana..."
-                      className="w-full bg-stone-50 border border-brand-border rounded-xl pl-10.5 pr-4 py-3 text-xs sm:text-sm font-semibold text-brand-dark focus:bg-white focus:ring-1 focus:ring-brand-primary focus:outline-hidden placeholder:text-gray-400 font-sans"
-                      required={activeTab === 'exclusivos'}
-                    />
-                  </div>
-                </div>
-
-                {/* Date Departure Column */}
-                <div className="md:col-span-3 space-y-2 text-left">
-                  <label className="text-[10px] font-mono uppercase tracking-wider text-gray-500 block font-bold">Previsão de Ida</label>
-                  <div className="relative flex items-center">
-                    <Calendar className="w-4 h-4 text-brand-primary absolute left-3.5" />
-                    <input
-                      type="date"
-                      value={dataIda}
-                      onChange={(e) => setDataIda(e.target.value)}
-                      className="w-full bg-stone-50 border border-brand-border rounded-xl pl-10.5 pr-4 py-3 text-xs sm:text-sm font-semibold text-brand-dark focus:bg-white focus:ring-1 focus:ring-brand-primary focus:outline-hidden font-sans"
-                    />
-                  </div>
-                </div>
-
-                {/* Date Return Column */}
-                <div className="md:col-span-3 space-y-2 text-left">
-                  <label className="text-[10px] font-mono uppercase tracking-wider text-gray-500 block font-bold">Previsão de Volta</label>
-                  <div className="relative flex items-center">
-                    <Calendar className="w-4 h-4 text-brand-primary absolute left-3.5" />
-                    <input
-                      type="date"
-                      value={dataVolta}
-                      onChange={(e) => setDataVolta(e.target.value)}
-                      className="w-full bg-stone-50 border border-brand-border rounded-xl pl-10.5 pr-4 py-3 text-xs sm:text-sm font-semibold text-brand-dark focus:bg-white focus:ring-1 focus:ring-brand-primary focus:outline-hidden font-sans"
-                    />
-                  </div>
-                </div>
-
-                {/* Execution Search Button Column */}
-                <div className="md:col-span-1 justify-end flex">
-                  <button
-                    type="submit"
-                    className="w-full bg-brand-primary hover:bg-brand-primary/95 text-white flex items-center justify-center font-display font-bold text-xs tracking-widest uppercase py-4 rounded-xl shadow-md transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-                  >
-                    SOLICITAR
-                  </button>
-                </div>
-
-              </div>
-            </form>
           </div>
         </div>
       </section>
