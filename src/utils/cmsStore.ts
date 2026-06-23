@@ -664,11 +664,18 @@ export async function autoSyncToServer(): Promise<void> {
 export async function initializeCmsStore(): Promise<void> {
   if (typeof window === 'undefined') return;
   
-  // 1. Check if we have any data in localStorage. If we don't, initialize with statically bundled fallbackData
+  // 1. Check if we have any data in localStorage. If we don't, or if the code revision (updatedAt) is different,
+  // initialize/overwrite with the statically bundled fallbackData. This allows chat-modified code values to instantly apply!
   try {
+    const currentRevision = localStorage.getItem('arcadane_cms_revision');
+    const incomingRevision = (fallbackData as any).updatedAt || 'initial';
     const hasExistingData = localStorage.getItem(KEYS.SERVICES) !== null;
-    if (!hasExistingData) {
-      console.log('Initializing empty localStorage with bundled fallbackData...');
+    
+    if (!hasExistingData || currentRevision !== incomingRevision) {
+      console.log(`Initializing/Updating localStorage with bundled fallbackData (revision: ${incomingRevision})...`);
+      
+      localStorage.setItem('arcadane_cms_revision', incomingRevision);
+      
       if (fallbackServices && fallbackServices.length > 0) {
         localStorage.setItem(KEYS.SERVICES, JSON.stringify(fallbackServices));
       } else {
@@ -719,12 +726,18 @@ export async function initializeCmsStore(): Promise<void> {
       
       if (fallbackData.arcadane_founders_photo) {
         localStorage.setItem('arcadane_founders_photo', fallbackData.arcadane_founders_photo);
+      } else {
+        localStorage.removeItem('arcadane_founders_photo');
       }
       if (fallbackData.arcadane_trajectory_photo) {
         localStorage.setItem('arcadane_trajectory_photo', fallbackData.arcadane_trajectory_photo);
+      } else {
+        localStorage.removeItem('arcadane_trajectory_photo');
       }
       if ((fallbackData as any).arcadane_custom_logo) {
         localStorage.setItem('arcadane_custom_logo', (fallbackData as any).arcadane_custom_logo);
+      } else {
+        localStorage.removeItem('arcadane_custom_logo');
       }
     }
     
@@ -772,6 +785,7 @@ export async function initializeCmsStore(): Promise<void> {
         updateKey('arcadane_founders_photo', serverData.arcadane_founders_photo);
         updateKey('arcadane_trajectory_photo', serverData.arcadane_trajectory_photo);
         updateKey('arcadane_custom_logo', serverData.arcadane_custom_logo);
+        updateKey('arcadane_cms_revision', serverData.updatedAt);
 
         if (updated) {
           console.log('CMS state updated from server. Broadcasting change...');

@@ -34,10 +34,12 @@ async function startServer() {
   // API Route: Save CMS state
   app.post('/api/save-cms-state', (req, res) => {
     try {
-      const data = req.body;
+      const data = req.body || {};
+      // Inject updated timestamp to invalidate browser caches and trigger sync
+      data.updatedAt = new Date().toISOString();
       const filePath = path.join(process.cwd(), 'src', 'utils', 'cmsStoreFallback.json');
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-      console.log('CMS state saved successfully to workspace file.');
+      console.log('CMS state saved successfully to workspace file with new updatedAt:', data.updatedAt);
       res.json({ success: true, message: 'Configurações e imagens persistidas no código com sucesso!' });
     } catch (error: any) {
       console.error('Failed to write fallback JSON to disk:', error);
