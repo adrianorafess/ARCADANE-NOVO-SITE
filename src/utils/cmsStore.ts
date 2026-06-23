@@ -662,15 +662,78 @@ export async function autoSyncToServer(): Promise<void> {
 
 // Web-only startup and event listeners to keep localStorage synced to project files
 if (typeof window !== 'undefined') {
+  // Always synchronize localStorage with the server's compiled fallbackData on load.
+  // This prevents stale local cache from overriding new server content.
+  try {
+    if (fallbackServices && fallbackServices.length > 0) {
+      localStorage.setItem(KEYS.SERVICES, JSON.stringify(fallbackServices));
+    } else {
+      localStorage.setItem(KEYS.SERVICES, JSON.stringify(DEFAULT_SERVICES));
+    }
+    
+    if (fallbackPackages && fallbackPackages.length > 0) {
+      localStorage.setItem(KEYS.PACKAGES, JSON.stringify(fallbackPackages));
+    } else {
+      localStorage.setItem(KEYS.PACKAGES, JSON.stringify(DEFAULT_PACKAGES));
+    }
+    
+    if (fallbackPromoPackages && fallbackPromoPackages.length > 0) {
+      localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(fallbackPromoPackages));
+    } else {
+      localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(DEFAULT_PROMO_PACKAGES));
+    }
+    
+    if (fallbackBlogPosts && fallbackBlogPosts.length > 0) {
+      localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(fallbackBlogPosts));
+    } else {
+      localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(DEFAULT_BLOG_POSTS));
+    }
+    
+    if (fallbackTestimonials && fallbackTestimonials.length > 0) {
+      localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(fallbackTestimonials));
+    } else {
+      localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(DEFAULT_TESTIMONIALS));
+    }
+    
+    if (fallbackSeoSettings) {
+      localStorage.setItem(KEYS.SEO, JSON.stringify({ ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings }));
+    } else {
+      localStorage.setItem(KEYS.SEO, JSON.stringify(DEFAULT_SEO_SETTINGS));
+    }
+    
+    if (fallbackHomeSettings) {
+      localStorage.setItem(KEYS.HOME, JSON.stringify({ ...DEFAULT_HOME_SETTINGS, ...fallbackHomeSettings }));
+    } else {
+      localStorage.setItem(KEYS.HOME, JSON.stringify(DEFAULT_HOME_SETTINGS));
+    }
+    
+    if (fallbackLuxuryTrips && fallbackLuxuryTrips.length > 0) {
+      localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(fallbackLuxuryTrips));
+    } else {
+      localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(DEFAULT_LUXURY_TRIPS));
+    }
+    
+    if (fallbackData.arcadane_founders_photo) {
+      localStorage.setItem('arcadane_founders_photo', fallbackData.arcadane_founders_photo);
+    }
+    if (fallbackData.arcadane_trajectory_photo) {
+      localStorage.setItem('arcadane_trajectory_photo', fallbackData.arcadane_trajectory_photo);
+    }
+    if ((fallbackData as any).arcadane_custom_logo) {
+      localStorage.setItem('arcadane_custom_logo', (fallbackData as any).arcadane_custom_logo);
+    }
+    
+    // Apply loaded SEO settings right away
+    const loadedSeo = fallbackSeoSettings ? { ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings } : DEFAULT_SEO_SETTINGS;
+    applySeoSettings(loadedSeo);
+  } catch (err) {
+    console.warn('Failed to sync fallbackData to localStorage on startup:', err);
+  }
+
   window.addEventListener('arcadane_cms_data_changed', () => {
     autoSyncToServer();
   });
   window.addEventListener('arcadane_logo_changed', () => {
     autoSyncToServer();
   });
-  
-  // Stagger sync on initial view/ready
-  setTimeout(() => {
-    autoSyncToServer();
-  }, 1200);
 }
