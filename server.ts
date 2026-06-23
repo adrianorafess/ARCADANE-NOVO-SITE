@@ -1,11 +1,7 @@
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
@@ -56,7 +52,7 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // Serve static files from the Vite build output directory (dist)
-    const distPath = path.join(__dirname, 'dist');
+    const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     // Fallback all requests to index.html for SPA client-side routing
     app.get('*', (req, res) => {

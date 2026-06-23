@@ -21,18 +21,153 @@ interface HomeViewProps {
 
 const BeflySearchWidget = React.memo(() => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'voos' | 'hoteis' | 'pacotes'>('voos');
+  const [origem, setOrigem] = useState('Chapecó (XAP)');
+  const [destino, setDestino] = useState('Orlando (MCO)');
+  const [dataIda, setDataIda] = useState('2026-07-15');
+  const [dataVolta, setDataVolta] = useState('2026-07-25');
+  const [passageiros, setPassageiros] = useState('2 Adultos');
+  
+  const isDevelopmentDomain = typeof window !== 'undefined' && (
+    window.location.hostname.includes('run.app') || 
+    window.location.hostname.includes('localhost') || 
+    window.location.hostname.includes('127.0.0.1')
+  );
 
   useEffect(() => {
-    if (containerRef.current) {
+    if (!isDevelopmentDomain && containerRef.current) {
       containerRef.current.innerHTML = '<befly-widget language="pt-br" new-tab="true"></befly-widget>';
     }
-  }, []);
+  }, [isDevelopmentDomain]);
+
+  if (!isDevelopmentDomain) {
+    return (
+      <div 
+        ref={containerRef}
+        className="w-full min-h-[140px]" 
+      />
+    );
+  }
 
   return (
-    <div 
-      ref={containerRef}
-      className="w-full min-h-[140px]" 
-    />
+    <div className="w-full bg-white text-stone-800 rounded-xl">
+      {/* Tabs */}
+      <div className="flex border-b border-gray-100 pb-3 mb-4 gap-6">
+        <button 
+          onClick={() => setActiveTab('voos')}
+          className={`pb-2 text-xs sm:text-sm font-semibold tracking-wide flex items-center gap-2 transition-all border-b-2 ${
+            activeTab === 'voos' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-stone-400 hover:text-stone-600'
+          }`}
+        >
+          <Plane className="w-4 h-4" />
+          Passagens Aéreas
+        </button>
+        <button 
+          onClick={() => setActiveTab('hoteis')}
+          className={`pb-2 text-xs sm:text-sm font-semibold tracking-wide flex items-center gap-2 transition-all border-b-2 ${
+            activeTab === 'hoteis' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-stone-400 hover:text-stone-600'
+          }`}
+        >
+          <Hotel className="w-4 h-4" />
+          Hotéis de Luxo
+        </button>
+        <button 
+          onClick={() => setActiveTab('pacotes')}
+          className={`pb-2 text-xs sm:text-sm font-semibold tracking-wide flex items-center gap-2 transition-all border-b-2 ${
+            activeTab === 'pacotes' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-stone-400 hover:text-stone-600'
+          }`}
+        >
+          <Briefcase className="w-4 h-4" />
+          Pacotes Completos
+        </button>
+      </div>
+
+      {/* Form Fields Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3.5 items-end">
+        {/* Origem */}
+        <div className="space-y-1 text-left">
+          <label className="block text-[10px] font-mono font-bold text-stone-400 uppercase tracking-wider">Origem</label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-primary" />
+            <input 
+              type="text" 
+              value={origem} 
+              onChange={(e) => setOrigem(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+            />
+          </div>
+        </div>
+
+        {/* Destino */}
+        <div className="space-y-1 text-left">
+          <label className="block text-[10px] font-mono font-bold text-stone-400 uppercase tracking-wider">Destino</label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-secondary" />
+            <input 
+              type="text" 
+              value={destino} 
+              onChange={(e) => setDestino(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+            />
+          </div>
+        </div>
+
+        {/* Datas */}
+        <div className="space-y-1 text-left">
+          <label className="block text-[10px] font-mono font-bold text-stone-400 uppercase tracking-wider">Ida e Volta</label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <input 
+              type="text" 
+              placeholder="Ida e Volta"
+              value={`${dataIda} • ${dataVolta}`}
+              onChange={() => {}}
+              className="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs sm:text-sm font-medium focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Passageiros */}
+        <div className="space-y-1 text-left">
+          <label className="block text-[10px] font-mono font-bold text-stone-400 uppercase tracking-wider">Viajantes</label>
+          <div className="relative">
+            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <input 
+              type="text" 
+              value={passageiros} 
+              onChange={(e) => setPassageiros(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+            />
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div>
+          <button 
+            type="button"
+            onClick={() => {
+              const text = `Olá Arcadane! Gostaria de cotar ${activeTab === 'voos' ? 'voos' : activeTab === 'hoteis' ? 'hospedagem' : 'um pacote completo'} de ${origem} para ${destino} saindo em ${dataIda} e retornando em ${dataVolta} para ${passageiros}.`;
+              window.open(`https://wa.me/5547992008571?text=${encodeURIComponent(text)}`, '_blank');
+            }}
+            className="w-full py-2.5 px-4 bg-brand-primary hover:bg-brand-primary/95 text-white font-semibold text-xs sm:text-sm rounded-lg shadow-md transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          >
+            Buscar Viagem
+            <Sparkles className="w-3.5 h-3.5 text-brand-secondary" />
+          </button>
+        </div>
+      </div>
+
+      {/* Subtle Dev mode badge */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-3 text-[9px] text-stone-400 border-t border-gray-50 pt-2 font-mono gap-1">
+        <span className="flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Buscador Arcadane inteligente integrado ao WhatsApp em Modo Sandbox
+        </span>
+        <span className="text-stone-300">
+          O widget oficial OnerTravel/BeFly carregará em produção no seu domínio oficial
+        </span>
+      </div>
+    </div>
   );
 }, () => true);
 
