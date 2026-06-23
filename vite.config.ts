@@ -9,48 +9,6 @@ export default defineConfig(() => {
     plugins: [
       react(), 
       tailwindcss(),
-      {
-        name: 'save-cms-state-api',
-        configureServer(server) {
-          server.middlewares.use((req, res, next) => {
-            if (req.url === '/api/get-cms-state' && req.method === 'GET') {
-              try {
-                const filePath = path.resolve(__dirname, 'src/utils/cmsStoreFallback.json');
-                if (fs.existsSync(filePath)) {
-                  const content = fs.readFileSync(filePath, 'utf-8');
-                  res.writeHead(200, { 'Content-Type': 'application/json' });
-                  res.end(content);
-                } else {
-                  res.writeHead(404, { 'Content-Type': 'application/json' });
-                  res.end(JSON.stringify({ error: 'Fallback file not found' }));
-                }
-              } catch (e: any) {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: e.message }));
-              }
-            } else if (req.url === '/api/save-cms-state' && req.method === 'POST') {
-              let body = '';
-              req.on('data', chunk => {
-                body += chunk.toString();
-              });
-              req.on('end', () => {
-                try {
-                  const data = JSON.parse(body);
-                  const filePath = path.resolve(__dirname, 'src/utils/cmsStoreFallback.json');
-                  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-                  res.writeHead(200, { 'Content-Type': 'application/json' });
-                  res.end(JSON.stringify({ success: true, message: 'Settings saved in development mode!' }));
-                } catch (e: any) {
-                  res.writeHead(500, { 'Content-Type': 'application/json' });
-                  res.end(JSON.stringify({ success: false, error: e.message }));
-                }
-              });
-            } else {
-              next();
-            }
-          });
-        }
-      }
     ],
     resolve: {
       alias: {
