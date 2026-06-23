@@ -28,19 +28,16 @@ const BeflySearchWidget = React.memo(() => {
   const [dataVolta, setDataVolta] = useState('2026-07-25');
   const [passageiros, setPassageiros] = useState('2 Adultos');
   
-  const isDevelopmentDomain = typeof window !== 'undefined' && (
-    window.location.hostname.includes('run.app') || 
-    window.location.hostname.includes('localhost') || 
-    window.location.hostname.includes('127.0.0.1')
-  );
+  const settings = getHomeSettings();
+  const useRealBeflyWidget = settings.widgetType === 'befly';
 
   useEffect(() => {
-    if (!isDevelopmentDomain && containerRef.current) {
+    if (useRealBeflyWidget && containerRef.current) {
       containerRef.current.innerHTML = '<befly-widget language="pt-br" new-tab="true"></befly-widget>';
     }
-  }, [isDevelopmentDomain]);
+  }, [useRealBeflyWidget]);
 
-  if (!isDevelopmentDomain) {
+  if (useRealBeflyWidget) {
     return (
       <div 
         ref={containerRef}

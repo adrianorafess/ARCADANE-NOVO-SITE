@@ -42,6 +42,7 @@ export interface HomeSettings {
   customTripTitle?: string;
   customTripSubtitle?: string;
   customTripButtonText?: string;
+  widgetType?: 'befly' | 'whatsapp';
 }
 
 export interface PromoPackage {
@@ -97,7 +98,8 @@ const DEFAULT_HOME_SETTINGS: HomeSettings = {
   footerEmail: "financeiro@arcadaneviagens.com",
   customTripTitle: "Viagens personalizadas:",
   customTripSubtitle: "Experiências exclusivas, desenhadas para você.",
-  customTripButtonText: "Clique e fale com a Arcadane!"
+  customTripButtonText: "Clique e fale com a Arcadane!",
+  widgetType: "whatsapp"
 };
 
 export const DEFAULT_PROMO_PACKAGES: PromoPackage[] = [

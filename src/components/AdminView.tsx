@@ -170,6 +170,7 @@ export default function AdminView() {
   const handleDownloadCmsBackup = () => {
     try {
       const dataToSync = {
+        updatedAt: new Date().toISOString(),
         arcadane_cms_services: JSON.parse(localStorage.getItem('arcadane_cms_services') || 'null'),
         arcadane_cms_packages: JSON.parse(localStorage.getItem('arcadane_cms_packages') || 'null'),
         arcadane_cms_promo_packages: JSON.parse(localStorage.getItem('arcadane_cms_promo_packages') || 'null'),
@@ -916,6 +917,21 @@ export default function AdminView() {
                       className={inputClass}
                       required
                     />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className={labelClass}>Tipo de Buscador da Home (Booking Engine)</label>
+                    <select
+                      value={home.widgetType || 'whatsapp'}
+                      onChange={(e) => setHome({ ...home, widgetType: e.target.value as 'befly' | 'whatsapp' })}
+                      className={inputClass}
+                    >
+                      <option value="whatsapp">Buscador Inteligente Arcadane (WhatsApp - Recomendado para qualquer domínio! 🎉)</option>
+                      <option value="befly">Buscador Oficial BeFly / OnerTravel (Requer domínio homologado pela OnerTravel)</option>
+                    </select>
+                    <p className="text-[10px] text-stone-500 font-mono mt-0.5">
+                      Se o seu site em produção no Hostinger/GitHub apresentar erro "Não autorizado" no widget da BeFly, selecione "Buscador Inteligente Arcadane (WhatsApp)" para que um buscador interativo personalizado funcione imediatamente e envie as cotações diretamente para o seu WhatsApp!
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
