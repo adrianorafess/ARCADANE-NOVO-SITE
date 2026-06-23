@@ -661,74 +661,138 @@ export async function autoSyncToServer(): Promise<void> {
 }
 
 // Web-only startup and event listeners to keep localStorage synced to project files
-if (typeof window !== 'undefined') {
-  // Always synchronize localStorage with the server's compiled fallbackData on load.
-  // This prevents stale local cache from overriding new server content.
+export async function initializeCmsStore(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  
+  // 1. Check if we have any data in localStorage. If we don't, initialize with statically bundled fallbackData
   try {
-    if (fallbackServices && fallbackServices.length > 0) {
-      localStorage.setItem(KEYS.SERVICES, JSON.stringify(fallbackServices));
+    const hasExistingData = localStorage.getItem(KEYS.SERVICES) !== null;
+    if (!hasExistingData) {
+      console.log('Initializing empty localStorage with bundled fallbackData...');
+      if (fallbackServices && fallbackServices.length > 0) {
+        localStorage.setItem(KEYS.SERVICES, JSON.stringify(fallbackServices));
+      } else {
+        localStorage.setItem(KEYS.SERVICES, JSON.stringify(DEFAULT_SERVICES));
+      }
+      
+      if (fallbackPackages && fallbackPackages.length > 0) {
+        localStorage.setItem(KEYS.PACKAGES, JSON.stringify(fallbackPackages));
+      } else {
+        localStorage.setItem(KEYS.PACKAGES, JSON.stringify(DEFAULT_PACKAGES));
+      }
+      
+      if (fallbackPromoPackages && fallbackPromoPackages.length > 0) {
+        localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(fallbackPromoPackages));
+      } else {
+        localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(DEFAULT_PROMO_PACKAGES));
+      }
+      
+      if (fallbackBlogPosts && fallbackBlogPosts.length > 0) {
+        localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(fallbackBlogPosts));
+      } else {
+        localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(DEFAULT_BLOG_POSTS));
+      }
+      
+      if (fallbackTestimonials && fallbackTestimonials.length > 0) {
+        localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(fallbackTestimonials));
+      } else {
+        localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(DEFAULT_TESTIMONIALS));
+      }
+      
+      if (fallbackSeoSettings) {
+        localStorage.setItem(KEYS.SEO, JSON.stringify({ ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings }));
+      } else {
+        localStorage.setItem(KEYS.SEO, JSON.stringify(DEFAULT_SEO_SETTINGS));
+      }
+      
+      if (fallbackHomeSettings) {
+        localStorage.setItem(KEYS.HOME, JSON.stringify({ ...DEFAULT_HOME_SETTINGS, ...fallbackHomeSettings }));
+      } else {
+        localStorage.setItem(KEYS.HOME, JSON.stringify(DEFAULT_HOME_SETTINGS));
+      }
+      
+      if (fallbackLuxuryTrips && fallbackLuxuryTrips.length > 0) {
+        localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(fallbackLuxuryTrips));
+      } else {
+        localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(DEFAULT_LUXURY_TRIPS));
+      }
+      
+      if (fallbackData.arcadane_founders_photo) {
+        localStorage.setItem('arcadane_founders_photo', fallbackData.arcadane_founders_photo);
+      }
+      if (fallbackData.arcadane_trajectory_photo) {
+        localStorage.setItem('arcadane_trajectory_photo', fallbackData.arcadane_trajectory_photo);
+      }
+      if ((fallbackData as any).arcadane_custom_logo) {
+        localStorage.setItem('arcadane_custom_logo', (fallbackData as any).arcadane_custom_logo);
+      }
+    }
+    
+    // Always apply current SEO settings immediately so page title matches loaded config
+    const currentSeo = localStorage.getItem(KEYS.SEO);
+    if (currentSeo) {
+      applySeoSettings(JSON.parse(currentSeo));
     } else {
-      localStorage.setItem(KEYS.SERVICES, JSON.stringify(DEFAULT_SERVICES));
+      applySeoSettings(fallbackSeoSettings ? { ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings } : DEFAULT_SEO_SETTINGS);
     }
-    
-    if (fallbackPackages && fallbackPackages.length > 0) {
-      localStorage.setItem(KEYS.PACKAGES, JSON.stringify(fallbackPackages));
-    } else {
-      localStorage.setItem(KEYS.PACKAGES, JSON.stringify(DEFAULT_PACKAGES));
-    }
-    
-    if (fallbackPromoPackages && fallbackPromoPackages.length > 0) {
-      localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(fallbackPromoPackages));
-    } else {
-      localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(DEFAULT_PROMO_PACKAGES));
-    }
-    
-    if (fallbackBlogPosts && fallbackBlogPosts.length > 0) {
-      localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(fallbackBlogPosts));
-    } else {
-      localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(DEFAULT_BLOG_POSTS));
-    }
-    
-    if (fallbackTestimonials && fallbackTestimonials.length > 0) {
-      localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(fallbackTestimonials));
-    } else {
-      localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(DEFAULT_TESTIMONIALS));
-    }
-    
-    if (fallbackSeoSettings) {
-      localStorage.setItem(KEYS.SEO, JSON.stringify({ ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings }));
-    } else {
-      localStorage.setItem(KEYS.SEO, JSON.stringify(DEFAULT_SEO_SETTINGS));
-    }
-    
-    if (fallbackHomeSettings) {
-      localStorage.setItem(KEYS.HOME, JSON.stringify({ ...DEFAULT_HOME_SETTINGS, ...fallbackHomeSettings }));
-    } else {
-      localStorage.setItem(KEYS.HOME, JSON.stringify(DEFAULT_HOME_SETTINGS));
-    }
-    
-    if (fallbackLuxuryTrips && fallbackLuxuryTrips.length > 0) {
-      localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(fallbackLuxuryTrips));
-    } else {
-      localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(DEFAULT_LUXURY_TRIPS));
-    }
-    
-    if (fallbackData.arcadane_founders_photo) {
-      localStorage.setItem('arcadane_founders_photo', fallbackData.arcadane_founders_photo);
-    }
-    if (fallbackData.arcadane_trajectory_photo) {
-      localStorage.setItem('arcadane_trajectory_photo', fallbackData.arcadane_trajectory_photo);
-    }
-    if ((fallbackData as any).arcadane_custom_logo) {
-      localStorage.setItem('arcadane_custom_logo', (fallbackData as any).arcadane_custom_logo);
-    }
-    
-    // Apply loaded SEO settings right away
-    const loadedSeo = fallbackSeoSettings ? { ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings } : DEFAULT_SEO_SETTINGS;
-    applySeoSettings(loadedSeo);
   } catch (err) {
-    console.warn('Failed to sync fallbackData to localStorage on startup:', err);
+    console.warn('Failed to perform initial localStorage check:', err);
   }
+
+  // 2. Try to fetch the latest saved state from the server.
+  // This ensures that updates written to the server's disk are pulled and applied
+  // to the user's/visitor's browser, overcoming static bundle limitations!
+  try {
+    const response = await fetch('/api/get-cms-state');
+    if (response.ok) {
+      const serverData = await response.json();
+      if (serverData && typeof serverData === 'object') {
+        console.log('Successfully fetched updated CMS state from server! Synchronizing...');
+        let updated = false;
+
+        const updateKey = (localKey: string, serverVal: any) => {
+          if (serverVal !== undefined && serverVal !== null) {
+            const currentVal = localStorage.getItem(localKey);
+            const serverValStr = typeof serverVal === 'string' ? serverVal : JSON.stringify(serverVal);
+            if (currentVal !== serverValStr) {
+              localStorage.setItem(localKey, serverValStr);
+              updated = true;
+            }
+          }
+        };
+
+        updateKey(KEYS.SERVICES, serverData.arcadane_cms_services);
+        updateKey(KEYS.PACKAGES, serverData.arcadane_cms_packages);
+        updateKey(KEYS.PROMO_PACKAGES, serverData.arcadane_cms_promo_packages);
+        updateKey(KEYS.BLOG_POSTS, serverData.arcadane_cms_blog_posts);
+        updateKey(KEYS.TESTIMONIALS, serverData.arcadane_cms_testimonials);
+        updateKey(KEYS.SEO, serverData.arcadane_cms_seo_settings);
+        updateKey(KEYS.HOME, serverData.arcadane_cms_home_settings);
+        updateKey(KEYS.LUXURY_TRIPS, serverData.arcadane_cms_luxury_trips);
+        updateKey('arcadane_founders_photo', serverData.arcadane_founders_photo);
+        updateKey('arcadane_trajectory_photo', serverData.arcadane_trajectory_photo);
+        updateKey('arcadane_custom_logo', serverData.arcadane_custom_logo);
+
+        if (updated) {
+          console.log('CMS state updated from server. Broadcasting change...');
+          broadcastChange();
+          // Apply new SEO settings
+          const freshSeo = localStorage.getItem(KEYS.SEO);
+          if (freshSeo) {
+            try {
+              applySeoSettings(JSON.parse(freshSeo));
+            } catch (e) {}
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.info('Server CMS state fetch not available or failed:', err);
+  }
+}
+
+if (typeof window !== 'undefined') {
+  initializeCmsStore();
 
   window.addEventListener('arcadane_cms_data_changed', () => {
     autoSyncToServer();

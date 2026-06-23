@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Key, LogOut, Settings, Globe, Film, Sparkles, Briefcase, Compass, Award, 
   Heart, AlertCircle, CheckCircle, Save, Undo, Plus, Trash2, Edit3, 
-  Eye, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag 
+  Eye, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag, Download 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -164,6 +164,37 @@ export default function AdminView() {
       showFeedback('Erro de rede: certifique-se de que o servidor está rodando.', 'error');
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleDownloadCmsBackup = () => {
+    try {
+      const dataToSync = {
+        arcadane_cms_services: JSON.parse(localStorage.getItem('arcadane_cms_services') || 'null'),
+        arcadane_cms_packages: JSON.parse(localStorage.getItem('arcadane_cms_packages') || 'null'),
+        arcadane_cms_promo_packages: JSON.parse(localStorage.getItem('arcadane_cms_promo_packages') || 'null'),
+        arcadane_cms_blog_posts: JSON.parse(localStorage.getItem('arcadane_cms_blog_posts') || 'null'),
+        arcadane_cms_testimonials: JSON.parse(localStorage.getItem('arcadane_cms_testimonials') || 'null'),
+        arcadane_cms_seo_settings: JSON.parse(localStorage.getItem('arcadane_cms_seo_settings') || 'null'),
+        arcadane_cms_home_settings: JSON.parse(localStorage.getItem('arcadane_cms_home_settings') || 'null'),
+        arcadane_cms_luxury_trips: JSON.parse(localStorage.getItem('arcadane_cms_luxury_trips') || 'null'),
+        arcadane_founders_photo: localStorage.getItem('arcadane_founders_photo'),
+        arcadane_trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
+        arcadane_custom_logo: localStorage.getItem('arcadane_custom_logo')
+      };
+
+      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+        JSON.stringify(dataToSync, null, 2)
+      )}`;
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', jsonString);
+      downloadAnchor.setAttribute('download', 'cmsStoreFallback.json');
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showFeedback('Arquivo cmsStoreFallback.json baixado com sucesso! Salve-o na pasta src/utils/ no seu GitHub para publicar no ar!');
+    } catch (err: any) {
+      showFeedback('Erro ao gerar arquivo de backup: ' + err.message, 'error');
     }
   };
 
@@ -414,14 +445,21 @@ export default function AdminView() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start md:self-center">
+          <div className="flex items-center gap-2.5 self-start md:self-center flex-wrap">
             <button
               onClick={handleSyncToWorkspace}
               disabled={isSyncing}
               className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-mono text-[10px] uppercase font-bold tracking-wider px-3.5 py-2.5 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-md flex-shrink-0"
             >
               <Server className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Salvando...' : 'Salvar p/ Hostinger'}
+              {isSyncing ? 'Salvando...' : 'Salvar no AI Studio'}
+            </button>
+            <button
+              onClick={handleDownloadCmsBackup}
+              className="bg-sky-600 hover:bg-sky-500 text-white font-mono text-[10px] uppercase font-bold tracking-wider px-3.5 py-2.5 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-md flex-shrink-0"
+            >
+              <Download className="w-4 h-4" />
+              Baixar Backup JSON
             </button>
             <button
               onClick={() => {
@@ -449,20 +487,39 @@ export default function AdminView() {
           <div className="space-y-1.5">
             <h4 className="text-sm font-bold font-display text-amber-400 flex items-center gap-2">
               <Server className="w-4.5 h-4.5 shrink-0 text-amber-500" />
-              Sincronização para Produção (Hostinger & GitHub)
+              Como publicar suas edições na Hostinger / GitHub:
             </h4>
-            <p className="text-xs text-stone-300 font-sans leading-relaxed">
-              O navegador armazena suas alterações de textos e fotos apenas no seu cache local nesta tela. Para salvar suas modificações, as fotos de depoimentos e imagens enviadas diretamente nos arquivos do projeto (para que fiquem salvas para sempre no GitHub e entrem em produção no seu link da Hostinger), você <strong>DEVE</strong> clicar em <strong className="text-emerald-400">"Sincronizar Banco"</strong> no botão à direita!
-            </p>
+            <div className="text-xs text-stone-300 font-sans space-y-2 leading-relaxed">
+              <p>
+                Como seu site na Hostinger roda de forma estática via GitHub, as alterações salvas aqui precisam ser enviadas para o seu repositório. Escolha uma das opções abaixo:
+              </p>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>
+                  <strong className="text-emerald-400">Opção A (Pelo AI Studio):</strong> Clique em <strong>"SINCRONIZAR ARQUIVOS"</strong> ao lado. Ele salvará os dados diretamente nos arquivos de desenvolvimento aqui. Depois, vá na barra de configurações do AI Studio e exporte as mudanças para o seu GitHub.
+                </li>
+                <li>
+                  <strong className="text-sky-400">Opção B (Manual e Rápida):</strong> Faça todas as edições desejadas nesta tela. Em seguida, clique em <strong>"BAIXAR ARQUIVO DE BACKUP (JSON)"</strong>. Pegue o arquivo baixado (<code className="text-sky-300">cmsStoreFallback.json</code>) e faça o upload direto dele na pasta <code className="text-stone-100">src/utils/</code> do seu repositório do GitHub. A Hostinger irá atualizar tudo automaticamente!
+                </li>
+              </ul>
+            </div>
           </div>
-          <button
-            onClick={handleSyncToWorkspace}
-            disabled={isSyncing}
-            className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-mono text-[11px] uppercase font-bold tracking-widest px-5 py-3 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-lg shrink-0 hover:-translate-y-0.5 active:translate-y-0"
-          >
-            <Server className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? 'SINCRONIZANDO...' : 'SINCRONIZAR BANCO'}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto shrink-0">
+            <button
+              onClick={handleSyncToWorkspace}
+              disabled={isSyncing}
+              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-mono text-[11px] uppercase font-bold tracking-widest px-4 py-3 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <Server className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'SINCRONIZANDO...' : 'SINCRONIZAR ARQUIVOS'}
+            </button>
+            <button
+              onClick={handleDownloadCmsBackup}
+              className="bg-sky-600 hover:bg-sky-500 text-white font-mono text-[11px] uppercase font-bold tracking-widest px-4 py-3 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <Download className="w-4 h-4" />
+              BAIXAR ARQUIVO DE BACKUP (JSON)
+            </button>
+          </div>
         </div>
 
         {/* Dashboard layout splits */}

@@ -12,6 +12,22 @@ const __dirname = path.dirname(__filename);
 // Enable body parsing with a high limit to accommodate base64 compressed images
 app.use(express.json({ limit: '100mb' }));
 
+app.get('/api/get-cms-state', (req, res) => {
+  try {
+    const filePath = path.join(__dirname, 'src', 'utils', 'cmsStoreFallback.json');
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf-8');
+      res.setHeader('Content-Type', 'application/json');
+      res.send(data);
+    } else {
+      res.status(404).json({ success: false, error: 'Fallback file not found on disk' });
+    }
+  } catch (error) {
+    console.error('Failed to read fallback JSON from disk:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.post('/api/save-cms-state', (req, res) => {
   try {
     const data = req.body;
