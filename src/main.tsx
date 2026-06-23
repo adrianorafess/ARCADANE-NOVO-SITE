@@ -19,9 +19,29 @@ if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => {
     if (isIgnorable(event.message, event.filename)) {
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
     }
   }, true);
+
+  // Filter console.error from third-party scripts
+  const originalConsoleError = console.error;
+  console.error = function(...args: any[]) {
+    const argStr = args.map(arg => {
+      try {
+        return typeof arg === 'object' ? JSON.stringify(arg) : String(arg);
+      } catch (err) {
+        return String(arg);
+      }
+    }).join(' ').toLowerCase();
+
+    if (argStr.includes('script error') || 
+        argStr.includes('vlibras') || 
+        argStr.includes('google') || 
+        argStr.includes('onertravel')) {
+      return;
+    }
+    originalConsoleError.apply(console, args);
+  };
 
   window.onerror = function (message, source, lineno, colno, error) {
     if (isIgnorable(String(message || ''), String(source || ''))) {
@@ -34,7 +54,7 @@ if (typeof window !== 'undefined') {
     const reason = event.reason ? (event.reason.message || String(event.reason)) : '';
     if (isIgnorable(reason, '')) {
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
     }
   }, true);
 }

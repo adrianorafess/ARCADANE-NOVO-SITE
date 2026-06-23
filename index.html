@@ -18,9 +18,30 @@
         window.addEventListener('error', function(e) {
           if (suppress(e.message, e.filename)) {
             e.preventDefault();
-            e.stopPropagation();
+            e.stopImmediatePropagation();
           }
         }, true);
+
+        // Intercept console.error to silence cross-origin script error noise
+        var originalConsoleError = console.error;
+        console.error = function() {
+          var args = Array.prototype.slice.call(arguments);
+          var argStr = args.map(function(arg) {
+            try {
+              return typeof arg === 'object' ? JSON.stringify(arg) : String(arg);
+            } catch(err) {
+              return String(arg);
+            }
+          }).join(' ').toLowerCase();
+
+          if (argStr.indexOf('script error') !== -1 || 
+              argStr.indexOf('vlibras') !== -1 || 
+              argStr.indexOf('google') !== -1 || 
+              argStr.indexOf('onertravel') !== -1) {
+            return;
+          }
+          return originalConsoleError.apply(console, arguments);
+        };
 
         var prevOnError = window.onerror;
         window.onerror = function(message, source, lineno, colno, error) {
@@ -37,7 +58,7 @@
           var reason = e.reason ? (e.reason.message || String(e.reason)) : '';
           if (suppress(reason, '')) {
             e.preventDefault();
-            e.stopPropagation();
+            e.stopImmediatePropagation();
           }
         }, true);
       })();
@@ -49,7 +70,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://static.onertravel.com/widget/search/production/styles.css" />
-    <script type="text/javascript" src="https://static.onertravel.com/widget/search/production/widget-befly.js" defer></script>
   </head>
   <body>
     <div id="google_translate_element" style="position: absolute; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; z-index: -9999;"></div>

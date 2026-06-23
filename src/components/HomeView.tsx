@@ -26,6 +26,17 @@ const BeflySearchWidget = React.memo(() => {
     if (containerRef.current) {
       containerRef.current.innerHTML = '<befly-widget language="pt-br" new-tab="true"></befly-widget>';
     }
+
+    if (!document.getElementById('befly-widget-script')) {
+      const script = document.createElement('script');
+      script.id = 'befly-widget-script';
+      script.src = 'https://static.onertravel.com/widget/search/production/widget-befly.js';
+      script.async = true;
+      script.onerror = (e) => {
+        console.warn('Befly widget script loading was blocked or failed:', e);
+      };
+      document.body.appendChild(script);
+    }
   }, []);
 
   return (

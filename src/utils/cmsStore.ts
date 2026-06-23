@@ -625,3 +625,52 @@ export function broadcastChange(): void {
     window.dispatchEvent(new Event('arcadane_cms_data_changed'));
   }
 }
+
+// Automatic synchronization from browser local storage to workspace file on server
+export async function autoSyncToServer(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    const dataToSync = {
+      arcadane_cms_services: JSON.parse(localStorage.getItem(KEYS.SERVICES) || 'null'),
+      arcadane_cms_packages: JSON.parse(localStorage.getItem(KEYS.PACKAGES) || 'null'),
+      arcadane_cms_promo_packages: JSON.parse(localStorage.getItem(KEYS.PROMO_PACKAGES) || 'null'),
+      arcadane_cms_blog_posts: JSON.parse(localStorage.getItem(KEYS.BLOG_POSTS) || 'null'),
+      arcadane_cms_testimonials: JSON.parse(localStorage.getItem(KEYS.TESTIMONIALS) || 'null'),
+      arcadane_cms_seo_settings: JSON.parse(localStorage.getItem(KEYS.SEO) || 'null'),
+      arcadane_cms_home_settings: JSON.parse(localStorage.getItem(KEYS.HOME) || 'null'),
+      arcadane_cms_luxury_trips: JSON.parse(localStorage.getItem(KEYS.LUXURY_TRIPS) || 'null'),
+      arcadane_founders_photo: localStorage.getItem('arcadane_founders_photo'),
+      arcadane_trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
+      arcadane_custom_logo: localStorage.getItem('arcadane_custom_logo')
+    };
+
+    // Only sync if at least some customized data exists
+    const hasAnyLocalData = Object.values(dataToSync).some(val => val !== null);
+    if (!hasAnyLocalData) return;
+
+    await fetch('/api/save-cms-state', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataToSync),
+    });
+  } catch (error) {
+    console.warn('Silent CMS state background sync failed:', error);
+  }
+}
+
+// Web-only startup and event listeners to keep localStorage synced to project files
+if (typeof window !== 'undefined') {
+  window.addEventListener('arcadane_cms_data_changed', () => {
+    autoSyncToServer();
+  });
+  window.addEventListener('arcadane_logo_changed', () => {
+    autoSyncToServer();
+  });
+  
+  // Stagger sync on initial view/ready
+  setTimeout(() => {
+    autoSyncToServer();
+  }, 1200);
+}

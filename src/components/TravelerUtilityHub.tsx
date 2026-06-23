@@ -137,6 +137,9 @@ export default function TravelerUtilityHub() {
       script.id = 'google-translate-script';
       script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       script.async = true;
+      script.onerror = (e) => {
+        console.warn('Google Translate script loading was blocked or failed:', e);
+      };
       document.body.appendChild(script);
     } else {
       // If script is already in the document, win.googleTranslateElementInit won't be called automatically.
@@ -174,6 +177,9 @@ export default function TravelerUtilityHub() {
       script.id = 'vlibras-script';
       script.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
       script.async = true;
+      script.onerror = (e) => {
+        console.warn('VLibras script loading was blocked or failed:', e);
+      };
       script.onload = () => {
         if (win.VLibras) {
           try {
