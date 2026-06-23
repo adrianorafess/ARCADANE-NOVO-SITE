@@ -3,7 +3,7 @@ import { PageId } from '../types';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ArcadaneIcon from './ArcadaneBrandIcon';
-import { getSeoSettings } from '../utils/cmsStore';
+import { getSeoSettings, getCustomLogo } from '../utils/cmsStore';
 
 interface HeaderProps {
   activePage: PageId;
@@ -31,12 +31,12 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
   const whatsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('arcadane_custom_logo');
+    const stored = getCustomLogo();
     if (stored) {
       setCustomLogo(stored);
     }
     const handleLogoChange = () => {
-      const updated = localStorage.getItem('arcadane_custom_logo');
+      const updated = getCustomLogo();
       setCustomLogo(updated);
       if (updated) {
         setLogoError(false);

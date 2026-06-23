@@ -454,13 +454,6 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
       setHomeSettings(getHomeSettings());
       setServices(getServices());
       setSeo(getSeoSettings());
-      
-      const savedTypewriter = localStorage.getItem('arcadane_typewriter_endings');
-      if (savedTypewriter) {
-        try {
-          setEndings(JSON.parse(savedTypewriter));
-        } catch (e) {}
-      }
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
     return () => {

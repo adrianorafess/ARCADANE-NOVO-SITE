@@ -536,6 +536,19 @@ export function getFoundersPhoto(): string | null {
   return data;
 }
 
+export function getCustomLogo(): string | null {
+  if (typeof window === 'undefined') return (fallbackData as any).arcadane_custom_logo || null;
+  const data = localStorage.getItem('arcadane_custom_logo');
+  if (!data) {
+    if ((fallbackData as any).arcadane_custom_logo) {
+      localStorage.setItem('arcadane_custom_logo', (fallbackData as any).arcadane_custom_logo);
+      return (fallbackData as any).arcadane_custom_logo;
+    }
+    return null;
+  }
+  return data;
+}
+
 export function getTrajectoryPhoto(): string | null {
   if (typeof window === 'undefined') return fallbackData.arcadane_trajectory_photo || null;
   const data = localStorage.getItem('arcadane_trajectory_photo');
@@ -560,6 +573,8 @@ export function resetCmsToDefault(): void {
   localStorage.removeItem(KEYS.HOME);
   localStorage.removeItem(KEYS.LUXURY_TRIPS);
   localStorage.removeItem('arcadane_founders_photo');
+  localStorage.removeItem('arcadane_trajectory_photo');
+  localStorage.removeItem('arcadane_custom_logo');
   applySeoSettings(DEFAULT_SEO_SETTINGS);
   broadcastChange();
 }

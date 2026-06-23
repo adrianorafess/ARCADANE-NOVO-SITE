@@ -141,7 +141,8 @@ export default function AdminView() {
         arcadane_cms_home_settings: JSON.parse(localStorage.getItem('arcadane_cms_home_settings') || 'null'),
         arcadane_cms_luxury_trips: JSON.parse(localStorage.getItem('arcadane_cms_luxury_trips') || 'null'),
         arcadane_founders_photo: localStorage.getItem('arcadane_founders_photo'),
-        arcadane_trajectory_photo: localStorage.getItem('arcadane_trajectory_photo')
+        arcadane_trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
+        arcadane_custom_logo: localStorage.getItem('arcadane_custom_logo')
       };
 
       const response = await fetch('/api/save-cms-state', {

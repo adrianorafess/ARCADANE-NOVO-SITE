@@ -3,7 +3,7 @@ import { PageId } from '../types';
 import { Phone, Mail, MapPin, Instagram, ArrowRight, Compass, Sparkles, Trash2, Plus, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import ArcadaneIcon from './ArcadaneBrandIcon';
-import { getSeoSettings, getHomeSettings, saveHomeSettings, saveSeoSettings } from '../utils/cmsStore';
+import { getSeoSettings, getHomeSettings, saveHomeSettings, saveSeoSettings, getCustomLogo } from '../utils/cmsStore';
 import { useRafesEditor } from './RafesVisualBuilder';
 
 interface FooterProps {
@@ -20,12 +20,12 @@ export default function Footer({ setActivePage }: FooterProps) {
   const [home, setHome] = useState(() => getHomeSettings());
 
   useEffect(() => {
-    const stored = localStorage.getItem('arcadane_custom_logo');
+    const stored = getCustomLogo();
     if (stored) {
       setCustomLogo(stored);
     }
     const handleLogoChange = () => {
-      const updated = localStorage.getItem('arcadane_custom_logo');
+      const updated = getCustomLogo();
       setCustomLogo(updated);
       if (updated) {
         setLogoError(false);

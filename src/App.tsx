@@ -20,7 +20,7 @@ import WhatsAppSelectorModal from './components/WhatsAppSelectorModal';
 import ArcadaneIcon from './components/ArcadaneBrandIcon';
 import RafesVisualBuilder from './components/RafesVisualBuilder';
 import { AnimatePresence, motion } from 'motion/react';
-import { getSeoSettings, applySeoSettings } from './utils/cmsStore';
+import { getSeoSettings, applySeoSettings, getCustomLogo } from './utils/cmsStore';
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageId>(PageId.Home);
@@ -29,12 +29,12 @@ export default function App() {
   const [customLogo, setCustomLogo] = useState<string | null>(null);
 
   useEffect(() => {
-    const logo = localStorage.getItem('arcadane_custom_logo');
+    const logo = getCustomLogo();
     if (logo) {
       setCustomLogo(logo);
     }
     const handleLogoChange = () => {
-      setCustomLogo(localStorage.getItem('arcadane_custom_logo'));
+      setCustomLogo(getCustomLogo());
     };
     window.addEventListener('arcadane_logo_changed', handleLogoChange);
     return () => {
