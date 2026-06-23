@@ -637,6 +637,18 @@ export default function RafesVisualBuilder({ activePage }: { activePage: PageId 
                     />
                   </div>
 
+                  <div className="space-y-1.5">
+                    <label className={fieldLabelClass}>Link do Vídeo de Fundo (MP4 ou YouTube)</label>
+                    <input 
+                      type="text" 
+                      value={home.heroVideoUrl || ''} 
+                      onChange={(e) => handleSaveHome({ ...home, heroVideoUrl: e.target.value })}
+                      className={fieldInputClass}
+                      placeholder="Ex: https://www.youtube.com/watch?v=1VhezN-EFfg"
+                    />
+                    <p className="text-[9px] text-stone-500">Aceita links diretos .mp4 (mixkit, etc) ou vídeos normais do YouTube!</p>
+                  </div>
+
                   <div className="space-y-1 pt-3 border-t border-stone-850">
                     <h4 className="font-display font-bold text-xs text-white uppercase tracking-wider font-sans">História da Consultoria (Quem Somos)</h4>
                   </div>

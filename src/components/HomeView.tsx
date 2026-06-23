@@ -19,7 +19,7 @@ interface HomeViewProps {
   setActivePage: (page: PageId) => void;
 }
 
-const BeflySearchWidget = React.memo(() => {
+const BeflySearchWidget = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'voos' | 'hoteis' | 'pacotes'>('voos');
   const [origem, setOrigem] = useState('Chapecó (XAP)');
@@ -27,8 +27,16 @@ const BeflySearchWidget = React.memo(() => {
   const [dataIda, setDataIda] = useState('2026-07-15');
   const [dataVolta, setDataVolta] = useState('2026-07-25');
   const [passageiros, setPassageiros] = useState('2 Adultos');
-  
-  const settings = getHomeSettings();
+  const [settings, setSettings] = useState(() => getHomeSettings());
+
+  useEffect(() => {
+    const handleCmsChange = () => {
+      setSettings(getHomeSettings());
+    };
+    window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
+    return () => window.removeEventListener('arcadane_cms_data_changed', handleCmsChange);
+  }, []);
+
   const useRealBeflyWidget = settings.widgetType === 'befly';
 
   useEffect(() => {
@@ -166,7 +174,7 @@ const BeflySearchWidget = React.memo(() => {
       </div>
     </div>
   );
-}, () => true);
+};
 
 interface TypewriterTitleProps {
   rafesOpen: boolean;
@@ -527,8 +535,11 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  // Video Background URL - State fully persistent via LocalStorage
+  // Video Background URL - State fully persistent via LocalStorage and HomeSettings CMS
   const [videoUrl, setVideoUrl] = useState(() => {
+    const homeSettingsVal = getHomeSettings().heroVideoUrl;
+    if (homeSettingsVal) return homeSettingsVal;
+
     const saved = localStorage.getItem('arcadane_video_url');
     // Automigrate old safari assets to the new requested premium YouTube experience
     if (!saved || saved.includes('mixkit-safari')) {
@@ -583,7 +594,12 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
   useEffect(() => {
     const handleCmsChange = () => {
       setTrajectoryPhoto(getTrajectoryPhoto());
-      setHomeSettings(getHomeSettings());
+      const nextSettings = getHomeSettings();
+      setHomeSettings(nextSettings);
+      if (nextSettings.heroVideoUrl) {
+        setVideoUrl(nextSettings.heroVideoUrl);
+        setTempVideoUrl(nextSettings.heroVideoUrl);
+      }
       setServices(getServices());
       setSeo(getSeoSettings());
     };
@@ -617,8 +633,14 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
     e.preventDefault();
     localStorage.setItem('arcadane_video_url', tempVideoUrl);
     setVideoUrl(tempVideoUrl);
+    
+    // Also save to homeSettings to synchronize with Admin View / Visual Builder
+    const nextHomeSettings = { ...homeSettings, heroVideoUrl: tempVideoUrl };
+    saveHomeSettings(nextHomeSettings);
+
     setShowVideoConfig(false);
     setIsPlaying(true);
+    window.dispatchEvent(new Event('arcadane_cms_data_changed'));
   };
 
   const togglePlay = () => {
@@ -637,8 +659,14 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
     localStorage.setItem('arcadane_video_url', defaultUrl);
     setVideoUrl(defaultUrl);
     setTempVideoUrl(defaultUrl);
+
+    // Also save to homeSettings to synchronize with Admin View / Visual Builder
+    const nextHomeSettings = { ...homeSettings, heroVideoUrl: defaultUrl };
+    saveHomeSettings(nextHomeSettings);
+
     setShowVideoConfig(false);
     setIsPlaying(true);
+    window.dispatchEvent(new Event('arcadane_cms_data_changed'));
   };
 
   const handleAddService = () => {
@@ -818,9 +846,24 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
             {/* Immersive Title with Elegant Hand-picked Fonts and Typewriter Animation */}
             <TypewriterTitle rafesOpen={rafesOpen} editField={editField} />
 
-
-
-            {/* Custom Control Buttons (Play/Pause) */}
+            {/* Subtitle! Display the heroSubtitle and make it clickable and editable in Rafes edit mode */}
+            <p 
+              className={`text-sm sm:text-base md:text-lg text-white/80 max-w-2xl mx-auto font-sans leading-relaxed select-none ${
+                rafesOpen ? 'border border-dashed border-amber-500 bg-amber-500/15 p-2 rounded-xl cursor-pointer hover:bg-amber-500/10 text-amber-200' : ''
+              }`}
+              onClick={() => {
+                if (rafesOpen) {
+                  editField('heroSubtitle', 'Editar Subtítulo do Topo', homeSettings.heroSubtitle || 'Curadoria de destinos...', false, (newVal) => {
+                    const next = { ...homeSettings, heroSubtitle: newVal };
+                    setHomeSettings(next);
+                    saveHomeSettings(next);
+                  });
+                }
+              }}
+              title={rafesOpen ? "Clique para editar o subtítulo" : undefined}
+            >
+              {homeSettings.heroSubtitle || 'Curadoria de destinos exclusivos, hotéis extraordinários e planejamento técnico de excelência.'}
+            </p>
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 onClick={togglePlay}
@@ -1298,6 +1341,25 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
                 homeSettings.aboutUsHeadline
               )}
             </h3>
+
+            {/* Subheadline! Display the aboutUsSubheadline and make it clickable and editable in Rafes edit mode */}
+            <p 
+              className={`text-base sm:text-lg text-gray-400 font-sans tracking-wide font-normal select-none ${
+                rafesOpen ? 'border border-dashed border-amber-500 bg-amber-500/10 p-2 rounded-xl cursor-pointer hover:bg-amber-500/15 text-amber-100' : ''
+              }`}
+              onClick={() => {
+                if (rafesOpen) {
+                  editField('aboutUsSubheadline', 'Editar Subtítulo Sobre Nós', homeSettings.aboutUsSubheadline || 'Sua jornada desenhada por especialistas', false, (newVal) => {
+                    const next = { ...homeSettings, aboutUsSubheadline: newVal };
+                    setHomeSettings(next);
+                    saveHomeSettings(next);
+                  });
+                }
+              }}
+              title={rafesOpen ? "Clique para editar o subtítulo Sobre Nós" : undefined}
+            >
+              {homeSettings.aboutUsSubheadline || 'Sua jornada desenhada por especialistas'}
+            </p>
             
             <div 
               className={`space-y-5 text-justify font-sans text-sm text-gray-300 leading-relaxed font-light ${
