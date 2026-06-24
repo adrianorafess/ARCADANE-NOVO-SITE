@@ -2,7 +2,7 @@
  * Utility to compress and resize images client-side before storing them in local storage.
  * Helps prevent QuotaExceededError by keeping base64 images well under 100KB.
  */
-export function compressImage(file: File, maxWidth: number = 600, maxHeight: number = 600, quality: number = 0.6, forcePng: boolean = false): Promise<string> {
+export function compressImage(file: File, maxWidth: number = 600, maxHeight: number = 600, quality: number = 0.6, forcePng: boolean = false, skipAggressiveLimit: boolean = false): Promise<string> {
   return new Promise((resolve, reject) => {
     // Check if the file is an image
     if (!file.type.startsWith('image/')) {
@@ -62,13 +62,13 @@ export function compressImage(file: File, maxWidth: number = 600, maxHeight: num
           let resultBase64 = attemptCompression(maxWidth, maxHeight, quality);
           
           // If the image is still larger than 50KB (approx 68,000 base64 chars), compress more aggressively
-          if (resultBase64.length > 68000) {
+          if (!skipAggressiveLimit && resultBase64.length > 68000) {
             console.warn(`Compressed image is still large (${resultBase64.length} chars). Retrying with smaller dimensions.`);
             resultBase64 = attemptCompression(Math.min(maxWidth, 400), Math.min(maxHeight, 400), 0.5);
           }
           
           // If still larger than 50KB, take extreme measures (300x300, 0.4 quality)
-          if (resultBase64.length > 68000) {
+          if (!skipAggressiveLimit && resultBase64.length > 68000) {
             console.warn(`Compressed image is STILL large (${resultBase64.length} chars). Applying extreme compression.`);
             resultBase64 = attemptCompression(300, 300, 0.35);
           }

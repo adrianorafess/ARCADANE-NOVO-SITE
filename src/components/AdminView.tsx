@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Key, LogOut, Settings, Globe, Film, Sparkles, Briefcase, Compass, Award, 
   Heart, AlertCircle, CheckCircle, Save, Undo, Plus, Trash2, Edit3, 
-  Eye, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag, Download 
+  Eye, EyeOff, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag, Download 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -19,6 +19,7 @@ export default function AdminView() {
   // Login State
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return sessionStorage.getItem('arcadane_admin_logged_in') === 'true';
   });
@@ -139,7 +140,7 @@ export default function AdminView() {
     
     setLogoUploading(true);
     try {
-      const compressed = await compressImage(file, 600, 600, 0.85);
+      const compressed = await compressImage(file, 2400, 2400, 0.95, true, true);
       localStorage.setItem('arcadane_custom_logo', compressed);
       setCustomLogo(compressed);
       window.dispatchEvent(new Event('arcadane_logo_changed'));
@@ -411,15 +412,24 @@ export default function AdminView() {
             
             <div className="space-y-1">
               <label htmlFor="admin-password" className={labelClass}>Chave de Acesso</label>
-              <input 
-                type="password" 
-                id="admin-password"
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Ex: arcadane123" 
-                className={inputClass}
-                required
-              />
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  id="admin-password"
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite sua chave de acesso" 
+                  className={`${inputClass} pr-10`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 focus:outline-none cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             {loginError && (
@@ -490,34 +500,19 @@ export default function AdminView() {
 
           <div className="flex items-center gap-2.5 self-start md:self-center flex-wrap">
             <button
-              onClick={handleSyncToWorkspace}
-              disabled={isSyncing}
-              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-mono text-[10px] uppercase font-bold tracking-wider px-3.5 py-2.5 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-md flex-shrink-0"
-            >
-              <Server className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Salvando...' : 'Salvar no AI Studio'}
-            </button>
-            <button
-              onClick={handleDownloadCmsBackup}
-              className="bg-sky-600 hover:bg-sky-500 text-white font-mono text-[10px] uppercase font-bold tracking-wider px-3.5 py-2.5 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-md flex-shrink-0"
-            >
-              <Download className="w-4 h-4" />
-              Baixar Backup JSON
-            </button>
-            <button
               onClick={() => {
                 // Return to Website
                 const clickEvent = new Event('click');
                 window.location.reload();
               }}
-              className="bg-stone-800 hover:bg-stone-700 text-stone-300 font-mono text-[10px] tracking-wider px-3 py-2 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
+              className="bg-[#AF4934] hover:bg-[#973a27] text-white font-mono text-[10px] tracking-wider px-4 py-2.5 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-md"
             >
-              <Eye className="w-4 h-4 text-brand-secondary" />
+              <Eye className="w-4 h-4 text-white" />
               Ver Site
             </button>
             <button
               onClick={handleLogout}
-              className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-450 border border-rose-500/20 font-mono text-[10px] tracking-wider px-3.5 py-2 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
+              className="bg-stone-800 hover:bg-stone-700 text-stone-300 font-mono text-[10px] tracking-wider px-3.5 py-2.5 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
             >
               <LogOut className="w-4 h-4" />
               Sair
