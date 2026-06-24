@@ -596,7 +596,17 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
       const saved = localStorage.getItem('arcadane_bento_destinations');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            // Fill any missing elements with BENTO_DESTINATIONS default items
+            const merged = [...BENTO_DESTINATIONS];
+            parsed.forEach((item, index) => {
+              if (index < 4 && item) {
+                merged[index] = item;
+              }
+            });
+            return merged;
+          }
         } catch (e) {
           // ignore
         }

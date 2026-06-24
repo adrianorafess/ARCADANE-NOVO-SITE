@@ -97,14 +97,7 @@ export default function AdminView() {
 
   // Bento Destinations list state
   const [bentoDestinations, setBentoDestinations] = useState<any[]>(() => {
-    const saved = localStorage.getItem('arcadane_bento_destinations');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {}
-    }
-    return [
+    const defaultBento = [
       {
         id: 1,
         title: "Destinos Exóticos",
@@ -134,7 +127,7 @@ export default function AdminView() {
           "O Brasil é um dos países mais ricos do mundo quando o assunto é diversidade de paisagens e experiências.",
           "Ainda assim, muitos viajantes acabam subestimando o potencial de destinos nacionais, sem perceber que algumas das experiências mais marcantes podem estar mais próximas do que imaginam.",
           "Entre os destaques, Fernando de Noronha continua sendo um dos destinos mais desejados, com águas cristalinas, vida marinha abundante e uma atmosfera que combina preservação e exclusividade.",
-          "Já os Lençóis Maranhenses oferecem um cenário único no mundo: lagoas de água doce entre dunas, formando paisagens que mudam ao longo do ano e surpreendem em cada visita.",
+          "Já os Lençóis Maranhenses oferecem um cenário único no mundo: lagoas de água doce entre dunas, formando paisagens que mudam ao longo do ano e surpreendem in cada visita.",
           "Outro destino que vem ganhando cada vez mais destaque é Alter do Chão, no Pará. Conhecido como o “Caribe Amazônico”, encanta pelas praias de água doce, pela tranquilidade e pela conexão com a natureza.",
           "Para quem busca experiências mais reservadas e sofisticadas, a Praia do Espelho, na Bahia, oferece um equilíbrio perfeito entre rusticidade e charme, com cenários preservados e uma atmosfera mais exclusiva.",
           "Mas viajar pelo Brasil também exige estratégia.",
@@ -159,8 +152,46 @@ export default function AdminView() {
           "Com a consultoria correta, cada escolha é planejada para que a sua única preocupação a bordo seja apreciar a vista e vivenciar cada porto de parada.",
           "Afinal, o mar é infinito, mas as suas férias devem ser perfeitas."
         ]
+      },
+      {
+        id: 4,
+        title: "Estados Unidos",
+        largeTitle: "Viagem para os Estados Unidos: roteiros além do óbvio para explorar o país",
+        image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=1200",
+        shortDesc: "Roteiros sob medida para famílias e experiências VIPs imbatíveis.",
+        paragraphs: [
+          "Falar em viagem para os Estados Unidos ainda leva muitas pessoas a pensarem automaticamente em Orlando e nos parques temáticos.",
+          "Mas o país vai muito além disso.",
+          "Os Estados Unidos são um destino extremamente diverso, capaz de oferecer experiências completamente diferentes — muitas vezes dentro da mesma viagem.",
+          "Para quem busca neve e esportes de inverno, regiões como Colorado e Lake Tahoe se destacam, com estações de ski bem estruturadas e paisagens impressionantes durante a temporada de inverno.",
+          "Já para os amantes de estrada e liberdade, a famosa Rota 66 é uma experiência icônica. Cruzar o país de carro, passando por cidades históricas e paisagens únicas, transforma a viagem em algo muito mais profissional do que apenas visitar destinos.",
+          "Os parques nacionais também merecem destaque. Lugares como o Grand Canyon e Yellowstone revelam um lado surpreendente do país, com cenários naturais grandiosos e experiências que fogem completamente do turismo tradicional.",
+          "E claro, cidades como Nova York, Las Vegas, Los Angeles e San Francisco continuam sendo referências globais, cada uma com sua personalidade, estilo e ritmo.",
+          "Mas o grande diferencial de uma viagem para os Estados Unidos está na forma como ela é construída.",
+          "Roteiros mal planejados podem gerar deslocamentos cansativos, perda de tempo e experiências superficiais.",
+          "Por outro lado, quando há estratégia na escolha dos destinos, na logística e na distribuição dos dias, a viagem ganha fluidez e profundidade.",
+          "E é nesse equilíbrio entre planejamento e experiência que o destino realmente se revela.",
+          "Porque no final, não se trata apenas de conhecer os Estados Unidos mas de viver o melhor que eles têm a oferecer, de forma inteligente e memorável."
+        ]
       }
     ];
+
+    const saved = localStorage.getItem('arcadane_bento_destinations');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const merged = [...defaultBento];
+          parsed.forEach((item, index) => {
+            if (index < 4 && item) {
+              merged[index] = item;
+            }
+          });
+          return merged;
+        }
+      } catch (e) {}
+    }
+    return defaultBento;
   });
 
   // Interactive Edit Modals / States
