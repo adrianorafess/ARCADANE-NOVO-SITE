@@ -356,8 +356,8 @@ const TypewriterTitle = React.memo(({ rafesOpen, editField }: TypewriterTitlePro
 
   return (
     <h1 
-      className={`font-display font-medium text-4xl sm:text-5.5xl md:text-6.5xl lg:text-[5rem] xl:text-[5.5rem] tracking-tight leading-[1.1] text-white min-h-[3.3em] md:min-h-[2.2em] lg:min-h-0 select-none ${
-        rafesOpen ? 'border border-dashed border-amber-500 bg-amber-500/15 p-2 rounded-2xl cursor-pointer hover:bg-amber-500/10' : ''
+      className={`font-display font-medium text-3xl sm:text-4.5xl md:text-5.5xl lg:text-[4.25rem] xl:text-[4.75rem] tracking-tight leading-[1.15] text-white text-center max-w-4xl mx-auto px-2 select-none relative ${
+        rafesOpen ? 'border border-dashed border-amber-500 bg-amber-500/15 p-3 rounded-2xl cursor-pointer hover:bg-amber-500/10' : ''
       }`}
       onClick={() => {
         if (rafesOpen) {
@@ -886,7 +886,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
       
       {/* 1. Immersive Video Hero Showcase Banner Section */}
       <section 
-        className="relative min-h-[95vh] lg:min-h-screen flex flex-col justify-between overflow-hidden text-white" 
+        className="relative min-h-[95vh] lg:min-h-screen flex flex-col justify-start items-center overflow-visible text-white pt-36 sm:pt-40 md:pt-44 lg:pt-48 xl:pt-52 pb-12" 
         id="home-hero"
       >
         {/* Full Video Background Layer with Ambient Overlays */}
@@ -936,8 +936,8 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
         </div>
 
         {/* Hero Central Text Callout */}
-        <div className="flex-grow flex items-center justify-center pt-24 sm:pt-32 pb-4">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-7">
+        <div className="w-full z-10 pt-2 sm:pt-4 pb-2">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
             
             {/* Tag badge with link to Instagram */}
             <a 
@@ -949,11 +949,13 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
               <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
               <span>@ARCADANEVIAGENS</span>
             </a>
-
+ 
             {/* Immersive Title with Elegant Hand-picked Fonts and Typewriter Animation */}
-            <TypewriterTitle rafesOpen={rafesOpen} editField={editField} />
-
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px] xl:min-h-[220px] flex items-center justify-center w-full">
+              <TypewriterTitle rafesOpen={rafesOpen} editField={editField} />
+            </div>
+ 
+            <div className="flex items-center justify-center gap-3 pt-1">
               <button
                 onClick={togglePlay}
                 className="w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 border border-white/15 flex items-center justify-center transition-all active:scale-95 text-white/90"
@@ -962,12 +964,12 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
                 {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white translate-x-0.5" />}
               </button>
             </div>
-
+ 
           </div>
         </div>
 
         {/* Floating Custom Booking Engine & Search Bar (Aligned Bottom of Hero) */}
-        <div className="w-full max-w-6xl mx-auto px-4 pb-8 relative z-10 -mt-32 sm:-mt-44 lg:-mt-60 xl:-mt-72" id="booking-area">
+        <div className="w-full max-w-6xl mx-auto px-4 pb-8 relative z-10 mt-6 sm:mt-8 lg:mt-10" id="booking-area">
           
           {/* Real Live Befly Widget Container */}
           <div className="bg-white rounded-2xl shadow-2xl border border-brand-border p-4.5 sm:p-5 lg:p-7 text-brand-dark max-w-6xl mx-auto text-left relative">
