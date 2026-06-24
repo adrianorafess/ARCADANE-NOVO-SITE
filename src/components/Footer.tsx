@@ -53,6 +53,23 @@ export default function Footer({ setActivePage }: FooterProps) {
     return clean;
   };
 
+  const parseFooterLinks = (linksStr?: string) => {
+    if (!linksStr) return [];
+    return linksStr.split(';').map(item => {
+      const parts = item.split('|');
+      const label = parts[0]?.trim();
+      const rawPageId = parts[1]?.trim();
+      let pageId: PageId = PageId.Packages;
+      if (rawPageId === 'custom_trip') pageId = PageId.CustomTrip;
+      else if (rawPageId === 'about_us') pageId = PageId.AboutUs;
+      else if (rawPageId === 'blog') pageId = PageId.Blog;
+      else if (rawPageId === 'contact') pageId = PageId.ContactUs;
+      else if (rawPageId === 'services') pageId = PageId.Services;
+      else if (rawPageId === 'home') pageId = PageId.Home;
+      return { label, pageId };
+    }).filter(x => x.label);
+  };
+
   const handleNavClick = (pageId: PageId) => {
     setActivePage(pageId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -236,89 +253,32 @@ export default function Footer({ setActivePage }: FooterProps) {
           {/* COLUMN 2: DESTINOS (lg:span-2) */}
           <div className="lg:col-span-2 lg:px-8 lg:border-r lg:border-[#DCCFC1]/30">
             <h3 className="font-sans font-bold text-[11px] uppercase tracking-[0.25em] text-[#FDFBF6] pt-2 mb-6">
-              Destinos
+              {home.footerCol1Title || 'Destinos'}
             </h3>
             <ul className="space-y-2.5 text-xs text-[#FBF8E8] font-sans">
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  África & Ilhas Exóticas
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  América do Sul & Central
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Ásia Imperial & Moderna
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Caribe Paradisíaco
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Europa Clássica & Secreta
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Oceania dos Sonhos
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Estados Unidos & Parques
-                </button>
-              </li>
+              {parseFooterLinks(home.footerCol1Links).map((item, idx) => (
+                <li key={idx}>
+                  <button onClick={() => handleNavClick(item.pageId)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
+                    {item.label}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* COLUMN 3: DESCUBRA-SE NO MUNDO (lg:span-3) */}
           <div className="lg:col-span-3 lg:px-10 lg:border-r lg:border-[#DCCFC1]/30">
             <h3 className="font-sans font-bold text-[11px] uppercase tracking-[0.25em] text-[#FDFBF6] pt-2 mb-6">
-              Descubra-se no Mundo
+              {home.footerCol2Title || 'Descubra-se no Mundo'}
             </h3>
             <ul className="space-y-2.5 text-xs text-[#FBF8E8] font-sans">
-              <li>
-                <button onClick={() => handleNavClick(PageId.CustomTrip)} className="hover:text-white hover:underline transition-all cursor-pointer text-left flex items-center gap-1.5">
-                  <span>Roteiro Exclusivo de Lua de Mel</span>
-                  <span className="text-[7px] bg-[#3B5EA4] text-[#FDFBF6] px-1.5 py-0.5 rounded-full font-mono font-bold">VIP</span>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Viagens Deslumbrantes de Trem
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Cruzeiros de Alto Luxo & Navegações
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Viagens com a Família
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.CustomTrip)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Bem-Estar, Retiros & Conexão
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.Packages)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Safáris Fotográficos na África
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick(PageId.CustomTrip)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
-                  Esqui, Neve & Chalés de Luxo
-                </button>
-              </li>
+              {parseFooterLinks(home.footerCol2Links).map((item, idx) => (
+                <li key={idx}>
+                  <button onClick={() => handleNavClick(item.pageId)} className="hover:text-white hover:underline transition-all cursor-pointer text-left">
+                    {item.label}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -720,7 +680,7 @@ export default function Footer({ setActivePage }: FooterProps) {
       <div className="bg-[#6F5B4E] border-t border-[#DCCFC1]/30 py-8 relative z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-[10px] text-[#F3EEE3] font-mono tracking-wider gap-4">
           <p className="font-medium text-center sm:text-left text-[#FDFBF6]/90">
-            © 2026 Arcadane Viagens LTDA. Todos os direitos reservados. CNPJ 48.799.471/0001-38.
+            {home.footerCopyright || '© 2026 Arcadane Viagens LTDA. Todos os direitos reservados. CNPJ 48.799.471/0001-38.'}
           </p>
           <div className="flex items-center gap-2">
             <span>Desenvolvido com maestria por</span>

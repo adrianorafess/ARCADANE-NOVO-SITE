@@ -43,8 +43,16 @@ export default function AdminView() {
     return localStorage.getItem('arcadane_trajectory_photo');
   });
 
+  const [customLogo, setCustomLogo] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('arcadane_custom_logo');
+    }
+    return null;
+  });
+  const [logoUploading, setLogoUploading] = useState(false);
+
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'seo' | 'home' | 'services' | 'packages' | 'promos' | 'blog' | 'testimonials' | 'reset'>('seo');
+  const [activeTab, setActiveTab] = useState<'seo' | 'home' | 'layout' | 'services' | 'packages' | 'promos' | 'blog' | 'testimonials' | 'reset'>('seo');
 
   // Interactive Edit Modals / States
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -117,6 +125,40 @@ export default function AdminView() {
     e.preventDefault();
     saveHomeSettings(home);
     showFeedback('Textos institucionais e vídeo da página inicial salvos!');
+  };
+
+  const handleSaveLayout = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveHomeSettings(home);
+    showFeedback('Layout, preloader, menus e rodapé salvos com sucesso!');
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setLogoUploading(true);
+    try {
+      const compressed = await compressImage(file, 600, 600, 0.85);
+      localStorage.setItem('arcadane_custom_logo', compressed);
+      setCustomLogo(compressed);
+      window.dispatchEvent(new Event('arcadane_logo_changed'));
+      window.dispatchEvent(new Event('arcadane_cms_data_changed'));
+      showFeedback('Novo logotipo PNG processado e salvo!');
+    } catch (err) {
+      console.error(err);
+      showFeedback('Erro ao processar imagem do logotipo.');
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleResetLogo = () => {
+    localStorage.removeItem('arcadane_custom_logo');
+    setCustomLogo(null);
+    window.dispatchEvent(new Event('arcadane_logo_changed'));
+    window.dispatchEvent(new Event('arcadane_cms_data_changed'));
+    showFeedback('Logotipo restaurado para o padrão original!');
   };
 
   const handleSaveServices = (e: React.FormEvent) => {
@@ -482,47 +524,6 @@ export default function AdminView() {
             </button>
           </div>
         </div>
-
-        {/* Warning Banner about Hostinger & GitHub deployment persistence */}
-        <div className="bg-amber-500/15 border border-amber-500/30 text-stone-200 p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-inner">
-          <div className="space-y-1.5">
-            <h4 className="text-sm font-bold font-display text-amber-400 flex items-center gap-2">
-              <Server className="w-4.5 h-4.5 shrink-0 text-amber-500" />
-              Como publicar suas edições na Hostinger / GitHub:
-            </h4>
-            <div className="text-xs text-stone-300 font-sans space-y-2 leading-relaxed">
-              <p>
-                Como seu site na Hostinger roda de forma estática via GitHub, as alterações salvas aqui precisam ser enviadas para o seu repositório. Escolha uma das opções abaixo:
-              </p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>
-                  <strong className="text-emerald-400">Opção A (Pelo AI Studio):</strong> Clique em <strong>"SINCRONIZAR ARQUIVOS"</strong> ao lado. Ele salvará os dados diretamente nos arquivos de desenvolvimento aqui. Depois, vá na barra de configurações do AI Studio e exporte as mudanças para o seu GitHub.
-                </li>
-                <li>
-                  <strong className="text-sky-400">Opção B (Manual e Rápida):</strong> Faça todas as edições desejadas nesta tela. Em seguida, clique em <strong>"BAIXAR ARQUIVO DE BACKUP (JSON)"</strong>. Pegue o arquivo baixado (<code className="text-sky-300">cmsStoreFallback.json</code>) e faça o upload direto dele na pasta <code className="text-stone-100">src/utils/</code> do seu repositório do GitHub. A Hostinger irá atualizar tudo automaticamente!
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto shrink-0">
-            <button
-              onClick={handleSyncToWorkspace}
-              disabled={isSyncing}
-              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-mono text-[11px] uppercase font-bold tracking-widest px-4 py-3 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <Server className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'SINCRONIZANDO...' : 'SINCRONIZAR ARQUIVOS'}
-            </button>
-            <button
-              onClick={handleDownloadCmsBackup}
-              className="bg-sky-600 hover:bg-sky-500 text-white font-mono text-[11px] uppercase font-bold tracking-widest px-4 py-3 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <Download className="w-4 h-4" />
-              BAIXAR ARQUIVO DE BACKUP (JSON)
-            </button>
-          </div>
-        </div>
-
         {/* Dashboard layout splits */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
@@ -555,6 +556,20 @@ export default function AdminView() {
               <span className="flex items-center gap-2.5">
                 <Film className="w-4 h-4 shrink-0" />
                 Início & Quem Somos
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('layout')}
+              className={`w-full text-left font-display text-xs tracking-wider uppercase px-4 py-3.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer border ${
+                activeTab === 'layout' 
+                  ? 'bg-[#AF4934]/15 border-[#AF4934]/35 text-[#AF4934] font-bold' 
+                  : 'bg-[#181615]/30 hover:bg-[#181615]/80 border-transparent text-stone-400'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Sliders className="w-4 h-4 shrink-0 text-amber-500" />
+                Layout, Logo & Menu
               </span>
             </button>
 
@@ -881,6 +896,250 @@ export default function AdminView() {
                   <button type="submit" className={btnClass}>
                     <Save className="w-4 h-4" />
                     Salvar Alterações de SEO
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Panel Layout, Logo, Menu & Preloader */}
+            {activeTab === 'layout' && (
+              <form onSubmit={handleSaveLayout} className="space-y-6 animate-fadeIn">
+                <div>
+                  <h3 className="font-display font-medium text-lg text-stone-100">Layout, Logotipo, Preloader & Menus</h3>
+                  <p className="text-stone-400 text-xs mt-1">
+                    Gerencie o estilo do preloader, faça upload do logotipo PNG, personalize os links dos menus e rodapé do site.
+                  </p>
+                </div>
+
+                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
+                  <h4 className="text-sm font-bold font-display text-amber-500">1. Logotipo Personalizado (PNG)</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div className="space-y-3">
+                      <p className="text-xs text-stone-300 leading-relaxed font-sans">
+                        Selecione um arquivo de imagem PNG com fundo transparente para substituir o logo oficial do site. O preloader e o cabeçalho serão atualizados em tempo real!
+                      </p>
+                      <div className="flex flex-wrap gap-2.5">
+                        <label className="bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-mono font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-md">
+                          <Image className="w-3.5 h-3.5" />
+                          {logoUploading ? 'Enviando...' : 'Selecionar PNG'}
+                          <input 
+                            type="file" 
+                            accept="image/png" 
+                            onChange={handleLogoUpload} 
+                            className="hidden" 
+                            disabled={logoUploading}
+                          />
+                        </label>
+                        {customLogo && (
+                          <button
+                            type="button"
+                            onClick={handleResetLogo}
+                            className="bg-stone-800 hover:bg-stone-700 text-stone-300 text-[11px] font-mono font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                          >
+                            <Undo className="w-3.5 h-3.5" />
+                            Restaurar Padrão
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-4 bg-stone-900 border border-stone-850 rounded-2xl h-40">
+                      <p className="text-[10px] uppercase font-mono tracking-widest text-stone-500 mb-2 font-bold">Visualização do Logo</p>
+                      <img 
+                        src={customLogo || "/logo.svg"} 
+                        alt="Logo" 
+                        className="max-h-24 w-auto object-contain brightness-100"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "/logo.svg";
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
+                  <h4 className="text-sm font-bold font-display text-amber-500">2. Estilo do Preloader</h4>
+                  <div className="space-y-1">
+                    <label className={labelClass}>Tipo de Animação do Preloader de Luxo</label>
+                    <select
+                      value={home.preloaderType || 'modern'}
+                      onChange={(e) => setHome({ ...home, preloaderType: e.target.value as any })}
+                      className={inputClass}
+                    >
+                      <option value="modern">Carregamento Premium (Fundo Liso com Zoom e Pulsação Elegante)</option>
+                      <option value="pulse">Pulsar Elegante (Pulsação contínua e suave do logotipo)</option>
+                      <option value="spin">Giro Clássico (Giro orbital ao redor do logotipo)</option>
+                      <option value="flip">Efeito Flip (Logotipo girando em 3D de forma intermitente)</option>
+                      <option value="zoom">Aproximação Suave (Efeito de aproximação infinito no logotipo)</option>
+                    </select>
+                    <p className="text-[10px] text-stone-500 font-mono mt-0.5">
+                      Esta animação será executada sempre que um usuário abrir ou recarregar a página inicial.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
+                  <h4 className="text-sm font-bold font-display text-amber-500">3. Menus de Navegação (Rótulos)</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <label className={labelClass}>Link Início</label>
+                      <input 
+                        type="text"
+                        value={home.menuLabelHome || ''}
+                        onChange={(e) => setHome({ ...home, menuLabelHome: e.target.value })}
+                        className={inputClass}
+                        placeholder="Início"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className={labelClass}>Link Serviços</label>
+                      <input 
+                        type="text"
+                        value={home.menuLabelServices || ''}
+                        onChange={(e) => setHome({ ...home, menuLabelServices: e.target.value })}
+                        className={inputClass}
+                        placeholder="Serviços"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className={labelClass}>Link Pacotes</label>
+                      <input 
+                        type="text"
+                        value={home.menuLabelPackages || ''}
+                        onChange={(e) => setHome({ ...home, menuLabelPackages: e.target.value })}
+                        className={inputClass}
+                        placeholder="Pacotes"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className={labelClass}>Link Quem Somos</label>
+                      <input 
+                        type="text"
+                        value={home.menuLabelAboutUs || ''}
+                        onChange={(e) => setHome({ ...home, menuLabelAboutUs: e.target.value })}
+                        className={inputClass}
+                        placeholder="Quem Somos"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className={labelClass}>Link Viagem Customizada</label>
+                      <input 
+                        type="text"
+                        value={home.menuLabelCustomTrip || ''}
+                        onChange={(e) => setHome({ ...home, menuLabelCustomTrip: e.target.value })}
+                        className={inputClass}
+                        placeholder="Viagem Personalizada"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className={labelClass}>Link Blog</label>
+                      <input 
+                        type="text"
+                        value={home.menuLabelBlog || ''}
+                        onChange={(e) => setHome({ ...home, menuLabelBlog: e.target.value })}
+                        className={inputClass}
+                        placeholder="Blog"
+                      />
+                    </div>
+                    <div className="space-y-1 sm:col-span-2 md:col-span-3">
+                      <label className={labelClass}>Link Contato</label>
+                      <input 
+                        type="text"
+                        value={home.menuLabelContactUs || ''}
+                        onChange={(e) => setHome({ ...home, menuLabelContactUs: e.target.value })}
+                        className={inputClass}
+                        placeholder="Contato"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
+                  <h4 className="text-sm font-bold font-display text-amber-500">4. Submenus de Cabeçalho (Dropdowns)</h4>
+                  <p className="text-xs text-stone-400 font-sans leading-relaxed">
+                    Personalize os sublinks que aparecem ao passar o mouse ou clicar nos itens "Pacotes" e "Viagem Personalizada". Use o formato: <code className="text-amber-400">Nome do Link | id_da_pagina</code> separados por ponto e vírgula (<code className="text-amber-400">;</code>).
+                  </p>
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className={labelClass}>Sublinks de "Pacotes"</label>
+                      <textarea
+                        rows={2}
+                        value={home.submenuPackagesLinks || ''}
+                        onChange={(e) => setHome({ ...home, submenuPackagesLinks: e.target.value })}
+                        placeholder="Maldivas | packages; Europa | packages; Ásia de Luxo | packages"
+                        className={inputClass}
+                      />
+                      <p className="text-[10px] text-stone-500 font-mono">Páginas disponíveis: <code className="text-stone-300">home</code>, <code className="text-stone-300">services</code>, <code className="text-stone-300">packages</code>, <code className="text-stone-300">about_us</code>, <code className="text-stone-300">custom_trip</code>, <code className="text-stone-300">blog</code>, <code className="text-stone-300">contact</code>.</p>
+                    </div>
+                    <div className="space-y-1">
+                      <label className={labelClass}>Sublinks de "Viagem Personalizada"</label>
+                      <textarea
+                        rows={2}
+                        value={home.submenuCustomTripLinks || ''}
+                        onChange={(e) => setHome({ ...home, submenuCustomTripLinks: e.target.value })}
+                        placeholder="Lua de Mel VIP | custom_trip; Roteiro de Trem | custom_trip"
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
+                  <h4 className="text-sm font-bold font-display text-amber-500">5. Personalização do Rodapé</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className={labelClass}>Título da Coluna 1 do Rodapé</label>
+                      <input 
+                        type="text"
+                        value={home.footerCol1Title || ''}
+                        onChange={(e) => setHome({ ...home, footerCol1Title: e.target.value })}
+                        className={inputClass}
+                        placeholder="Destinos"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className={labelClass}>Título da Coluna 2 do Rodapé</label>
+                      <input 
+                        type="text"
+                        value={home.footerCol2Title || ''}
+                        onChange={(e) => setHome({ ...home, footerCol2Title: e.target.value })}
+                        className={inputClass}
+                        placeholder="Descubra-se no Mundo"
+                      />
+                    </div>
+                    <div className="space-y-1 md:col-span-2">
+                      <label className={labelClass}>Links da Coluna 1 do Rodapé (Formato: Nome|pagina;Nome|pagina)</label>
+                      <textarea
+                        rows={2}
+                        value={home.footerCol1Links || ''}
+                        onChange={(e) => setHome({ ...home, footerCol1Links: e.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div className="space-y-1 md:col-span-2">
+                      <label className={labelClass}>Links da Coluna 2 do Rodapé (Formato: Nome|pagina;Nome|pagina)</label>
+                      <textarea
+                        rows={2}
+                        value={home.footerCol2Links || ''}
+                        onChange={(e) => setHome({ ...home, footerCol2Links: e.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div className="space-y-1 md:col-span-2">
+                      <label className={labelClass}>Texto de Copyright & CNPJ do Rodapé</label>
+                      <input 
+                        type="text"
+                        value={home.footerCopyright || ''}
+                        onChange={(e) => setHome({ ...home, footerCopyright: e.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex md:justify-end border-t border-stone-800 pt-6">
+                  <button type="submit" className={btnClass}>
+                    <Save className="w-4 h-4" />
+                    Salvar Alterações de Layout
                   </button>
                 </div>
               </form>

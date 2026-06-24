@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PageId } from '../types';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ArcadaneIcon from './ArcadaneBrandIcon';
-import { getSeoSettings, getCustomLogo } from '../utils/cmsStore';
+import { getSeoSettings, getCustomLogo, getHomeSettings, HomeSettings } from '../utils/cmsStore';
 
 interface HeaderProps {
   activePage: PageId;
@@ -27,6 +27,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
   const [isWhatsDropdownOpen, setIsWhatsDropdownOpen] = useState(false);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
+  const [home, setHome] = useState<HomeSettings>(() => getHomeSettings());
   
   const whatsRef = useRef<HTMLDivElement>(null);
 
@@ -51,6 +52,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
   useEffect(() => {
     const handleCmsChange = () => {
       setSeo(getSeoSettings());
+      setHome(getHomeSettings());
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
     return () => {
@@ -82,14 +84,24 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const parseSublinks = (sublinksStr?: string) => {
+    if (!sublinksStr) return [];
+    return sublinksStr.split(';').map(pair => {
+      const parts = pair.split('|');
+      const label = parts[0]?.trim();
+      const pageId = parts[1]?.trim() as PageId || PageId.Home;
+      return { label, pageId };
+    }).filter(x => x.label);
+  };
+
   const navItems = [
-    { id: PageId.Home, label: 'Início' },
-    { id: PageId.Services, label: 'Serviços' },
-    { id: PageId.Packages, label: 'Pacotes' },
-    { id: PageId.AboutUs, label: 'Quem Somos' },
-    { id: PageId.CustomTrip, label: 'Viagem Personalizada' },
-    { id: PageId.Blog, label: 'Blog' },
-    { id: PageId.ContactUs, label: 'Contato' }
+    { id: PageId.Home, label: home.menuLabelHome || 'Início' },
+    { id: PageId.Services, label: home.menuLabelServices || 'Serviços' },
+    { id: PageId.Packages, label: home.menuLabelPackages || 'Pacotes', sublinks: parseSublinks(home.submenuPackagesLinks) },
+    { id: PageId.AboutUs, label: home.menuLabelAboutUs || 'Quem Somos' },
+    { id: PageId.CustomTrip, label: home.menuLabelCustomTrip || 'Viagem Personalizada', sublinks: parseSublinks(home.submenuCustomTripLinks) },
+    { id: PageId.Blog, label: home.menuLabelBlog || 'Blog' },
+    { id: PageId.ContactUs, label: home.menuLabelContactUs || 'Contato' }
   ];
 
   const handleNavClick = (pageId: PageId) => {
@@ -142,24 +154,46 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
 
           {/* Desktop Navigation Capsule Pill */}
           <nav 
-            className="hidden xl:flex items-center gap-1.5 border border-white/15 bg-black/25 backdrop-blur-md py-1.5 px-4.5 rounded-full" 
+            className="hidden xl:flex items-center gap-1.5 border border-white/15 bg-black/25 backdrop-blur-md py-1.5 px-4.5 rounded-full animate-fadeIn" 
             id="desktop-nav"
           >
             {navItems.map((item) => {
               const isActive = activePage === item.id;
+              const hasSub = item.sublinks && item.sublinks.length > 0;
               return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  id={`nav-item-${item.id}`}
-                  className={`relative px-4 py-2 rounded-full text-[11px] font-sans font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-                    isActive 
-                      ? 'bg-white/20 text-white shadow-xs' 
-                      : 'text-white/70 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {item.label}
-                </button>
+                <div key={item.id} className="relative group">
+                  <button
+                    onClick={() => handleNavClick(item.id)}
+                    id={`nav-item-${item.id}`}
+                    className={`relative px-4 py-2 rounded-full text-[11px] font-sans font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1 ${
+                      isActive 
+                        ? 'bg-white/20 text-white shadow-xs' 
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {hasSub && <ChevronDown className="w-3 h-3 opacity-60 group-hover:rotate-180 transition-transform duration-300" />}
+                  </button>
+                  
+                  {hasSub && (
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                      <div className="bg-stone-900 border border-stone-800 rounded-2xl shadow-2xl p-2 w-52 text-left">
+                        {item.sublinks.map((sub, idx) => (
+                          <button
+                            key={idx}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleNavClick(sub.pageId);
+                            }}
+                            className="block w-full text-left px-3 py-2 text-[10.5px] text-white/70 hover:text-white hover:bg-white/10 rounded-xl font-sans font-bold uppercase tracking-wider transition-colors"
+                          >
+                            {sub.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
@@ -273,22 +307,37 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
             className="xl:hidden bg-stone-950/95 border-b border-stone-800 overflow-hidden backdrop-blur-xl absolute top-full left-0 right-0"
             id="mobile-nav-menu"
           >
-            <div className="px-4 pt-2 pb-6 space-y-1">
+            <div className="px-4 pt-2 pb-6 space-y-2">
               {navItems.map((item) => {
                 const isActive = activePage === item.id;
+                const hasSub = item.sublinks && item.sublinks.length > 0;
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavClick(item.id)}
-                    id={`mobile-nav-${item.id}`}
-                    className={`block w-full text-left px-4 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
-                      isActive 
-                        ? 'bg-white/15 text-white' 
-                        : 'text-white/60 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
+                  <div key={item.id} className="space-y-1">
+                    <button
+                      onClick={() => handleNavClick(item.id)}
+                      id={`mobile-nav-${item.id}`}
+                      className={`block w-full text-left px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
+                        isActive 
+                          ? 'bg-white/15 text-white' 
+                          : 'text-white/60 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                    {hasSub && (
+                      <div className="pl-6 space-y-1 border-l border-stone-850 ml-4">
+                        {item.sublinks.map((sub, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleNavClick(sub.pageId)}
+                            className="block w-full text-left px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/50 hover:text-white transition-colors"
+                          >
+                            • {sub.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>

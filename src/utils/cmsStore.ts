@@ -46,6 +46,27 @@ export interface HomeSettings {
   customTripSubtitle?: string;
   customTripButtonText?: string;
   widgetType?: 'befly' | 'whatsapp';
+  
+  // Custom Dynamic Layout configurations
+  preloaderType?: 'pulse' | 'spin' | 'flip' | 'modern' | 'zoom';
+  footerCopyright?: string;
+  footerCol1Title?: string;
+  footerCol1Links?: string; // Semicolon-separated label|pageId or label|url
+  footerCol2Title?: string;
+  footerCol2Links?: string; // Semicolon-separated label|pageId or label|url
+  
+  // Custom Menu & Sub-menu Configurations
+  menuLabelHome?: string;
+  menuLabelServices?: string;
+  menuLabelPackages?: string;
+  menuLabelAboutUs?: string;
+  menuLabelCustomTrip?: string;
+  menuLabelBlog?: string;
+  menuLabelContactUs?: string;
+  
+  // Submenus configuration strings (label|targetPageId or label|url)
+  submenuPackagesLinks?: string;
+  submenuCustomTripLinks?: string;
 }
 
 export interface PromoPackage {
@@ -102,7 +123,28 @@ const DEFAULT_HOME_SETTINGS: HomeSettings = {
   customTripTitle: "Viagens personalizadas:",
   customTripSubtitle: "Experiências exclusivas, desenhadas para você.",
   customTripButtonText: "Clique e fale com a Arcadane!",
-  widgetType: "befly"
+  widgetType: "befly",
+  
+  // Custom Dynamic Layout configurations
+  preloaderType: "pulse",
+  footerCopyright: "© 2026 Arcadane Viagens LTDA. Todos os direitos reservados. CNPJ 48.799.471/0001-38.",
+  footerCol1Title: "Destinos",
+  footerCol1Links: "África & Ilhas Exóticas|packages;América do Sul & Central|packages;Ásia Imperial & Moderna|packages;Caribe Paradisíaco|packages;Europa Clássica & Secreta|packages;Oceania dos Sonhos|packages;Estados Unidos & Parques|packages",
+  footerCol2Title: "Descubra-se no Mundo",
+  footerCol2Links: "Roteiro Exclusivo de Lua de Mel|custom_trip;Viagens Deslumbrantes de Trem|packages;Cruzeiros de Alto Luxo & Navegações|packages;Viagens com a Família|packages;Bem-Estar, Retiros & Conexão|custom_trip;Safáris Fotográficos na África|packages;Esqui, Neve & Chalés de Luxo|custom_trip",
+  
+  // Custom Menu & Sub-menu Configurations
+  menuLabelHome: "Início",
+  menuLabelServices: "Serviços",
+  menuLabelPackages: "Pacotes",
+  menuLabelAboutUs: "Quem Somos",
+  menuLabelCustomTrip: "Viagem Personalizada",
+  menuLabelBlog: "Blog",
+  menuLabelContactUs: "Contato",
+  
+  // Submenus configuration strings (label|targetPageId or label|url)
+  submenuPackagesLinks: "África & Ilhas|packages;América do Sul|packages;Ásia|packages;Caribe|packages;Europa|packages;Oceania|packages;EUA & Parques|packages",
+  submenuCustomTripLinks: "Lua de Mel Exclusiva|custom_trip;Navegações de Luxo|packages;Viagens de Trem|packages;Estações de Esqui|custom_trip"
 };
 
 export const DEFAULT_PROMO_PACKAGES: PromoPackage[] = [

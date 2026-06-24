@@ -19,13 +19,14 @@ import WhatsAppSelectorModal from './components/WhatsAppSelectorModal';
 import ArcadaneIcon from './components/ArcadaneBrandIcon';
 import RafesVisualBuilder from './components/RafesVisualBuilder';
 import { AnimatePresence, motion } from 'motion/react';
-import { getSeoSettings, applySeoSettings, getCustomLogo } from './utils/cmsStore';
+import { getSeoSettings, applySeoSettings, getCustomLogo, getHomeSettings, HomeSettings } from './utils/cmsStore';
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageId>(PageId.Home);
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [homeSettings, setHomeSettings] = useState<HomeSettings>(() => getHomeSettings());
 
   useEffect(() => {
     const logo = getCustomLogo();
@@ -45,9 +46,10 @@ export default function App() {
     // Apply SEO and configurations immediately
     applySeoSettings(getSeoSettings());
 
-    // Listen to changes from CMS to immediately re-apply SEO
+    // Listen to changes from CMS to immediately re-apply SEO & Home Settings
     const handleCmsChange = () => {
       applySeoSettings(getSeoSettings());
+      setHomeSettings(getHomeSettings());
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
 
@@ -117,14 +119,78 @@ export default function App() {
               className="flex flex-col items-center max-w-md px-6"
             >
               {/* Spinning/pulsating branding mark (original image or vector fallback) */}
-              <img 
-                src={customLogo || "/logo.svg"} 
-                alt="Arcadane Viagens" 
-                className="h-44 sm:h-56 md:h-64 lg:h-72 max-w-[340px] sm:max-w-[420px] md:max-w-[480px] w-auto object-contain mb-8 animate-pulse" 
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = "/logo.svg";
-                }}
-              />
+              {(!homeSettings.preloaderType || homeSettings.preloaderType === 'pulse') && (
+                <img 
+                  src={customLogo || "/logo.svg"} 
+                  alt="Arcadane Viagens" 
+                  className="h-44 sm:h-56 md:h-64 lg:h-72 max-w-[340px] sm:max-w-[420px] md:max-w-[480px] w-auto object-contain mb-8 animate-pulse" 
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/logo.svg";
+                  }}
+                />
+              )}
+
+              {homeSettings.preloaderType === 'spin' && (
+                <div className="relative mb-8 flex items-center justify-center">
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                    className="absolute -inset-6 rounded-full border-2 border-dashed border-[#AF4934]/50"
+                  />
+                  <img 
+                    src={customLogo || "/logo.svg"} 
+                    alt="Arcadane Viagens" 
+                    className="h-44 sm:h-56 md:h-64 lg:h-72 max-w-[340px] sm:max-w-[420px] md:max-w-[480px] w-auto object-contain relative z-10" 
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "/logo.svg";
+                    }}
+                  />
+                </div>
+              )}
+
+              {homeSettings.preloaderType === 'flip' && (
+                <motion.img 
+                  src={customLogo || "/logo.svg"} 
+                  alt="Arcadane Viagens" 
+                  animate={{ rotateY: [0, 180, 360] }}
+                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                  className="h-44 sm:h-56 md:h-64 lg:h-72 max-w-[340px] sm:max-w-[420px] md:max-w-[480px] w-auto object-contain mb-8" 
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/logo.svg";
+                  }}
+                />
+              )}
+
+              {homeSettings.preloaderType === 'modern' && (
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1, y: [0, -6, 0] }}
+                  transition={{ duration: 0.8, y: { repeat: Infinity, duration: 3, ease: "easeInOut" } }}
+                  className="mb-8"
+                >
+                  <img 
+                    src={customLogo || "/logo.svg"} 
+                    alt="Arcadane Viagens" 
+                    className="h-44 sm:h-56 md:h-64 lg:h-72 max-w-[340px] sm:max-w-[420px] md:max-w-[480px] w-auto object-contain" 
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "/logo.svg";
+                    }}
+                  />
+                </motion.div>
+              )}
+
+              {homeSettings.preloaderType === 'zoom' && (
+                <motion.img 
+                  src={customLogo || "/logo.svg"} 
+                  alt="Arcadane Viagens" 
+                  animate={{ scale: [0.93, 1.07, 0.93] }}
+                  transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+                  className="h-44 sm:h-56 md:h-64 lg:h-72 max-w-[340px] sm:max-w-[420px] md:max-w-[480px] w-auto object-contain mb-8" 
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/logo.svg";
+                  }}
+                />
+              )}
 
               {/* Progress feedback */}
               <div className="w-48 h-[2px] bg-white/20 rounded-full overflow-hidden relative mb-3">
