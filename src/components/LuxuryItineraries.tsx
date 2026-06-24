@@ -52,7 +52,7 @@ export default function LuxuryItineraries() {
       title: "Roteiro Exclusivo das Maldivas",
       subTitle: "Bangalôs sobre a água e pôr do sol eterno em águas turquesas",
       operator: "Consultoria Premium Arcadane",
-      duration: "8 Dias / 7 Noites",
+      duration: "8 Dias",
       tag: "Maldivas • Oceano Índico",
       image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=800",
       description: "Desfrute de uma experiência majestosa no paraíso das Maldivas. Hospede-se nos resorts mais exclusivos com mordomo privativo, jantares sob as estrelas na areia branca e passeios de iate privativos.",
@@ -64,7 +64,7 @@ export default function LuxuryItineraries() {
       ],
       link: "https://www.arcadaneviagens.com",
       badgeColor: "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
-      waMessage: "Olá Arcadane! Vi o roteiro de luxo curado 'Roteiro Exclusivo das Maldivas' no site e gostaria de agendar uma consultoria exclusiva com vocês."
+      waMessage: "Olá Arcadane! Vi o roteiro exclusivo curado 'Roteiro Exclusivo das Maldivas' no site e gostaria de agendar uma consultoria exclusiva com vocês."
     };
     const updated = [...trips, newTrip];
     setTrips(updated);
@@ -73,7 +73,7 @@ export default function LuxuryItineraries() {
 
   const handleDeleteTrip = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm("⚠️ Tem certeza que deseja remover este roteiro de luxo do site?")) {
+    if (window.confirm("⚠️ Tem certeza que deseja remover este roteiro exclusivo do site?")) {
       const updated = trips.filter(t => t.id !== id);
       setTrips(updated);
       saveLuxuryItineraries(updated);
@@ -96,21 +96,21 @@ export default function LuxuryItineraries() {
             className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-sans font-bold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Adicionar Novo Roteiro de Luxo</span>
+            <span>Adicionar Novo Roteiro Exclusivo</span>
           </button>
         </div>
       )}
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-stone-200">
         <div className="space-y-3 text-left">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-blue/10 text-brand-blue border border-brand-blue/15 font-mono text-[10px] uppercase tracking-widest font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-brand-blue animate-pulse" /> Roteiros de Altíssimo Padrão
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-blue/5 text-brand-blue border border-brand-blue/10 font-sans text-xs font-semibold">
+            <Sparkles className="w-3.5 h-3.5 text-brand-blue" /> Uma seleção especial de viagens para quem busca o extraordinário.
           </div>
           <h2 className="font-display font-black text-3xl sm:text-4.5xl text-stone-900 tracking-tight leading-tight">
-            Curadoria de Roteiros Prontos de Luxo
+            Curadoria Signature
           </h2>
           <p className="text-sm sm:text-base text-stone-500 max-w-2xl leading-relaxed">
-            Selecionei duas propostas globais de elite, minuciosamente arquitetadas com os maiores operadores do país. Roteiros impecáveis, com suporte 24h e curadoria premium.
+            Roteiros exclusivos, experiências raras e serviços escolhidos para transformar cada etapa da viagem em algo verdadeiramente único.
           </p>
         </div>
         

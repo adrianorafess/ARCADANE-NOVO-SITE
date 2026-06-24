@@ -127,7 +127,7 @@ export const PACKAGES: PackageItem[] = [
     category: 'exotico',
     description: 'Descubra a ilha dos deuses na Indonésia. Roteiro exclusivo mesclando templos sagrados em Ubud, as falésias de Uluwatu e a tranquilidade espiritual do sudeste asiático.',
     price: 'Sob Consulta',
-    duration: '12 Dias / 10 Noites',
+    duration: '12 Dias',
     imageWord: 'bali',
     highlights: ['Templos Sagrados de Ubud', 'Entardecer em Uluwatu', 'Hospedagem de Charme', 'Guia em Português/Espanhol']
   },
@@ -137,7 +137,7 @@ export const PACKAGES: PackageItem[] = [
     category: 'exotico',
     description: 'Uma combinação mágica entre a vida selvagem pura da Tanzânia e as águas azul-turquesa cristalinas e bangalôs sobre a água nas Maldivas.',
     price: 'Sob Consulta',
-    duration: '15 Dias / 13 Noites',
+    duration: '15 Dias',
     imageWord: 'safari',
     highlights: ['Safári Privativo 4x4', 'Avistamento dos Big Five', 'Bangalôs Sobre as Águas', 'Regime All-Inclusive nas Maldivas']
   },
@@ -147,7 +147,7 @@ export const PACKAGES: PackageItem[] = [
     category: 'nacional',
     description: 'Viva o charme europeu da Serra Gaúcha. Roteiro gastronômico exclusivo, passeios pelas vinícolas boutique do Vale dos Vinhedos e hospedagem de altíssimo padrão.',
     price: 'Sob Consulta',
-    duration: '5 Dias / 4 Noites',
+    duration: '5 Dias',
     imageWord: 'gramado',
     highlights: ['Tour Vale dos Vinhedos', 'Jantar de Fondue Exclusivo', 'Hospedagem Boutique', 'Assistência 24h Local']
   },
@@ -157,7 +157,7 @@ export const PACKAGES: PackageItem[] = [
     category: 'nacional',
     description: 'A rota das emoções definitiva. Lagoas de águas doces e cristalinas em meio a dunas gigantescas, finalizando com o pôr do sol inesquecível em Jeri.',
     price: 'Sob Consulta',
-    duration: '8 Dias / 7 Noites',
+    duration: '8 Dias',
     imageWord: 'nordeste',
     highlights: ['Circuito Lagoa Azul & Bonita', 'Transfer 4x4 Privativo', 'Pousadas de Charme', 'Passeio de Jangada no Rio Preguiças']
   },
@@ -167,7 +167,7 @@ export const PACKAGES: PackageItem[] = [
     category: 'nacional',
     description: 'Diversão e sofisticação no maior parque temático da América Latina em Penha, hospedando-se na vibrante Balneário Camboriú, cercado pelas praias mais elegantes.',
     price: 'Sob Consulta',
-    duration: '4 Dias / 3 Noites',
+    duration: '4 Dias',
     imageWord: 'parque',
     highlights: ['Ingresso Passe 2 Dias Beto Carrero', 'Hospedagem em Balneário Camboriú', 'Transfer Privativo', 'Tour Panorâmico na Roda Gigante FG Big Wheel']
   },
@@ -177,7 +177,7 @@ export const PACKAGES: PackageItem[] = [
     category: 'cruzeiro',
     description: 'Navegue a bordo dos transatlânticos mais luxuosos da MSC ou Costa Cruzeiros. Gastronomia internacional, shows estilo Broadway e as praias mais bonitas do Brasil.',
     price: 'Sob Consulta',
-    duration: '8 Dias / 7 Noites',
+    duration: '8 Dias',
     imageWord: 'cruzeiro',
     highlights: ['Cabine com Varanda', 'Todas as Refeições Inclusas', 'Paradas em Ilhabela, Búzios e Salvador', 'Festas e Shows Noturnos']
   },
@@ -187,7 +187,7 @@ export const PACKAGES: PackageItem[] = [
     category: 'eua',
     description: 'Roteiro completo para a Disney e Universal Studios. Inclui assessoria exclusiva para compra de ingressos, agendamento de fura-filas (Genie+) e hospedagem impecável.',
     price: 'Sob Consulta',
-    duration: '10 Dias / 8 Noites',
+    duration: '10 Dias',
     imageWord: 'disney',
     highlights: ['Planejamento Dia a Dia de Parques', 'Ingressos Disney & Universal', 'Hospedagem em Resort Parceiro', 'Guia Brasileiro de Suporte']
   },
@@ -197,7 +197,7 @@ export const PACKAGES: PackageItem[] = [
     category: 'eua',
     description: 'Sinta a pulsação da maior metrópole do mundo. Roteiro abrangente unindo o Central Park, estátua da liberdade, mirantes modernos (Summit) e um espetáculo inesquecível na Broadway.',
     price: 'Sob Consulta',
-    duration: '7 Dias / 5 Noites',
+    duration: '7 Dias',
     imageWord: 'ny',
     highlights: ['Ingresso Summit One Vanderbilt', 'Ingresso Musical Broadway', 'Tour de Contrastes Privativo', 'Hospedagem Central em Manhattan']
   }

@@ -1308,7 +1308,7 @@ export default function AdminView() {
                             category: 'exotico',
                             description: '',
                             price: 'Sob Consulta',
-                            duration: '10 Dias / 8 Noites',
+                            duration: '10 Dias',
                             imageWord: 'bali',
                             highlights: ['', '']
                           });
@@ -1401,13 +1401,13 @@ export default function AdminView() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className={labelClass}>Duração do Passeio / Noites</label>
+                        <label className={labelClass}>Duração do Passeio (Dias)</label>
                         <input 
                           type="text" 
                           value={editingPackage.duration} 
                           onChange={(e) => setEditingPackage({ ...editingPackage, duration: e.target.value })}
                           className={inputClass}
-                          placeholder="Ex: 10 Dias / 8 Noites"
+                          placeholder="Ex: 10 Dias"
                           required
                         />
                       </div>

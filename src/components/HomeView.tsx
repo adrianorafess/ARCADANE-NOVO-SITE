@@ -538,7 +538,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
   // Video Background URL - State fully persistent via LocalStorage and HomeSettings CMS
   const [videoUrl, setVideoUrl] = useState(() => {
     const homeSettingsVal = getHomeSettings().heroVideoUrl;
-    if (homeSettingsVal) return homeSettingsVal;
+    if (homeSettingsVal && !homeSettingsVal.includes('mixkit-safari')) return homeSettingsVal;
 
     const saved = localStorage.getItem('arcadane_video_url');
     // Automigrate old safari assets to the new requested premium YouTube experience
@@ -846,24 +846,6 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
             {/* Immersive Title with Elegant Hand-picked Fonts and Typewriter Animation */}
             <TypewriterTitle rafesOpen={rafesOpen} editField={editField} />
 
-            {/* Subtitle! Display the heroSubtitle and make it clickable and editable in Rafes edit mode */}
-            <p 
-              className={`text-sm sm:text-base md:text-lg text-white/80 max-w-2xl mx-auto font-sans leading-relaxed select-none ${
-                rafesOpen ? 'border border-dashed border-amber-500 bg-amber-500/15 p-2 rounded-xl cursor-pointer hover:bg-amber-500/10 text-amber-200' : ''
-              }`}
-              onClick={() => {
-                if (rafesOpen) {
-                  editField('heroSubtitle', 'Editar Subtítulo do Topo', homeSettings.heroSubtitle || 'Curadoria de destinos...', false, (newVal) => {
-                    const next = { ...homeSettings, heroSubtitle: newVal };
-                    setHomeSettings(next);
-                    saveHomeSettings(next);
-                  });
-                }
-              }}
-              title={rafesOpen ? "Clique para editar o subtítulo" : undefined}
-            >
-              {homeSettings.heroSubtitle || 'Curadoria de destinos exclusivos, hotéis extraordinários e planejamento técnico de excelência.'}
-            </p>
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 onClick={togglePlay}

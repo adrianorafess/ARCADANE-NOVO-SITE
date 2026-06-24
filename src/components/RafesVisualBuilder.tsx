@@ -258,7 +258,7 @@ export default function RafesVisualBuilder({ activePage }: { activePage: PageId 
       category: 'exotico',
       description: 'Uma incrível imersão cultural e histórica desenhada de forma cirúrgica para que você aproveite cada instante com exclusividade e elegância.',
       price: 'Sob Consulta',
-      duration: '8 Dias / 7 Noites',
+      duration: '8 Dias',
       imageWord: 'bali',
       highlights: ['Consultoria de viagem VIP', 'Hospedagem em hotel boutique', 'Aéreo executivo ou de primeira classe', 'Concierge local exclusivo']
     };
@@ -878,7 +878,7 @@ export default function RafesVisualBuilder({ activePage }: { activePage: PageId 
                             onClick={() => {
                               const nTitle = window.prompt("Título do Roteiro:", p.title);
                               if (nTitle && nTitle.trim() !== "") {
-                                const nDays = window.prompt("Duração (ex: 8 Dias / 7 Noites):", p.duration);
+                                const nDays = window.prompt("Duração (ex: 8 Dias):", p.duration);
                                 const bgUrl = window.prompt("Link (URL) de uma linda imagem personalizada para o card:", (p as any).image || '');
                                 const desc = window.prompt("Descrição resumida do card:", p.description);
 

@@ -89,7 +89,7 @@ const DEFAULT_SEO_SETTINGS: SeoSettings = {
 const DEFAULT_HOME_SETTINGS: HomeSettings = {
   heroTitle: "A arte de viajar <span class=\"font-serif font-normal italic text-brand-secondary\">sob medida</span>",
   heroSubtitle: "Curadoria de destinos exclusivos, hotéis extraordinários e planejamento técnico de excelência.",
-  heroVideoUrl: "https://assets.mixkit.co/videos/preview/mixkit-safari-under-sunset-sky-43152-large.mp4",
+  heroVideoUrl: "https://www.youtube.com/watch?v=1VhezN-EFfg",
   aboutUsHeadline: "Nossa trajetória, nosso propósito",
   aboutUsSubheadline: "Sua jornada desenhada por especialistas",
   aboutUsText: "A Arcadane Viagens nasceu com o propósito de transformar o simples ato de viajar em uma experiência de significado. Unimos planejamento técnico e sensibilidade humana para criar roteiros sob medida, que refletem o estilo, o ritmo e os sonhos de cada cliente.\n\nMais do que uma agência de viagens convencional, somos uma consultoria de experiências completas. Cuidamos com amor de cada detalhe, desde a primeira conversa até o seu retorno, com total transparência, segurança e um atendimento que é verdadeiramente próximo de você.\n\nAcreditamos que viajar é uma das formas mais bonitas de viver e registrar memórias. É por isso que trabalhamos todos os dias para transformar destinos marcantes em histórias reais.",
@@ -283,14 +283,14 @@ export const DEFAULT_LUXURY_TRIPS: LuxuryTrip[] = [
     ],
     link: "https://queensberry.com.br/programa/detalhes/tourregular/asia/R024/belezas-da-china/",
     badgeColor: "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
-    waMessage: "Olá Arcadane! Vi o roteiro de luxo curado 'Belezas da China' (Queensberry) no site e gostaria de agendar uma consultoria exclusiva com vocês."
+    waMessage: "Olá Arcadane! Vi o roteiro exclusivo curado 'Belezas da China' (Queensberry) no site e gostaria de agendar uma consultoria exclusiva com vocês."
   },
   {
     id: "islandia-magia-luzes",
     title: "Elas Viajam Islândia: A Magia das Luzes do Norte",
     subTitle: "Grupo Exclusivo para Mulheres na Terra do Gelo e Fogo",
     operator: "Orinter Especial",
-    duration: "10 Dias / 8 Noites",
+    duration: "10 Dias",
     tag: "Aurora Boreal & Bem-Estar",
     image: "https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&q=80&w=800",
     description: "Uma jornada extraordinária desenhada especialmente para um grupo unido de mulheres audazes. Contemplem o céu noturno dançando em tons esmeralda nas caçadas guiadas de Aurora Boreal e relaxem nas águas termais rejuvenescedoras da mística Blue Lagoon.",
@@ -302,7 +302,7 @@ export const DEFAULT_LUXURY_TRIPS: LuxuryTrip[] = [
     ],
     link: "https://online.orinter.com.br/orcamento-web/pt/link?token=T1JJIHwgMTI5MjQyMTkgfCBDM0Q2MUNBNDc3M0Q5Q0U4NjkwODI3MzIyRkZBMDA4Mw==",
     badgeColor: "bg-brand-secondary/20 text-brand-chocolate border-brand-secondary/30",
-    waMessage: "Olá Arcadane! Estou muito interessada no grupo de luxo 'Elas Viajam Islândia: Luzes do Norte' (Orinter) e gostaria de solicitar uma consultoria para mim."
+    waMessage: "Olá Arcadane! Estou muito interessada no grupo exclusivo 'Elas Viajam Islândia: Luzes do Norte' (Orinter) e gostaria de solicitar uma consultoria para mim."
   }
 ];
 
