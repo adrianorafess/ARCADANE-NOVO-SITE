@@ -1,0 +1,63 @@
+{
+  "collections": {
+    "cms": {
+      "documents": {
+        "services": {
+          "fields": {
+            "data": "array"
+          }
+        },
+        "packages": {
+          "fields": {
+            "data": "array"
+          }
+        },
+        "promo_packages": {
+          "fields": {
+            "data": "array"
+          }
+        },
+        "blog_posts": {
+          "fields": {
+            "data": "array"
+          }
+        },
+        "testimonials": {
+          "fields": {
+            "data": "array"
+          }
+        },
+        "seo_settings": {
+          "fields": {
+            "data": "map"
+          }
+        },
+        "home_settings": {
+          "fields": {
+            "data": "map"
+          }
+        },
+        "luxury_trips": {
+          "fields": {
+            "data": "array"
+          }
+        },
+        "founders_photo": {
+          "fields": {
+            "data": "string"
+          }
+        },
+        "trajectory_photo": {
+          "fields": {
+            "data": "string"
+          }
+        },
+        "custom_logo": {
+          "fields": {
+            "data": "string"
+          }
+        }
+      }
+    }
+  }
+}

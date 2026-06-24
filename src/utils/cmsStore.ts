@@ -1,6 +1,9 @@
 import { ServiceItem, TestimonialItem, PackageItem, BlogPost, LuxuryTrip } from '../types';
 import { SERVICES as DEFAULT_SERVICES, TESTIMONIALS as DEFAULT_TESTIMONIALS, PACKAGES as DEFAULT_PACKAGES, BLOG_POSTS as DEFAULT_BLOG_POSTS } from '../data';
 import fallbackData from './cmsStoreFallback.json';
+import { saveToFirebase, setupFirebaseRealtimeListener } from './firebase';
+
+let isSyncingFromFirebase = false;
 
 export interface SeoSettings {
   siteTitle: string;
@@ -680,37 +683,63 @@ export function broadcastChange(): void {
   }
 }
 
-// Automatic synchronization from browser local storage to workspace file on server
+// Automatic synchronization from browser local storage to Firebase and Node workspace backup server
 export async function autoSyncToServer(): Promise<void> {
   if (typeof window === 'undefined') return;
+  if (isSyncingFromFirebase) return;
+
   try {
-    const dataToSync = {
-      arcadane_cms_services: JSON.parse(localStorage.getItem(KEYS.SERVICES) || 'null'),
-      arcadane_cms_packages: JSON.parse(localStorage.getItem(KEYS.PACKAGES) || 'null'),
-      arcadane_cms_promo_packages: JSON.parse(localStorage.getItem(KEYS.PROMO_PACKAGES) || 'null'),
-      arcadane_cms_blog_posts: JSON.parse(localStorage.getItem(KEYS.BLOG_POSTS) || 'null'),
-      arcadane_cms_testimonials: JSON.parse(localStorage.getItem(KEYS.TESTIMONIALS) || 'null'),
-      arcadane_cms_seo_settings: JSON.parse(localStorage.getItem(KEYS.SEO) || 'null'),
-      arcadane_cms_home_settings: JSON.parse(localStorage.getItem(KEYS.HOME) || 'null'),
-      arcadane_cms_luxury_trips: JSON.parse(localStorage.getItem(KEYS.LUXURY_TRIPS) || 'null'),
-      arcadane_founders_photo: localStorage.getItem('arcadane_founders_photo'),
-      arcadane_trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
-      arcadane_custom_logo: localStorage.getItem('arcadane_custom_logo')
+    const dataToSync: Record<string, any> = {
+      services: JSON.parse(localStorage.getItem(KEYS.SERVICES) || 'null'),
+      packages: JSON.parse(localStorage.getItem(KEYS.PACKAGES) || 'null'),
+      promo_packages: JSON.parse(localStorage.getItem(KEYS.PROMO_PACKAGES) || 'null'),
+      blog_posts: JSON.parse(localStorage.getItem(KEYS.BLOG_POSTS) || 'null'),
+      testimonials: JSON.parse(localStorage.getItem(KEYS.TESTIMONIALS) || 'null'),
+      seo_settings: JSON.parse(localStorage.getItem(KEYS.SEO) || 'null'),
+      home_settings: JSON.parse(localStorage.getItem(KEYS.HOME) || 'null'),
+      luxury_trips: JSON.parse(localStorage.getItem(KEYS.LUXURY_TRIPS) || 'null'),
+      founders_photo: localStorage.getItem('arcadane_founders_photo'),
+      trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
+      custom_logo: localStorage.getItem('arcadane_custom_logo'),
+      
+      // Extended layout parameters for absolute multi-device synchronicity
+      bento_destinations: JSON.parse(localStorage.getItem('arcadane_bento_destinations') || 'null'),
+      video_url: localStorage.getItem('arcadane_video_url'),
+      search_mode: localStorage.getItem('arcadane_search_mode'),
+      typewriter_endings: JSON.parse(localStorage.getItem('arcadane_typewriter_endings') || 'null')
     };
 
-    // Only sync if at least some customized data exists
-    const hasAnyLocalData = Object.values(dataToSync).some(val => val !== null);
-    if (!hasAnyLocalData) return;
+    // Save each individual non-null key to Firebase Firestore so they are loaded immediately on Hostinger or other devices
+    for (const [key, value] of Object.entries(dataToSync)) {
+      if (value !== null && value !== undefined) {
+        saveToFirebase(key, value);
+      }
+    }
+
+    // Failsafe backup: also update backend workspace file
+    const legacyData = {
+      arcadane_cms_services: dataToSync.services,
+      arcadane_cms_packages: dataToSync.packages,
+      arcadane_cms_promo_packages: dataToSync.promo_packages,
+      arcadane_cms_blog_posts: dataToSync.blog_posts,
+      arcadane_cms_testimonials: dataToSync.testimonials,
+      arcadane_cms_seo_settings: dataToSync.seo_settings,
+      arcadane_cms_home_settings: dataToSync.home_settings,
+      arcadane_cms_luxury_trips: dataToSync.luxury_trips,
+      arcadane_founders_photo: dataToSync.founders_photo,
+      arcadane_trajectory_photo: dataToSync.trajectory_photo,
+      arcadane_custom_logo: dataToSync.custom_logo
+    };
 
     await fetch('/api/save-cms-state', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(dataToSync),
+      body: JSON.stringify(legacyData),
     });
   } catch (error) {
-    console.warn('Silent CMS state background sync failed:', error);
+    console.warn('Silent CMS state background sync to server/Firebase failed:', error);
   }
 }
 
@@ -853,6 +882,55 @@ export async function initializeCmsStore(): Promise<void> {
   } catch (err) {
     console.info('Server CMS state fetch not available or failed:', err);
   }
+
+  // 3. Connect to Firebase Firestore for modern real-time instant synchronization!
+  try {
+    console.log('[Firebase] Setting up bidirectional Realtime Firestore Syncer...');
+    setupFirebaseRealtimeListener((key, remoteData) => {
+      if (typeof window === 'undefined') return;
+
+      let localKey: string | null = null;
+      if (key === 'services') localKey = KEYS.SERVICES;
+      else if (key === 'packages') localKey = KEYS.PACKAGES;
+      else if (key === 'promo_packages') localKey = KEYS.PROMO_PACKAGES;
+      else if (key === 'blog_posts') localKey = KEYS.BLOG_POSTS;
+      else if (key === 'testimonials') localKey = KEYS.TESTIMONIALS;
+      else if (key === 'seo_settings') localKey = KEYS.SEO;
+      else if (key === 'home_settings') localKey = KEYS.HOME;
+      else if (key === 'luxury_trips') localKey = KEYS.LUXURY_TRIPS;
+      else if (key === 'founders_photo') localKey = 'arcadane_founders_photo';
+      else if (key === 'trajectory_photo') localKey = 'arcadane_trajectory_photo';
+      else if (key === 'custom_logo') localKey = 'arcadane_custom_logo';
+      else if (key === 'bento_destinations') localKey = 'arcadane_bento_destinations';
+      else if (key === 'video_url') localKey = 'arcadane_video_url';
+      else if (key === 'search_mode') localKey = 'arcadane_search_mode';
+      else if (key === 'typewriter_endings') localKey = 'arcadane_typewriter_endings';
+
+      if (localKey && remoteData !== undefined && remoteData !== null) {
+        const currentVal = localStorage.getItem(localKey);
+        const remoteValStr = typeof remoteData === 'string' ? remoteData : JSON.stringify(remoteData);
+
+        if (currentVal !== remoteValStr) {
+          console.log(`[Firebase] Remotely updated key "${key}" detected. Applying to browser...`);
+
+          isSyncingFromFirebase = true;
+          try {
+            localStorage.setItem(localKey, remoteValStr);
+            if (key === 'seo_settings') {
+              applySeoSettings(remoteData);
+            }
+            broadcastChange();
+          } finally {
+            setTimeout(() => {
+              isSyncingFromFirebase = false;
+            }, 50);
+          }
+        }
+      }
+    });
+  } catch (fbErr) {
+    console.warn('[Firebase] Snapshot subscriber initialization failed:', fbErr);
+  }
 }
 
 if (typeof window !== 'undefined') {
@@ -865,3 +943,4 @@ if (typeof window !== 'undefined') {
     autoSyncToServer();
   });
 }
+
