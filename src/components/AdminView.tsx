@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Key, LogOut, Settings, Globe, Film, Sparkles, Briefcase, Compass, Award, 
   Heart, AlertCircle, CheckCircle, Save, Undo, Plus, Trash2, Edit3, 
-  Eye, EyeOff, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag, Download 
+  Eye, EyeOff, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag, Download, Users 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -54,6 +54,114 @@ export default function AdminView() {
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<'seo' | 'home' | 'layout' | 'services' | 'packages' | 'promos' | 'blog' | 'testimonials' | 'reset'>('seo');
+
+  // Typewriter phrases state
+  const [typewriterEndings, setTypewriterEndings] = useState<string>(() => {
+    const saved = localStorage.getItem('arcadane_typewriter_endings');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.join(', ');
+      } catch (e) {}
+    }
+    return [
+      "o mundo.",
+      "novos olhares.",
+      "outras versões de si.",
+      "caminhos por dentro.",
+      "lugares que ficam.",
+      "histórias pelo caminho.",
+      "o extraordinário.",
+      "novos sentidos.",
+      "que o mundo é maior.",
+      "memórias antes de viver.",
+      "a beleza do agora.",
+      "o que te move.",
+      "novos começos.",
+      "o mundo e voltar diferente.",
+      "que há muito além daqui."
+    ].join(', ');
+  });
+
+  // Seal / Medallion custom states
+  const [sealTopText, setSealTopText] = useState(() => localStorage.getItem('arcadane_seal_top_text') || "ARCADANE CURADORIA EXCLUSIVA");
+  const [sealBottomText, setSealBottomText] = useState(() => localStorage.getItem('arcadane_seal_bottom_text') || "VIAGENS EXTRAORDINÁRIAS");
+  const [sealNumber, setSealNumber] = useState(() => localStorage.getItem('arcadane_seal_number') || "10");
+  const [sealLabel1, setSealLabel1] = useState(() => localStorage.getItem('arcadane_seal_label1') || "ANOS DE");
+  const [sealLabel2, setSealLabel2] = useState(() => localStorage.getItem('arcadane_seal_label2') || "EXPERIÊNCIA");
+
+  // Quiz Banner Custom states
+  const [quizBannerBadge, setQuizBannerBadge] = useState(() => localStorage.getItem('arcadane_quiz_banner_badge') || "EXPERIÊNCIA INTERATIVA EXCLUSIVA");
+  const [quizBannerTitle, setQuizBannerTitle] = useState(() => localStorage.getItem('arcadane_quiz_banner_title') || "Descubra seu estilo de viajante e seu destino ideal");
+  const [quizBannerDesc, setQuizBannerDesc] = useState(() => localStorage.getItem('arcadane_quiz_banner_desc') || "Responda algumas perguntas rápidas de curadoria e descubra em tempo real qual é a atmosfera global exata que mais sincroniza com você, além de receber sugestões exclusivas prontas para planejar com nossos consultores.");
+
+  // Bento Destinations list state
+  const [bentoDestinations, setBentoDestinations] = useState<any[]>(() => {
+    const saved = localStorage.getItem('arcadane_bento_destinations');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return [
+      {
+        id: 1,
+        title: "Destinos Exóticos",
+        largeTitle: "Destinos exóticos para viajar: experiências únicas que vão além do comum",
+        image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&q=80&w=1200",
+        shortDesc: "Viagens extraordinárias para lugares remotos e fascinantes.",
+        paragraphs: [
+          "Viajar para destinos exóticos é, muitas vezes, sair do roteiro tradicional e se permitir viver algo verdadeiramente transformador.",
+          "São viagens que não se resumem a fotos bonitas, elas despertam sensações, ampliam perspectivas e criam memórias que permanecem por toda a vida.",
+          "Entre os destinos exóticos mais desejados do mundo, Bali, na Indonésia, encanta pela espiritualidade e pela conexão com a natureza. Já o Deserto do Atacama, no Chile, impressiona pela imensidão silenciosa e pelas paisagens quase surreais.",
+          "Mas existe uma experiência que eleva esse concept a outro nível: o safari na África.",
+          "Explorar regiões como o Serengeti, na Tanzânia, ou reservas no Quênia é vivenciar a natureza em seu estado mais puro. Observar animais selvagens em liberdade, acompanhar o ritmo da vida natural e sentir a grandiosidade daquele cenário é algo difícil de traduzir em palavras e impossível de esquecer.",
+          "Destinos como Maldivas também entram nesse universo, combinando exclusividade, tranquilidade e paisagens que parecem irreais. Já em Marrakech, no Marrocos, cada detalhe, das cores aos aromas, transforma o simples ato de caminhar em uma experiência cultural profunda.",
+          "Mas viajar para lugares assim exige mais do que vontade.",
+          "Questões como melhor época, deslocamentos internos, escolha de hospedagens e experiências fazem toda a diferença entre uma viagem comum e uma jornada memorável.",
+          "E é justamente nesse nível de detalhe que viagens bem planejadas se destacam.",
+          "Porque quando tudo está alinhado, o viajante deixa de se preocupar com a logística e passa a viver o que realmente importa: o momento."
+        ]
+      },
+      {
+        id: 2,
+        title: "Nacionais",
+        largeTitle: "Destinos nacionais para viajar: lugares incríveis no Brasil que você precisa conhecer",
+        image: "https://images.unsplash.com/photo-1590418606746-018840f9cd0f?auto=format&fit=crop&q=80&w=1200",
+        shortDesc: "Descubra a grandiosidade e os paraísos secretos do Brasil.",
+        paragraphs: [
+          "O Brasil é um dos países mais ricos do mundo quando o assunto é diversidade de paisagens e experiências.",
+          "Ainda assim, muitos viajantes acabam subestimando o potencial de destinos nacionais, sem perceber que algumas das experiências mais marcantes podem estar mais próximas do que imaginam.",
+          "Entre os destaques, Fernando de Noronha continua sendo um dos destinos mais desejados, com águas cristalinas, vida marinha abundante e uma atmosfera que combina preservação e exclusividade.",
+          "Já os Lençóis Maranhenses oferecem um cenário único no mundo: lagoas de água doce entre dunas, formando paisagens que mudam ao longo do ano e surpreendem em cada visita.",
+          "Outro destino que vem ganhando cada vez mais destaque é Alter do Chão, no Pará. Conhecido como o “Caribe Amazônico”, encanta pelas praias de água doce, pela tranquilidade e pela conexão com a natureza.",
+          "Para quem busca experiências mais reservadas e sofisticadas, a Praia do Espelho, na Bahia, oferece um equilíbrio perfeito entre rusticidade e charme, com cenários preservados e uma atmosfera mais exclusiva.",
+          "Mas viajar pelo Brasil também exige estratégia.",
+          "Questões como Sazonalidade, acesso, escolha de hospedagem e organização de roteiro impactam diretamente na experiência. É comum que destinos incríveis sejam mal aproveitados simplesmente por falta de planejamento adequado.",
+          "Quando bem estruturada, a viagem ganha outro nível. E é nesse cuidado com os detalhes que o Brasil revela todo o seu potencial, muitas vezes surpreendendo até os viajantes mais experientes."
+        ]
+      },
+      {
+        id: 3,
+        title: "Cruzeiros",
+        largeTitle: "Cruzeiros: como escolher a experiência ideal para sua próxima viagem",
+        image: "https://images.unsplash.com/photo-1548574505-5e239809ee19?auto=format&fit=crop&q=80&w=800",
+        shortDesc: "Navegue pelo mundo cercado por conforto cinco estrelas.",
+        paragraphs: [
+          "Os cruzeiros têm se consolidado como uma das formas mais completas e encantadoras de viajar.",
+          "A proposta é simples, mas extremamente sofisticada: conhecer diferentes destinos, com conforto, praticidade e uma estrutura que acompanha você durante toda a jornada.",
+          "Hoje, os cruzeiros vão muito além da ideia tradicional. São verdadeiros resorts flutuantes, com gastronomia refinada, entretenimento de alto nível, spas, atividades e experiências pensadas para diferentes perfis de viajantes.",
+          "Rotas pelo Caribe estão entre as mais procuradas, passando por destinos como Bahamas e Cozumel, ideais para quem busca águas cristalinas e clima descontraído. Já o Mediterrâneo oferece uma imersão cultural única, conectando cidades como Roma, Barcelona e Atenas em um único roteiro.",
+          "Para quem deseja algo ainda mais exclusivo, existem cruzeiros de luxo e expedição, com itinerários diferenciados e serviços altamente personalizados.",
+          "Mas navegar com tranquilidade também exige escolhas certas.",
+          "Qual companhia combina mais com o seu perfil? Qual cabine oferece a melhor experiência? Como funcionam os pacotes de bebidas, internet e passeios terrestres?",
+          "Com a consultoria correta, cada escolha é planejada para que a sua única preocupação a bordo seja apreciar a vista e vivenciar cada porto de parada.",
+          "Afinal, o mar é infinito, mas as suas férias devem ser perfeitas."
+        ]
+      }
+    ];
+  });
 
   // Interactive Edit Modals / States
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -125,7 +233,30 @@ export default function AdminView() {
   const handleSaveHome = (e: React.FormEvent) => {
     e.preventDefault();
     saveHomeSettings(home);
-    showFeedback('Textos institucionais e vídeo da página inicial salvos!');
+
+    // Save typewriter endings list
+    const parsedEndings = typewriterEndings.split(',').map(s => s.trim()).filter(Boolean);
+    localStorage.setItem('arcadane_typewriter_endings', JSON.stringify(parsedEndings));
+
+    // Save custom seal (medallion) texts
+    localStorage.setItem('arcadane_seal_top_text', sealTopText);
+    localStorage.setItem('arcadane_seal_bottom_text', sealBottomText);
+    localStorage.setItem('arcadane_seal_number', sealNumber);
+    localStorage.setItem('arcadane_seal_label1', sealLabel1);
+    localStorage.setItem('arcadane_seal_label2', sealLabel2);
+
+    // Save custom quiz banner texts
+    localStorage.setItem('arcadane_quiz_banner_badge', quizBannerBadge);
+    localStorage.setItem('arcadane_quiz_banner_title', quizBannerTitle);
+    localStorage.setItem('arcadane_quiz_banner_desc', quizBannerDesc);
+
+    // Save bento destinations list
+    localStorage.setItem('arcadane_bento_destinations', JSON.stringify(bentoDestinations));
+
+    // Dispatch reload
+    window.dispatchEvent(new Event('arcadane_cms_data_changed'));
+
+    showFeedback('Página Inicial editada bloco por bloco e salva com absoluto sucesso! 🎉');
   };
 
   const handleSaveLayout = (e: React.FormEvent) => {
@@ -1144,110 +1275,449 @@ export default function AdminView() {
             {activeTab === 'home' && (
               <form onSubmit={handleSaveHome} className="space-y-6">
                 <div>
-                  <h3 className="font-display font-medium text-lg text-stone-100">Hero, Vídeo & Quem Somos</h3>
-                  <p className="text-stone-400 text-xs mt-1">Troque o texto principal do site, o vídeo do plano de fundo e o texto descritivo do institucional.</p>
+                  <h3 className="font-display font-medium text-lg text-stone-100 flex items-center gap-2">
+                    <Sliders className="w-5 h-5 text-[#AF4934]" />
+                    Página Inicial: Edição Bloco por Bloco
+                  </h3>
+                  <p className="text-stone-400 text-xs mt-1">Todos os elementos, textos, imagens, selos, blocos e estruturas da Página Inicial em abas e sessões organizadas e 100% editáveis.</p>
                 </div>
 
-                {/* Hero section texts */}
-                <div className="space-y-5">
-                  <div className="space-y-1">
-                    <label className={labelClass}>Título Principal (Suporta HTML para itálico)</label>
-                    <input 
-                      type="text" 
-                      value={home.heroTitle} 
-                      onChange={(e) => setHome({ ...home, heroTitle: e.target.value })}
-                      className={inputClass}
-                      required
-                    />
-                    <p className="text-[10px] text-stone-500 font-mono mt-0.5">Use tags HTML como &lt;span class="font-serif italic text-brand-secondary"&gt;texto&lt;/span&gt; para dar ênfase dourada.</p>
+                {/* BLOCK 1: HERO BANNER & ROTATING PHRASES */}
+                <div className="bg-stone-900/40 border border-stone-800/80 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-stone-200 font-display font-medium border-b border-stone-800 pb-2">
+                    <Film className="w-5 h-5 text-[#AF4934]" />
+                    <span>Bloco 1: Hero Banner, Vídeo & Textos Iniciais</span>
                   </div>
-
-                  <div className="space-y-1">
-                    <label className={labelClass}>Subtítulo do Hero</label>
-                    <textarea 
-                      rows={2}
-                      value={home.heroSubtitle} 
-                      onChange={(e) => setHome({ ...home, heroSubtitle: e.target.value })}
-                      className={inputClass}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className={labelClass}>Tipo de Buscador da Home (Booking Engine)</label>
-                    <select
-                      value={home.widgetType || 'whatsapp'}
-                      onChange={(e) => setHome({ ...home, widgetType: e.target.value as 'befly' | 'whatsapp' })}
-                      className={inputClass}
-                    >
-                      <option value="whatsapp">Buscador Inteligente Arcadane (WhatsApp - Recomendado para qualquer domínio! 🎉)</option>
-                      <option value="befly">Buscador Oficial BeFly / OnerTravel (Requer domínio homologado pela OnerTravel)</option>
-                    </select>
-                    <p className="text-[10px] text-stone-500 font-mono mt-0.5">
-                      Se o seu site em produção no Hostinger/GitHub apresentar erro "Não autorizado" no widget da BeFly, selecione "Buscador Inteligente Arcadane (WhatsApp)" para que um buscador interativo personalizado funcione imediatamente e envie as cotações diretamente para o seu WhatsApp!
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-1">
-                      <label className={labelClass}>Link do Vídeo MP4 (Fundo do Banner)</label>
-                      <input 
-                        type="url" 
-                        value={home.heroVideoUrl} 
-                        onChange={(e) => setHome({ ...home, heroVideoUrl: e.target.value })}
-                        className={inputClass}
-                        required
-                      />
-                      <p className="text-[10px] text-stone-500 font-mono mt-0.5">Utilize um link MP4 de alta velocidade (ex: links da mixkit ou direct-bucket).</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className={labelClass}>Título Superior da Trajetória (Destaque)</label>
-                      <input 
-                        type="text" 
-                        value={home.aboutUsHeadline} 
-                        onChange={(e) => setHome({ ...home, aboutUsHeadline: e.target.value })}
-                        className={inputClass}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* About section texts */}
-                <div className="border-t border-stone-850 pt-5 space-y-4">
-                  <h4 className="font-display text-sm tracking-wide text-stone-200">História Institucional (Quem Somos)</h4>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className={labelClass}>Subtítulo Institucional</label>
+                      <label className={labelClass}>Título Principal (Suporta HTML para itálico)</label>
                       <input 
                         type="text" 
-                        value={home.aboutUsSubheadline} 
-                        onChange={(e) => setHome({ ...home, aboutUsSubheadline: e.target.value })}
+                        value={home.heroTitle} 
+                        onChange={(e) => setHome({ ...home, heroTitle: e.target.value })}
+                        className={inputClass}
+                        required
+                      />
+                      <p className="text-[10px] text-stone-500 font-mono mt-0.5">Dica: Use &lt;span class="font-serif italic text-brand-secondary"&gt;suas palavras&lt;/span&gt; para o efeito ouro.</p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className={labelClass}>Subtítulo do Hero</label>
+                      <textarea 
+                        rows={2}
+                        value={home.heroSubtitle} 
+                        onChange={(e) => setHome({ ...home, heroSubtitle: e.target.value })}
                         className={inputClass}
                         required
                       />
                     </div>
 
-                    <div className="space-y-1 md:col-span-2">
-                      <label className={labelClass}>Texto Principal do Quem Somos (Use saltos de linha)</label>
+                    <div className="space-y-1">
+                      <label className={labelClass}>Frases Rotativas do Efeito Digitador (Separadas por vírgulas)</label>
+                      <textarea 
+                        rows={3}
+                        value={typewriterEndings} 
+                        onChange={(e) => setTypewriterEndings(e.target.value)}
+                        className={`${inputClass} font-mono text-xs`}
+                        placeholder="Exemplo: o mundo., novos olhares., novas memórias."
+                        required
+                      />
+                      <p className="text-[10px] text-stone-500 font-mono mt-0.5">Insira as frases que aparecem digitadas logo após a palavra "Descobrir". Separe cada uma por vírgula.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className={labelClass}>Tipo de Buscador Integrado (Booking Engine)</label>
+                        <select
+                          value={home.widgetType || 'whatsapp'}
+                          onChange={(e) => setHome({ ...home, widgetType: e.target.value as 'befly' | 'whatsapp' })}
+                          className={inputClass}
+                        >
+                          <option value="whatsapp">Buscador Inteligente Arcadane (WhatsApp - Recomendado! 🎉)</option>
+                          <option value="befly">Buscador Oficial BeFly / OnerTravel (Requer domínio homologado)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className={labelClass}>Link do Vídeo MP4 de Fundo</label>
+                        <input 
+                          type="url" 
+                          value={home.heroVideoUrl} 
+                          onChange={(e) => setHome({ ...home, heroVideoUrl: e.target.value })}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOCK 2: BENTO GRID */}
+                <div className="bg-stone-900/40 border border-stone-800/80 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-stone-200 font-display font-medium border-b border-stone-800 pb-2">
+                    <Compass className="w-5 h-5 text-[#AF4934]" />
+                    <span>Bloco 2: Abas Informativas Interativas (Bento Grid Destinations)</span>
+                  </div>
+                  <p className="text-xs text-stone-400">Edite as abas interativas do meio da página inicial. Cada aba tem título, cabeçalho de artigo, imagem de fundo e múltiplos parágrafos.</p>
+                  
+                  <div className="space-y-5">
+                    {bentoDestinations.map((dest, idx) => (
+                      <div key={dest.id} className="bg-stone-950/60 border border-stone-850 rounded-xl p-4 space-y-3">
+                        <div className="text-xs font-mono font-bold text-[#AF4934] uppercase flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-[#AF4934] animate-pulse" />
+                          Aba #{dest.id} - {dest.title}
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className={labelClass}>Título do Botão da Aba</label>
+                            <input
+                              type="text"
+                              value={dest.title}
+                              onChange={(e) => {
+                                const updated = [...bentoDestinations];
+                                updated[idx] = { ...updated[idx], title: e.target.value };
+                                setBentoDestinations(updated);
+                              }}
+                              className={inputClass}
+                              required
+                            />
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <label className={labelClass}>Título Grande do Artigo</label>
+                            <input
+                              type="text"
+                              value={dest.largeTitle}
+                              onChange={(e) => {
+                                const updated = [...bentoDestinations];
+                                updated[idx] = { ...updated[idx], largeTitle: e.target.value };
+                                setBentoDestinations(updated);
+                              }}
+                              className={inputClass}
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className={labelClass}>Descrição Curta de Chamada</label>
+                          <input
+                            type="text"
+                            value={dest.shortDesc}
+                            onChange={(e) => {
+                              const updated = [...bentoDestinations];
+                              updated[idx] = { ...updated[idx], shortDesc: e.target.value };
+                              setBentoDestinations(updated);
+                            }}
+                            className={inputClass}
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className={labelClass}>Parágrafos do Artigo (Um por linha)</label>
+                          <textarea
+                            rows={5}
+                            value={dest.paragraphs ? dest.paragraphs.join('\n') : ''}
+                            onChange={(e) => {
+                              const updated = [...bentoDestinations];
+                              updated[idx] = { ...updated[idx], paragraphs: e.target.value.split('\n') };
+                              setBentoDestinations(updated);
+                            }}
+                            className={`${inputClass} font-sans text-xs leading-relaxed`}
+                            placeholder="Escreva os parágrafos do texto do artigo. Pressione enter para criar um novo parágrafo..."
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-stone-900">
+                          <label className={labelClass}>Imagem de Fundo da Aba</label>
+                          <div className="flex items-center gap-4">
+                            <img src={dest.image} className="w-16 h-12 object-cover rounded-md border border-stone-800" />
+                            <div className="flex-1 space-y-1">
+                              <label className="cursor-pointer inline-flex items-center gap-2 bg-[#AF4934]/15 hover:bg-[#AF4934]/30 text-[#AF4934] px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all border border-[#AF4934]/30">
+                                <Image className="w-3.5 h-3.5" />
+                                Carregar Imagem da Aba...
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      compressAndSetImage(file, (base64) => {
+                                        const updated = [...bentoDestinations];
+                                        updated[idx] = { ...updated[idx], image: base64 };
+                                        setBentoDestinations(updated);
+                                        showFeedback(`Imagem da aba "${dest.title}" atualizada!`);
+                                      });
+                                    }
+                                  }}
+                                />
+                              </label>
+                              <p className="text-[9px] text-stone-500">A imagem de alta definição será compactada automaticamente para melhor performance.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* BLOCK 3: TRAJECTORY & PURPOSE */}
+                <div className="bg-stone-900/40 border border-stone-800/80 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-stone-200 font-display font-medium border-b border-stone-800 pb-2">
+                    <FileText className="w-5 h-5 text-[#AF4934]" />
+                    <span>Bloco 3: Nossa Trajetória & Propósito (Quem Somos)</span>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className={labelClass}>Título Principal Superior</label>
+                        <input 
+                          type="text" 
+                          value={home.aboutUsHeadline} 
+                          onChange={(e) => setHome({ ...home, aboutUsHeadline: e.target.value })}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className={labelClass}>Subtítulo Institucional</label>
+                        <input 
+                          type="text" 
+                          value={home.aboutUsSubheadline} 
+                          onChange={(e) => setHome({ ...home, aboutUsSubheadline: e.target.value })}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className={labelClass}>Texto Descritivo Principal (Use parágrafos)</label>
                       <textarea 
                         rows={6}
                         value={home.aboutUsText} 
                         onChange={(e) => setHome({ ...home, aboutUsText: e.target.value })}
                         className={`${inputClass} leading-relaxed`}
-                        placeholder="Texto institucional completo..."
+                        required
+                      />
+                    </div>
+
+                    <div className="border-t border-stone-850 pt-4">
+                      <label className={labelClass}>Foto Ilustrativa da Trajetória</label>
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center mt-2">
+                        <div className="md:col-span-3 max-w-[140px] aspect-video sm:aspect-square rounded-xl overflow-hidden border border-stone-800 bg-stone-950 relative">
+                          <img 
+                            src={trajectoryPhoto || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1200"} 
+                            alt="Preview Foto Trajetória"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-x-0 bottom-0 py-0.5 bg-black/75 text-[8px] font-mono text-center text-[#AF4934] font-bold">ATUAL</div>
+                        </div>
+
+                        <div className="md:col-span-9 space-y-2">
+                          <p className="text-xs text-stone-400 font-light">
+                            Faça o upload da imagem HD horizontal para ilustrar a história da Arcadane na página inicial.
+                          </p>
+                          <label className="cursor-pointer inline-flex items-center gap-2 bg-[#AF4934]/15 hover:bg-[#AF4934]/30 text-[#AF4934] px-4 py-2 rounded-xl text-xs font-mono font-bold border border-[#AF4934]/30 transition-all">
+                            <Image className="w-4 h-4" />
+                            Upload de Nova Imagem...
+                            <input 
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  compressAndSetImage(file, (base64) => {
+                                    localStorage.setItem('arcadane_trajectory_photo', base64);
+                                    setTrajectoryPhoto(base64);
+                                    window.dispatchEvent(new Event('arcadane_cms_data_changed'));
+                                    showFeedback('Foto da trajetória salva com sucesso!');
+                                  });
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOCK 4: CUSTOM SEALS & CERTIFICATIONS */}
+                <div className="bg-stone-900/40 border border-stone-800/80 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-stone-200 font-display font-medium border-b border-stone-800 pb-2">
+                    <Award className="w-5 h-5 text-[#AF4934]" />
+                    <span>Bloco 4: Medalhão e Selo de Credibilidade de Ouro</span>
+                  </div>
+                  <p className="text-xs text-stone-400">Edite todos os textos do selo de ouro que flutua ao lado do bloco da trajetória.</p>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className={labelClass}>Texto Circular Superior</label>
+                        <input
+                          type="text"
+                          value={sealTopText}
+                          onChange={(e) => setSealTopText(e.target.value)}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className={labelClass}>Texto Circular Inferior</label>
+                        <input
+                          type="text"
+                          value={sealBottomText}
+                          onChange={(e) => setSealBottomText(e.target.value)}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label className={labelClass}>Número Central de Destaque</label>
+                        <input
+                          type="text"
+                          value={sealNumber}
+                          onChange={(e) => setSealNumber(e.target.value)}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className={labelClass}>Etiqueta Central Linha 1</label>
+                        <input
+                          type="text"
+                          value={sealLabel1}
+                          onChange={(e) => setSealLabel1(e.target.value)}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className={labelClass}>Etiqueta Central Linha 2</label>
+                        <input
+                          type="text"
+                          value={sealLabel2}
+                          onChange={(e) => setSealLabel2(e.target.value)}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOCK 5: TRAVEL QUIZ PROMO BANNER */}
+                <div className="bg-stone-900/40 border border-stone-800/80 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-stone-200 font-display font-medium border-b border-stone-800 pb-2">
+                    <Sparkles className="w-5 h-5 text-[#AF4934]" />
+                    <span>Bloco 5: Banner Promocional do Quiz de Viagens Interativo</span>
+                  </div>
+                  <p className="text-xs text-stone-400">Edite as chamadas do banner do Quiz na Página Inicial.</p>
+
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className={labelClass}>Etiqueta Pequena do Banner (Badge)</label>
+                      <input
+                        type="text"
+                        value={quizBannerBadge}
+                        onChange={(e) => setQuizBannerBadge(e.target.value)}
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className={labelClass}>Título Principal do Banner</label>
+                      <input
+                        type="text"
+                        value={quizBannerTitle}
+                        onChange={(e) => setQuizBannerTitle(e.target.value)}
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className={labelClass}>Descrição do Banner</label>
+                      <textarea
+                        rows={3}
+                        value={quizBannerDesc}
+                        onChange={(e) => setQuizBannerDesc(e.target.value)}
+                        className={inputClass}
                         required
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Custom Trip Section */}
-                <div className="border-t border-stone-850 pt-5 space-y-4">
-                  <h4 className="font-display text-sm tracking-wide text-stone-200">Viagem Personalizada (Banner CTA de Rodapé)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* BLOCK 6: TEAM FOUNDERS ABOUT PHOTO */}
+                <div className="bg-stone-900/40 border border-stone-800/80 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-stone-200 font-display font-medium border-b border-stone-800 pb-2">
+                    <Users className="w-5 h-5 text-[#AF4934]" />
+                    <span>Bloco 6: Foto dos Sócios-Fundadores (Sobre Nós)</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    <div className="md:col-span-3 max-w-[140px] aspect-square rounded-xl overflow-hidden border border-stone-800 bg-stone-950 relative">
+                      <img 
+                        src={foundersPhoto || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1200"} 
+                        alt="Preview Foto Fundadores"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 py-0.5 bg-black/75 text-[8px] font-mono text-center text-[#AF4934] font-bold">ATUAL</div>
+                    </div>
+
+                    <div className="md:col-span-9 space-y-2">
+                      <p className="text-xs text-stone-400 font-light">
+                        Atualize a foto oficial de Maria, Mateus & Mariana que aparece na tela institucional "Quem Somos".
+                      </p>
+                      <label className="cursor-pointer inline-flex items-center gap-2 bg-[#AF4934]/15 hover:bg-[#AF4934]/30 text-[#AF4934] px-4 py-2 rounded-xl text-xs font-mono font-bold border border-[#AF4934]/30 transition-all">
+                        <Image className="w-4 h-4" />
+                        Carregar Nova Imagem...
+                        <input 
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              compressAndSetImage(file, (base64) => {
+                                localStorage.setItem('arcadane_founders_photo', base64);
+                                setFoundersPhoto(base64);
+                                window.dispatchEvent(new Event('arcadane_cms_data_changed'));
+                                showFeedback('Foto oficial dos fundadores salva com sucesso!');
+                              });
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOCK 7: CUSTOM TRIP CTA BANNER */}
+                <div className="bg-stone-900/40 border border-stone-800/80 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-stone-200 font-display font-medium border-b border-stone-800 pb-2">
+                    <Briefcase className="w-5 h-5 text-[#AF4934]" />
+                    <span>Bloco 7: Viagem Personalizada (Banner CTA de Rodapé)</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className={labelClass}>Título do Banner</label>
                       <input 
@@ -1257,7 +1727,7 @@ export default function AdminView() {
                         className={inputClass}
                         placeholder="Viagens\npersonalizadas:"
                       />
-                      <p className="text-[9px] text-stone-500 font-mono">Use \n para quebra de linha</p>
+                      <p className="text-[9px] text-stone-500 font-mono">Use \n para quebrar a linha</p>
                     </div>
 
                     <div className="space-y-1">
@@ -1267,29 +1737,31 @@ export default function AdminView() {
                         value={home.customTripSubtitle || ''} 
                         onChange={(e) => setHome({ ...home, customTripSubtitle: e.target.value })}
                         className={inputClass}
-                        placeholder="Experiências exclusivas, desenhadas para você."
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className={labelClass}>Texto de Chamada do Botão</label>
+                      <label className={labelClass}>Texto do Botão de Ação</label>
                       <input 
                         type="text" 
                         value={home.customTripButtonText || ''} 
                         onChange={(e) => setHome({ ...home, customTripButtonText: e.target.value })}
                         className={inputClass}
-                        placeholder="Clique e fale com a Arcadane!"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Footer Section */}
-                <div className="border-t border-stone-850 pt-5 space-y-4">
-                  <h4 className="font-display text-sm tracking-wide text-stone-200">Informações Técnicas do Rodapé (Footer)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* BLOCK 8: FOOTER TECHNICAL INFO */}
+                <div className="bg-stone-900/40 border border-stone-800/80 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-stone-200 font-display font-medium border-b border-stone-800 pb-2">
+                    <Globe className="w-5 h-5 text-[#AF4934]" />
+                    <span>Bloco 8: Rodapé e Informações Institucionais do Footer</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
-                      <label className={labelClass}>Slogan do Rodapé</label>
+                      <label className={labelClass}>Slogan Institucional do Rodapé</label>
                       <input 
                         type="text" 
                         value={home.footerText || ''} 
@@ -1299,7 +1771,7 @@ export default function AdminView() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className={labelClass}>Endereço do Rodapé</label>
+                      <label className={labelClass}>Endereço Comercial</label>
                       <input 
                         type="text" 
                         value={home.footerAddress || ''} 
@@ -1309,155 +1781,13 @@ export default function AdminView() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className={labelClass}>E-mail de Contato Comercial</label>
+                      <label className={labelClass}>E-mail Oficial</label>
                       <input 
                         type="email" 
                         value={home.footerEmail || ''} 
                         onChange={(e) => setHome({ ...home, footerEmail: e.target.value })}
                         className={inputClass}
                       />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Team founders photo uploader */}
-                <div className="border-t border-stone-850 pt-5 space-y-4">
-                  <h4 className="font-display font-medium text-sm tracking-wide text-[#AF4934] uppercase font-mono text-xs font-bold">Foto Oficial dos Fundadores (Maria, Mateus & Mariana • Sobre Nós)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                    <div className="md:col-span-3 max-w-[160px] aspect-square rounded-2xl overflow-hidden border border-stone-800 bg-stone-900 shadow-lg relative">
-                      <img 
-                        src={foundersPhoto || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1200"} 
-                        alt="Preview Foto Oficial de Maria, Mateus & Mariana"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 py-1 bg-black/70 text-[9px] font-mono text-center text-[#AF4934] font-bold">FOTO ATUAL</div>
-                    </div>
-
-                    <div className="md:col-span-9 space-y-3">
-                      <p className="text-xs text-stone-400 font-light leading-relaxed">
-                        Envie uma nova fotografia dos três sócios-fundadores juntos. Esta foto será renderizada na página "Sobre Nós" como a imagem em destaque.
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        <label 
-                          htmlFor="admin-founders-photo"
-                          className="px-4 py-2 border border-dashed border-stone-700 hover:border-[#AF4934]/60 bg-[#1c1917]/20 rounded-xl text-xs font-mono text-stone-300 font-bold hover:text-white cursor-pointer transition-colors inline-flex items-center gap-2"
-                        >
-                          <Image className="w-4 h-4 text-[#AF4934]" />
-                          Carregar Nova Imagem...
-                        </label>
-                        <input 
-                          type="file"
-                          id="admin-founders-photo"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              compressAndSetImage(file, (base64) => {
-                                localStorage.setItem('arcadane_founders_photo', base64);
-                                setFoundersPhoto(base64);
-                                if (typeof window !== 'undefined') {
-                                  window.dispatchEvent(new Event('arcadane_cms_data_changed'));
-                                }
-                                showFeedback('Foto oficial dos fundadores atualizada com sucesso!');
-                              });
-                            }
-                          }}
-                        />
-
-                        {foundersPhoto && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (window.confirm('Deseja redefinir a imagem para a foto padrão de fábrica?')) {
-                                localStorage.removeItem('arcadane_founders_photo');
-                                setFoundersPhoto(null);
-                                if (typeof window !== 'undefined') {
-                                  window.dispatchEvent(new Event('arcadane_cms_data_changed'));
-                                }
-                                showFeedback('Foto redefinida para a imagem padrão.');
-                              }
-                            }}
-                            className="px-4 py-2 bg-rose-500/15 hover:bg-rose-500/30 text-rose-450 border border-rose-500/30 rounded-xl text-xs font-mono font-bold transition-all inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <Trash className="w-3.5 h-3.5" />
-                            Restaurar Padrão
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-stone-500 font-mono">Imagens pesadas serão compactadas automaticamente para garantir excelente performance de carregamento no site.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Home trajectory photo uploader */}
-                <div className="border-t border-stone-850 pt-5 space-y-4">
-                  <h4 className="font-display font-medium text-sm tracking-wide text-[#AF4934] uppercase font-mono text-xs font-bold">Foto da Trajetória (Página Inicial)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                    <div className="md:col-span-3 max-w-[160px] aspect-video sm:aspect-square rounded-2xl overflow-hidden border border-stone-800 bg-stone-900 shadow-lg relative">
-                      <img 
-                        src={trajectoryPhoto || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1200"} 
-                        alt="Preview Foto da Trajetória"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 py-1 bg-black/70 text-[9px] font-mono text-center text-[#AF4934] font-bold">FOTO ATUAL</div>
-                    </div>
-
-                    <div className="md:col-span-9 space-y-3">
-                      <p className="text-xs text-stone-400 font-light leading-relaxed">
-                        Envie uma imagem para ilustrar o bloco "Nossa trajetória, nosso propósito" na Página Inicial (da mesma forma que no exemplo do anexo). É recomendável uma imagem horizontal ou quadrada.
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        <label 
-                          htmlFor="admin-trajectory-photo"
-                          className="px-4 py-2 border border-dashed border-stone-700 hover:border-[#AF4934]/60 bg-[#1c1917]/20 rounded-xl text-xs font-mono text-stone-300 font-bold hover:text-white cursor-pointer transition-colors inline-flex items-center gap-2"
-                        >
-                          <Image className="w-4 h-4 text-[#AF4934]" />
-                          Carregar Nova Imagem da Trajetória...
-                        </label>
-                        <input 
-                          type="file"
-                          id="admin-trajectory-photo"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              compressAndSetImage(file, (base64) => {
-                                localStorage.setItem('arcadane_trajectory_photo', base64);
-                                setTrajectoryPhoto(base64);
-                                if (typeof window !== 'undefined') {
-                                  window.dispatchEvent(new Event('arcadane_cms_data_changed'));
-                                }
-                                showFeedback('Foto de destaque de trajetória salva com sucesso!');
-                              });
-                            }
-                          }}
-                        />
-
-                        {trajectoryPhoto && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (window.confirm('Deseja redefinir a imagem para o padrão de fábrica?')) {
-                                localStorage.removeItem('arcadane_trajectory_photo');
-                                setTrajectoryPhoto(null);
-                                if (typeof window !== 'undefined') {
-                                  window.dispatchEvent(new Event('arcadane_cms_data_changed'));
-                                }
-                                showFeedback('Foto da trajetória redefinida com sucesso.');
-                              }
-                            }}
-                            className="px-4 py-2 bg-rose-500/15 hover:bg-rose-500/30 text-rose-450 border border-rose-500/30 rounded-xl text-xs font-mono font-bold transition-all inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <Trash className="w-3.5 h-3.5" />
-                            Restaurar Padrão
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-stone-500 font-mono">Imagens pesadas serão compactadas automaticamente para garantir excelente performance de carregamento no site.</p>
                     </div>
                   </div>
                 </div>

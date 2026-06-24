@@ -698,6 +698,18 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
   const [services, setServices] = useState<ServiceItem[]>(() => getServices());
   const [seo, setSeo] = useState(() => getSeoSettings());
 
+  // Seal / Badge Custom fields
+  const [sealTopText, setSealTopText] = useState(() => localStorage.getItem('arcadane_seal_top_text') || "ARCADANE CURADORIA EXCLUSIVA");
+  const [sealBottomText, setSealBottomText] = useState(() => localStorage.getItem('arcadane_seal_bottom_text') || "VIAGENS EXTRAORDINÁRIAS");
+  const [sealNumber, setSealNumber] = useState(() => localStorage.getItem('arcadane_seal_number') || "10");
+  const [sealLabel1, setSealLabel1] = useState(() => localStorage.getItem('arcadane_seal_label1') || "ANOS DE");
+  const [sealLabel2, setSealLabel2] = useState(() => localStorage.getItem('arcadane_seal_label2') || "EXPERIÊNCIA");
+
+  // Quiz Banner Custom fields
+  const [quizBannerBadge, setQuizBannerBadge] = useState(() => localStorage.getItem('arcadane_quiz_banner_badge') || "EXPERIÊNCIA INTERATIVA EXCLUSIVA");
+  const [quizBannerTitle, setQuizBannerTitle] = useState(() => localStorage.getItem('arcadane_quiz_banner_title') || "Descubra seu estilo de viajante e seu destino ideal");
+  const [quizBannerDesc, setQuizBannerDesc] = useState(() => localStorage.getItem('arcadane_quiz_banner_desc') || "Responda algumas perguntas rápidas de curadoria e descubra em tempo real qual é a atmosfera global exata que mais sincroniza com você, além de receber sugestões exclusivas prontas para planejar com nossos consultores.");
+
   useEffect(() => {
     const handleCmsChange = () => {
       setTrajectoryPhoto(getTrajectoryPhoto());
@@ -709,6 +721,16 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
       }
       setServices(getServices());
       setSeo(getSeoSettings());
+
+      setSealTopText(localStorage.getItem('arcadane_seal_top_text') || "ARCADANE CURADORIA EXCLUSIVA");
+      setSealBottomText(localStorage.getItem('arcadane_seal_bottom_text') || "VIAGENS EXTRAORDINÁRIAS");
+      setSealNumber(localStorage.getItem('arcadane_seal_number') || "10");
+      setSealLabel1(localStorage.getItem('arcadane_seal_label1') || "ANOS DE");
+      setSealLabel2(localStorage.getItem('arcadane_seal_label2') || "EXPERIÊNCIA");
+
+      setQuizBannerBadge(localStorage.getItem('arcadane_quiz_banner_badge') || "EXPERIÊNCIA INTERATIVA EXCLUSIVA");
+      setQuizBannerTitle(localStorage.getItem('arcadane_quiz_banner_title') || "Descubra seu estilo de viajante e seu destino ideal");
+      setQuizBannerDesc(localStorage.getItem('arcadane_quiz_banner_desc') || "Responda algumas perguntas rápidas de curadoria e descubra em tempo real qual é a atmosfera global exata que mais sincroniza com você, além de receber sugestões exclusivas prontas para planejar com nossos consultores.");
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
     return () => {
@@ -1517,13 +1539,13 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
                 {/* Modern Curved Texts - Styled for extreme premium feel using clean tracking-stretched sans-serif */}
                 <text className="font-sans text-[7.5px] tracking-[0.24em] font-extrabold uppercase" fill="url(#gold-light)">
                   <textPath href="#circle-text-path-top" startOffset="50%" textAnchor="middle">
-                    ARCADANE CURADORIA EXCLUSIVA
+                    {sealTopText}
                   </textPath>
                 </text>
                 
                 <text className="font-sans text-[6.5px] tracking-[0.22em] font-semibold uppercase" fill="url(#gold-light)">
                   <textPath href="#circle-text-path-bottom" startOffset="50%" textAnchor="middle">
-                    VIAGENS EXTRAORDINÁRIAS
+                    {sealBottomText}
                   </textPath>
                 </text>
                 
@@ -1538,16 +1560,16 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
                 
                 {/* Clean, unmistakable modern numbers centerpiece representing 10+ Years of Experience */}
                 <g fill="url(#gold-grad)" className="select-none font-sans font-black" style={{ fontFamily: '"Montserrat", "Inter", sans-serif' }}>
-                  <text x="93" y="112" textAnchor="middle" className="text-[46px] tracking-tighter">10</text>
+                  <text x="93" y="112" textAnchor="middle" className="text-[46px] tracking-tighter">{sealNumber}</text>
                   <text x="122" y="90" className="text-[20px] font-bold" fill="url(#gold-light)">+</text>
                 </g>
                 
                 {/* Core description labels beneath the numbers */}
                 <text x="100" y="127" textAnchor="middle" fill="url(#gold-light)" className="font-sans text-[8.5px] font-extrabold tracking-[0.25em] uppercase">
-                  ANOS DE
+                  {sealLabel1}
                 </text>
                 <text x="100" y="139" textAnchor="middle" fill="url(#gold-grad)" className="font-sans text-[9px] font-black tracking-[0.3em] uppercase">
-                  EXPERIÊNCIA
+                  {sealLabel2}
                 </text>
               </svg>
             </div>
@@ -1664,16 +1686,16 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
             <div className="inline-flex items-center gap-2 bg-[#AF4934]/20 border border-[#AF4934]/30 px-3.5 py-1.5 rounded-full">
               <Sparkles className="w-3.5 h-3.5 text-[#AF4934] animate-pulse" />
               <span className="font-mono text-[9px] sm:text-[10px] tracking-widest uppercase text-[#AF4934] font-bold">
-                EXPERIÊNCIA INTERATIVA EXCLUSIVA
+                {quizBannerBadge}
               </span>
             </div>
             
             <h3 className="font-serif italic text-3.5xl sm:text-4.5xl lg:text-5.xl text-white tracking-tight leading-tight">
-              Descubra seu estilo de viajante e seu destino ideal
+              {quizBannerTitle}
             </h3>
             
             <p className="text-stone-300 text-sm sm:text-base leading-relaxed font-sans max-w-xl font-light">
-              Responda algumas perguntas rápidas de curadoria e descubra em tempo real qual é a atmosfera global exata que mais sincroniza com você, além de receber sugestões exclusivas prontas para planejar com nossos consultores.
+              {quizBannerDesc}
             </p>
             
             {/* Quick value badges */}
