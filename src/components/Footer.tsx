@@ -86,35 +86,14 @@ export default function Footer({ setActivePage }: FooterProps) {
                 className="flex items-center gap-3 w-fit cursor-pointer group select-none"
                 onClick={() => handleNavClick(PageId.Home)}
               >
-                {customLogo ? (
-                  <img 
-                    src={customLogo} 
-                    alt="Arcadane Viagens" 
-                    className="h-12 w-auto object-contain brightness-100 transition-all duration-300 group-hover:scale-[1.02]" 
-                    onError={() => setLogoError(true)}
-                  />
-                ) : (
-                  <div className="flex items-center gap-3">
-                    {/* Majestic Vector Arch Window Icon */}
-                    <ArcadaneIcon 
-                       size={42} 
-                       primaryColor="#AF4934" 
-                       secondaryColor="#F3EEE3" 
-                       textColor="#ffffff"
-                       animate={true}
-                       className="transform group-hover:scale-[1.05] transition-transform duration-300"
-                    />
-                    {/* Elite Typography Sidewordmark */}
-                    <div className="flex flex-col items-start leading-none pt-0.5">
-                      <span className="font-signature text-[28px] sm:text-[34px] text-white tracking-wide transition-all duration-300 group-hover:text-[#F3EEE3] leading-none">
-                        Arcadane
-                      </span>
-                      <span className="text-[6.5px] sm:text-[7px] tracking-[0.28em] text-[#FBF8E8] font-sans uppercase leading-none mt-1.5 font-bold group-hover:text-white transition-colors duration-300">
-                        AGÊNCIA DE VIAGENS
-                      </span>
-                    </div>
-                  </div>
-                )}
+                <img 
+                  src={customLogo || "/logo.svg"} 
+                  alt="Arcadane Viagens" 
+                  className="h-24 sm:h-32 md:h-36 w-auto object-contain brightness-100 transition-all duration-300 group-hover:scale-[1.02]" 
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/logo.svg";
+                  }}
+                />
               </div>
 
               {/* Editorial Address List */}

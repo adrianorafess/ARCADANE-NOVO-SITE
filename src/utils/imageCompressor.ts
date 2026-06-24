@@ -2,7 +2,7 @@
  * Utility to compress and resize images client-side before storing them in local storage.
  * Helps prevent QuotaExceededError by keeping base64 images well under 100KB.
  */
-export function compressImage(file: File, maxWidth: number = 600, maxHeight: number = 600, quality: number = 0.6): Promise<string> {
+export function compressImage(file: File, maxWidth: number = 600, maxHeight: number = 600, quality: number = 0.6, forcePng: boolean = false): Promise<string> {
   return new Promise((resolve, reject) => {
     // Check if the file is an image
     if (!file.type.startsWith('image/')) {
@@ -44,10 +44,15 @@ export function compressImage(file: File, maxWidth: number = 600, maxHeight: num
               return rawBase64;
             }
 
+            // Clear canvas to ensure transparency is preserved
+            ctx.clearRect(0, 0, width, height);
+
             ctx.drawImage(img, 0, 0, width, height);
             
             try {
-              return canvas.toDataURL('image/jpeg', q);
+              const isTransparent = forcePng || (file.type && (file.type.includes('png') || file.type.includes('svg') || file.type.includes('gif') || file.type.includes('webp'))) || (file.name && /\.(png|svg|gif|webp)$/i.test(file.name));
+              const format = isTransparent ? 'image/png' : 'image/jpeg';
+              return canvas.toDataURL(format, isTransparent ? undefined : q);
             } catch (err) {
               console.warn("toDataURL nested failed, returning raw base64", err);
               return rawBase64;

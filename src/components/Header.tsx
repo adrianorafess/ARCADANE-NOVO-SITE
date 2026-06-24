@@ -121,7 +121,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
       id="main-header"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 sm:h-24">
+        <div className="flex items-center justify-between py-4 sm:py-6 lg:py-8">
                    {/* Logo Brand Brand Image with Elegant Auto-Fallback */}
           <div className="flex items-center gap-3 sm:gap-4" id="brand-logo-wrapper">
             <div 
@@ -129,35 +129,14 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
               onClick={() => handleNavClick(PageId.Home)}
               id="brand-logo"
             >
-              {customLogo ? (
-                <img 
-                  src={customLogo} 
-                  alt="Arcadane Viagens" 
-                  className="h-14 sm:h-18 w-auto object-contain brightness-100 transition-all duration-300 group-hover:scale-[1.02]" 
-                  onError={() => setLogoError(true)}
-                />
-              ) : (
-                <div className="flex items-center gap-3">
-                  {/* Majestic Vector Arch Window Icon */}
-                  <ArcadaneIcon 
-                    size={46} 
-                    primaryColor="#AF4934" 
-                    secondaryColor="#DCCFC1" 
-                    textColor="#ffffff"
-                    animate={true}
-                    className="transform group-hover:scale-[1.05] transition-transform duration-300"
-                  />
-                  {/* Elite Typography Sidewordmark */}
-                  <div className="flex flex-col items-start leading-none pt-1">
-                    <span className="font-signature text-[34px] sm:text-[40px] text-white tracking-wide transition-all duration-300 group-hover:text-brand-secondary leading-none">
-                      Arcadane
-                    </span>
-                    <span className="text-[7.5px] sm:text-[8px] tracking-[0.28em] text-brand-secondary font-sans uppercase leading-none mt-1.5 font-bold group-hover:text-white transition-colors duration-300">
-                      AGÊNCIA DE VIAGENS
-                    </span>
-                  </div>
-                </div>
-              )}
+              <img 
+                src={customLogo || "/logo.svg"} 
+                alt="Arcadane Viagens" 
+                className="h-24 sm:h-32 md:h-36 w-auto object-contain brightness-100 transition-all duration-300 group-hover:scale-[1.02]" 
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/logo.svg";
+                }}
+              />
             </div>
           </div>
 

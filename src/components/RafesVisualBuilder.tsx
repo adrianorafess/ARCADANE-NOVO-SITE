@@ -152,7 +152,7 @@ export default function RafesVisualBuilder({ activePage }: { activePage: PageId 
     const file = e.target.files?.[0];
     if (file) {
       try {
-        const compressedBase64 = await compressImage(file, 500, 250, 0.82);
+        const compressedBase64 = await compressImage(file, 1000, 500, 0.95, true);
         localStorage.setItem('arcadane_custom_logo', compressedBase64);
         setCustomLogo(compressedBase64);
         window.dispatchEvent(new Event('arcadane_logo_changed'));

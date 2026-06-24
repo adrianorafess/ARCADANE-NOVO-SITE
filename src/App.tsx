@@ -107,33 +107,24 @@ export default function App() {
             key="preloader"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.6, ease: [0.43, 0.13, 0.23, 0.96] } }}
-            className="fixed inset-0 z-10000 flex flex-col items-center justify-center bg-[#6F5B4E]"
+            className="fixed inset-0 z-10000 flex flex-col items-center justify-center bg-[#12100E]"
             id="arcadane-luxury-loader"
           >
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.7, ease: "easeOut" }}
-              className="flex flex-col items-center max-w-xs px-6"
+              className="flex flex-col items-center max-w-md px-6"
             >
               {/* Spinning/pulsating branding mark (original image or vector fallback) */}
-              {customLogo ? (
-                <img 
-                  src={customLogo} 
-                  alt="Arcadane Viagens" 
-                  className="h-28 sm:h-36 w-auto object-contain mb-8 animate-pulse" 
-                />
-              ) : (
-                <ArcadaneIcon
-                  variant="full"
-                  size={180}
-                  primaryColor="#fdfcf9"
-                  secondaryColor="#fdfcf9"
-                  textColor="#fdfcf9"
-                  animate={true}
-                  className="mb-8"
-                />
-              )}
+              <img 
+                src={customLogo || "/logo.svg"} 
+                alt="Arcadane Viagens" 
+                className="h-44 sm:h-56 md:h-64 lg:h-72 max-w-[340px] sm:max-w-[420px] md:max-w-[480px] w-auto object-contain mb-8 animate-pulse" 
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/logo.svg";
+                }}
+              />
 
               {/* Progress feedback */}
               <div className="w-48 h-[2px] bg-white/20 rounded-full overflow-hidden relative mb-3">

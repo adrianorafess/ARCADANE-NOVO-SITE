@@ -503,10 +503,29 @@
       "link": "https://online.orinter.com.br/orcamento-web/pt/link?token=T1JJIHwgMTI5MjQyMTkgfCBDM0Q2MUNBNDc3M0Q5Q0U4NjkwODI3MzIyRkZBMDA4Mw==",
       "badgeColor": "bg-brand-secondary/20 text-brand-chocolate border-brand-secondary/30",
       "waMessage": "Olá Arcadane! Estou muito interessada no grupo de luxo 'Elas Viajam Islândia: Luzes do Norte' (Orinter) e gostaria de solicitar uma consultoria para mim."
+    },
+    {
+      "id": "ciamaritima-krooze-cruise",
+      "title": "Cruzeiro Seabourn Quest All inclusive",
+      "subTitle": "Navegação Boutique de Alto Padrão pelos Mares Mais Deslumbrantes",
+      "operator": "Seabourn",
+      "duration": "8 Dias",
+      "tag": "Cruzeiro de Luxo & All Inclusive",
+      "image": "https://images.unsplash.com/photo-1548574505-5e239809ee19?auto=format&fit=crop&q=80&w=800",
+      "description": "Embarque em uma jornada inesquecível de puro charme e sofisticação. Navegue com todo o conforto de um cruzeiro boutique de altíssimo padrão, desfrutando de vistas deslumbrantes, gastronomia internacional cinco estrelas e serviços impecáveis de bordo.",
+      "highlights": [
+        "Suítes luxuosas com varanda privativa e vista total para o mar",
+        "Experiência gastronômica all-inclusive premium com chefs renomados",
+        "Entretenimento exclusivo de classe mundial e atividades de lazer",
+        "Atendimento próximo e personalizado em cada detalhe de sua viagem"
+      ],
+      "link": "https://ciamaritima.krooze.com.br/quote/6a2c7dc44e2b065bf1eb981c",
+      "badgeColor": "bg-emerald-50 text-emerald-800 border-emerald-200",
+      "waMessage": "Olá Arcadane! Vi o Cruzeiro Seabourn Quest All inclusive no site e gostaria de agendar uma consultoria exclusiva com vocês para esse roteiro."
     }
   ],
   "arcadane_founders_photo": null,
   "arcadane_trajectory_photo": null,
-  "arcadane_custom_logo": null,
-  "updatedAt": "2026-06-24T16:03:45.603Z"
+  "arcadane_custom_logo": "/logo.svg",
+  "updatedAt": "2026-06-24T17:34:44.395Z"
 }

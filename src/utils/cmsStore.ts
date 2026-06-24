@@ -303,6 +303,25 @@ export const DEFAULT_LUXURY_TRIPS: LuxuryTrip[] = [
     link: "https://online.orinter.com.br/orcamento-web/pt/link?token=T1JJIHwgMTI5MjQyMTkgfCBDM0Q2MUNBNDc3M0Q5Q0U4NjkwODI3MzIyRkZBMDA4Mw==",
     badgeColor: "bg-brand-secondary/20 text-brand-chocolate border-brand-secondary/30",
     waMessage: "Olá Arcadane! Estou muito interessada no grupo exclusivo 'Elas Viajam Islândia: Luzes do Norte' (Orinter) e gostaria de solicitar uma consultoria para mim."
+  },
+  {
+    id: "ciamaritima-krooze-cruise",
+    title: "Cruzeiro Seabourn Quest All inclusive",
+    subTitle: "Navegação Boutique de Alto Padrão pelos Mares Mais Deslumbrantes",
+    operator: "Seabourn",
+    duration: "8 Dias",
+    tag: "Cruzeiro de Luxo & All Inclusive",
+    image: "https://images.unsplash.com/photo-1548574505-5e239809ee19?auto=format&fit=crop&q=80&w=800",
+    description: "Embarque em uma jornada inesquecível de puro charme e sofisticação. Navegue com todo o conforto de um cruzeiro boutique de altíssimo padrão, desfrutando de vistas deslumbrantes, gastronomia internacional cinco estrelas e serviços impecáveis de bordo.",
+    highlights: [
+      "Suítes luxuosas com varanda privativa e vista total para o mar",
+      "Experiência gastronômica all-inclusive premium com chefs renomados",
+      "Entretenimento exclusivo de classe mundial e atividades de lazer",
+      "Atendimento próximo e personalizado em cada detalhe de sua viagem"
+    ],
+    link: "https://ciamaritima.krooze.com.br/quote/6a2c7dc44e2b065bf1eb981c",
+    badgeColor: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    waMessage: "Olá Arcadane! Vi o Cruzeiro Seabourn Quest All inclusive no site e gostaria de agendar uma consultoria exclusiva com vocês para esse roteiro."
   }
 ];
 
@@ -528,6 +547,23 @@ export function getLuxuryItineraries(): LuxuryTrip[] {
     if (list.length === 0) {
       localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(FALLBACK_LUXURY_TRIPS));
       return FALLBACK_LUXURY_TRIPS;
+    }
+    // Automatically merge missing default trips (by ID) so updates are visible without a cache clear
+    let updated = false;
+    const mergedList = [...list];
+    for (const defaultTrip of FALLBACK_LUXURY_TRIPS) {
+      const idx = mergedList.findIndex(t => t.id === defaultTrip.id);
+      if (idx === -1) {
+        mergedList.push(defaultTrip);
+        updated = true;
+      } else if (mergedList[idx].title === "Cruzeiro de Luxo Cia Marítima") {
+        mergedList[idx] = { ...mergedList[idx], ...defaultTrip };
+        updated = true;
+      }
+    }
+    if (updated) {
+      localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(mergedList));
+      return mergedList;
     }
     return list;
   } catch (e) {

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 120" width="460" height="120">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&amp;family=Great+Vibes&amp;family=Alex+Brush&amp;display=swap');
+      .brand-title {
+        font-family: 'Great Vibes', 'Alex Brush', cursive;
+        font-size: 75px;
+        fill: #ffffff;
+      }
+      .brand-subtitle {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 0.32em;
+        fill: #ffffff;
+      }
+    </style>
+  </defs>
+  <!-- Window Icon Group -->
+  <g transform="translate(10, 0)">
+    <!-- Outer Arch Frame -->
+    <path d="M 6 114 L 6 52 A 44 44 0 0 1 94 52 L 94 114 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" />
+    <!-- Inner Arch Frame -->
+    <path d="M 11 111 L 11 52 A 39 39 0 0 1 89 52 L 89 111 Z" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round" />
+    <!-- Horizontal Divider -->
+    <line x1="11" y1="52" x2="89" y2="52" stroke="#ffffff" stroke-width="1.8" />
+    <!-- Arch radial divisions -->
+    <line x1="50" y1="52" x2="50" y2="13" stroke="#ffffff" stroke-width="1.8" />
+    <line x1="50" y1="52" x2="22.5" y2="24.5" stroke="#ffffff" stroke-width="1.8" />
+    <line x1="50" y1="52" x2="77.5" y2="24.5" stroke="#ffffff" stroke-width="1.8" />
+    <!-- Dunes -->
+    <path d="M 11 68 C 35 72, 60 55, 89 64" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 11 84 C 35 88, 60 74, 89 76" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M 11 98 C 35 106, 60 92, 89 94" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+    <!-- 8-pointed star/sun -->
+    <polygon points="68,56 68.9,59.7 72.2,57.8 70.4,61 73.7,62 70.4,63 72.2,66.2 68.9,64.3 68,68 67.1,64.3 63.8,66.2 65.6,63 62.3,62 65.6,61 63.8,57.8 67.1,59.7" fill="#ffffff" />
+  </g>
+  <text x="120" y="75" class="brand-title">Arcadane</text>
+  <text x="124" y="102" class="brand-subtitle">AGÊNCIA DE VIAGENS</text>
+</svg>

@@ -117,7 +117,7 @@ export default function LuxuryItineraries() {
 
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
         {trips.map((trip) => {
           const originalTrip = DEFAULT_LUXURY_TRIPS.find(d => d.id === trip.id);
           const originalImage = originalTrip?.image || trip.image;
@@ -129,7 +129,7 @@ export default function LuxuryItineraries() {
               className="flex flex-col bg-white rounded-3xl border border-stone-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden text-left group relative"
             >
               {/* Image banner overlayed with Tag & Indicator */}
-              <div className="relative h-64 sm:h-72 lg:h-80 overflow-hidden shrink-0">
+              <div className="relative h-56 sm:h-60 lg:h-64 overflow-hidden shrink-0">
                 <img 
                   referrerPolicy="no-referrer"
                   src={trip.image} 
@@ -294,7 +294,7 @@ export default function LuxuryItineraries() {
               </div>
 
               {/* Inner Content Block */}
-              <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between space-y-6">
+              <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-5">
                 
                 <div className="space-y-4">
                   <div className="space-y-1">
@@ -389,7 +389,7 @@ export default function LuxuryItineraries() {
                     }}
                   >
                     <span className="text-xs font-mono uppercase tracking-wider text-stone-400 font-bold block">Destaques Exclusivos (Clique para editar):</span>
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-stone-600">
+                    <ul className="grid grid-cols-1 gap-2 text-xs text-stone-600">
                       {trip.highlights.map((highlight, index) => (
                         <li key={index} className="flex items-start gap-2">
                           <CheckCircle2 className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
