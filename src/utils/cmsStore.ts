@@ -62,9 +62,9 @@ export interface PromoPackage {
 }
 
 const DEFAULT_SEO_SETTINGS: SeoSettings = {
-  siteTitle: "Arcadane Viagens | Roteiros Personalizados de Luxo",
-  metaDescription: "A Arcadane Viagens une planejamento técnico cirúrgico e sensibilidade para criar roteiros de viagem personalizados de alto padrão.",
-  keywords: "arcadane, viagens de luxo, roteiros sob medida, turismo personalizado, maria mateus mariana, roteiros exclusivos",
+  siteTitle: "Arcadane Viagens - Agência de viagem em Balneário Camboriú",
+  metaDescription: "A Arcadane Viagens é a sua agência de viagens em Balneário Camboriú especializada em roteiros personalizados, viagens de luxo e curadoria exclusiva de experiências pelo mundo.",
+  keywords: "agência de viagens balneário camboriú, viagens de luxo, roteiros de viagem personalizados, turismo de alto padrão, arcadane viagens, passagens executivas, hotéis de luxo, consultoria de viagem, balneário camboriú turismo, maria mateus mariana, roteiros exclusivos",
   faviconUrl: "",
   contactWhatsAppMateus: "554791492704", // Authentic contact WhatsApps
   contactWhatsAppMaria: "5547992008571",
@@ -99,7 +99,7 @@ const DEFAULT_HOME_SETTINGS: HomeSettings = {
   customTripTitle: "Viagens personalizadas:",
   customTripSubtitle: "Experiências exclusivas, desenhadas para você.",
   customTripButtonText: "Clique e fale com a Arcadane!",
-  widgetType: "whatsapp"
+  widgetType: "befly"
 };
 
 export const DEFAULT_PROMO_PACKAGES: PromoPackage[] = [
@@ -476,7 +476,23 @@ export function getSeoSettings(): SeoSettings {
     localStorage.setItem(KEYS.SEO, JSON.stringify(FALLBACK_SEO_SETTINGS));
     return FALLBACK_SEO_SETTINGS;
   }
-  return { ...FALLBACK_SEO_SETTINGS, ...JSON.parse(data) };
+  try {
+    const parsed = JSON.parse(data);
+    // If user has the old generic default title or description, update it to Balneário Camboriú
+    if (
+      !parsed.siteTitle || 
+      parsed.siteTitle === "Arcadane Viagens | Roteiros Personalizados de Luxo" ||
+      parsed.siteTitle.indexOf("Roteiros Personalizados de Luxo") !== -1
+    ) {
+      parsed.siteTitle = FALLBACK_SEO_SETTINGS.siteTitle;
+      parsed.metaDescription = FALLBACK_SEO_SETTINGS.metaDescription;
+      parsed.keywords = FALLBACK_SEO_SETTINGS.keywords;
+      localStorage.setItem(KEYS.SEO, JSON.stringify(parsed));
+    }
+    return { ...FALLBACK_SEO_SETTINGS, ...parsed };
+  } catch (e) {
+    return FALLBACK_SEO_SETTINGS;
+  }
 }
 
 export function saveSeoSettings(settings: SeoSettings): void {
@@ -728,13 +744,9 @@ export async function initializeCmsStore(): Promise<void> {
       
       if (fallbackData.arcadane_founders_photo) {
         localStorage.setItem('arcadane_founders_photo', fallbackData.arcadane_founders_photo);
-      } else {
-        localStorage.removeItem('arcadane_founders_photo');
       }
       if (fallbackData.arcadane_trajectory_photo) {
         localStorage.setItem('arcadane_trajectory_photo', fallbackData.arcadane_trajectory_photo);
-      } else {
-        localStorage.removeItem('arcadane_trajectory_photo');
       }
       if ((fallbackData as any).arcadane_custom_logo) {
         localStorage.setItem('arcadane_custom_logo', (fallbackData as any).arcadane_custom_logo);

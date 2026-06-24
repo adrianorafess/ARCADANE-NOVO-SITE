@@ -80,3 +80,49 @@
   border: 1px solid var(--color-brand-border);
 }
 
+/* Custom styling overrides for befly-widget to match Arcadane's luxurious brand identity */
+befly-widget {
+  --primary-color: #3B5EA4 !important;
+  --brand-color: #3B5EA4 !important;
+  --accent-color: #AF4934 !important;
+  --onertravel-primary: #3B5EA4 !important;
+  --widget-primary: #3B5EA4 !important;
+  --color-primary: #3B5EA4 !important;
+  display: block;
+}
+
+#wrapper {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Force override all potential search/submit buttons inside the befly-widget */
+befly-widget button,
+befly-widget .btn,
+befly-widget .btn-primary,
+befly-widget .search-btn,
+befly-widget [type="submit"],
+befly-widget .submit-btn,
+befly-widget .search-button,
+befly-widget .search-submit,
+befly-widget .search-bar-btn {
+  background-color: var(--color-brand-primary, #3B5EA4) !important;
+  background: var(--color-brand-primary, #3B5EA4) !important;
+  color: #ffffff !important;
+  border-color: var(--color-brand-primary, #3B5EA4) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 600 !important;
+}
+
+befly-widget button:hover,
+befly-widget .btn:hover,
+befly-widget .btn-primary:hover,
+befly-widget .search-btn:hover,
+befly-widget [type="submit"]:hover {
+  background-color: #2e4981 !important;
+  background: #2e4981 !important;
+  border-color: #2e4981 !important;
+}
+
+

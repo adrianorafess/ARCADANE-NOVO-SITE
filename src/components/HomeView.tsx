@@ -41,7 +41,11 @@ const BeflySearchWidget = () => {
 
   useEffect(() => {
     if (useRealBeflyWidget && containerRef.current) {
-      containerRef.current.innerHTML = '<befly-widget language="pt-br" new-tab="true"></befly-widget>';
+      containerRef.current.innerHTML = `
+        <div id="wrapper">
+          <befly-widget language="pt-br" new-tab="true"></befly-widget>
+        </div>
+      `;
     }
   }, [useRealBeflyWidget]);
 
@@ -175,6 +179,109 @@ const BeflySearchWidget = () => {
     </div>
   );
 };
+
+const FloatingBuscador = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [settings, setSettings] = useState(() => getHomeSettings());
+  const [isVisible, setIsVisible] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
+
+  useEffect(() => {
+    const handleCmsChange = () => {
+      setSettings(getHomeSettings());
+    };
+    window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
+    return () => window.removeEventListener('arcadane_cms_data_changed', handleCmsChange);
+  }, []);
+
+  const useRealBeflyWidget = settings.widgetType === 'befly';
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show when user scrolls past 500px down on PC
+      if (window.scrollY > 500) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Inject widget HTML when visible and not minimized
+  useEffect(() => {
+    if (useRealBeflyWidget && isVisible && !isMinimized && containerRef.current) {
+      // We schedule a microtask or small timeout to ensure the DOM is painted and ready
+      const timer = setTimeout(() => {
+        if (containerRef.current) {
+          containerRef.current.innerHTML = `
+            <div id="wrapper">
+              <befly-widget language="pt-br" new-tab="true"></befly-widget>
+            </div>
+          `;
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [useRealBeflyWidget, isVisible, isMinimized]);
+
+  if (!useRealBeflyWidget || !isVisible) return null;
+
+  return (
+    <div className="hidden lg:block fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+      <AnimatePresence>
+        {isMinimized ? (
+          <motion.button
+            key="minimized-pill"
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            onClick={() => setIsMinimized(false)}
+            className="flex items-center gap-2.5 px-6 py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-display font-bold text-xs rounded-full shadow-2xl hover:shadow-brand-primary/20 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 cursor-pointer border border-white/10 whitespace-nowrap"
+          >
+            <Plane className="w-4 h-4 text-brand-secondary animate-bounce" />
+            <span className="tracking-wider uppercase">BUSCADOR DE PASSAGENS</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+          </motion.button>
+        ) : (
+          <motion.div
+            key="expanded-card"
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            className="w-[540px] bg-white rounded-2xl shadow-2xl border border-brand-border/40 overflow-hidden flex flex-col text-left"
+          >
+            {/* Header */}
+            <div className="bg-brand-primary/5 px-4.5 py-3 border-b border-brand-border/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-brand-primary">
+                  Buscador Oficial Arcadane
+                </span>
+              </div>
+              <button
+                onClick={() => setIsMinimized(true)}
+                className="p-1 rounded-lg hover:bg-black/5 text-stone-500 hover:text-stone-800 transition-colors cursor-pointer flex items-center gap-1.5 text-[10px] font-mono font-bold"
+                title="Minimizar Buscador"
+              >
+                <span>MINIMIZAR</span>
+                <ChevronDown className="w-4 h-4 text-brand-primary" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 bg-white max-h-[420px] overflow-y-auto">
+              <div ref={containerRef} className="w-full min-h-[140px]" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 
 interface TypewriterTitleProps {
   rafesOpen: boolean;
@@ -860,7 +967,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
         </div>
 
         {/* Floating Custom Booking Engine & Search Bar (Aligned Bottom of Hero) */}
-        <div className="w-full max-w-6xl mx-auto px-4 pb-8 relative z-10 -mt-20 sm:-mt-28 lg:-mt-36 xl:-mt-44" id="booking-area">
+        <div className="w-full max-w-6xl mx-auto px-4 pb-8 relative z-10 -mt-32 sm:-mt-44 lg:-mt-60 xl:-mt-72" id="booking-area">
           
           {/* Real Live Befly Widget Container */}
           <div className="bg-white rounded-2xl shadow-2xl border border-brand-border p-4.5 sm:p-5 lg:p-7 text-brand-dark max-w-6xl mx-auto text-left relative">
@@ -1995,6 +2102,8 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
           </div>
         )}
       </AnimatePresence>
+
+      <FloatingBuscador />
 
     </div>
   );

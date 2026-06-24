@@ -14,7 +14,6 @@ import TravelQuizView from './components/TravelQuizView';
 import AdminView from './components/AdminView';
 import ExitIntentModal from './components/ExitIntentModal';
 import TravelerUtilityHub from './components/TravelerUtilityHub';
-import CustomCursor from './components/CustomCursor';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import WhatsAppSelectorModal from './components/WhatsAppSelectorModal';
 import ArcadaneIcon from './components/ArcadaneBrandIcon';
@@ -122,7 +121,7 @@ export default function App() {
                 <img 
                   src={customLogo} 
                   alt="Arcadane Viagens" 
-                  className="h-28 sm:h-36 w-auto object-contain mb-8 animate-pulse text-white brightness-200" 
+                  className="h-28 sm:h-36 w-auto object-contain mb-8 animate-pulse" 
                 />
               ) : (
                 <ArcadaneIcon
@@ -196,9 +195,6 @@ export default function App() {
 
       {/* Rafes Visual Builder & Quick Live Overlay System */}
       <RafesVisualBuilder activePage={activePage} />
-
-      {/* Elegant custom luxury interactive airplane pointer */}
-      <CustomCursor />
 
     </div>
     </>
