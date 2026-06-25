@@ -99,7 +99,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
   const baseItems = [
     { id: PageId.Home, label: home.menuLabelHome || 'Início', hide: home.hideHome, hideInMenu: home.hideHomeInMenu },
     { id: PageId.Services, label: home.menuLabelServices || 'Serviços', hide: home.hideServices, hideInMenu: home.hideServicesInMenu },
-    { id: PageId.Packages, label: home.menuLabelPackages || 'Pacotes', sublinks: parseSublinks(home.submenuPackagesLinks), hide: home.hidePackages, hideInMenu: home.hidePackagesInMenu },
+    { id: PageId.Packages, label: home.menuLabelPackages || 'Pacotes', sublinks: undefined, hide: home.hidePackages, hideInMenu: home.hidePackagesInMenu },
     { id: PageId.AboutUs, label: home.menuLabelAboutUs || 'Quem Somos', hide: home.hideAboutUs, hideInMenu: home.hideAboutUsInMenu },
     { id: PageId.CustomTrip, label: home.menuLabelCustomTrip || 'Viagem Personalizada', sublinks: undefined, hide: home.hideCustomTrip, hideInMenu: home.hideCustomTripInMenu },
     { id: PageId.Blog, label: home.menuLabelBlog || 'Blog', hide: home.hideBlog, hideInMenu: home.hideBlogInMenu },
