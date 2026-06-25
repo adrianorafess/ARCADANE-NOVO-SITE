@@ -35,6 +35,7 @@ export interface PackageItem {
   duration: string;
   imageWord: string; // Used to generate or show stylized vector icons/placeholders
   highlights: string[];
+  image?: string; // Optional custom cover image URL
 }
 
 export interface BlogPost {

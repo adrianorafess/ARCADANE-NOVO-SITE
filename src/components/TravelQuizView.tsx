@@ -15,6 +15,7 @@ import {
   Globe
 } from 'lucide-react';
 import { getSeoSettings } from '../utils/cmsStore';
+import { trackCustomEvent } from '../utils/analyticsTracker';
 
 interface Question {
   id: number;
@@ -274,6 +275,9 @@ export default function TravelQuizView() {
       const updatedAnswers = [...answers, selectedInCurrent];
       setAnswers(updatedAnswers);
       setSelectedInCurrent(null);
+      if (currentStep === QUESTIONS.length) {
+        trackCustomEvent('quiz_completed', 'travel-quiz');
+      }
       setCurrentStep(currentStep + 1);
       window.scrollTo({ top: 300, behavior: 'smooth' });
     }

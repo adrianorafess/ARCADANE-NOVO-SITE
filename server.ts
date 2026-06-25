@@ -10,6 +10,44 @@ async function startServer() {
   // Enable body parsing with a high limit to accommodate base64 compressed images
   app.use(express.json({ limit: '100mb' }));
 
+  // API Route: Proxy OnerTravel API calls to bypass domain restrictions
+  app.use('/api/onertravel/api', async (req, res) => {
+    try {
+      const targetPath = req.url; // Contains the sub-path and query parameters (e.g. "/institutionWidgetConfiguration")
+      const targetUrl = `https://api.onertravel.com/api${targetPath}`;
+      const method = req.method;
+      
+      const headers: Record<string, string> = {
+        'Accept': 'application/json, text/plain, */*',
+        'Content-Type': 'application/json',
+        // Impersonate the authorized production domain
+        'Origin': 'https://www.arcadaneviagens.com.br',
+        'Referer': 'https://www.arcadaneviagens.com.br/',
+        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0'
+      };
+
+      const fetchOptions: RequestInit = {
+        method,
+        headers,
+      };
+
+      if (['POST', 'PUT', 'PATCH'].includes(method) && req.body) {
+        fetchOptions.body = JSON.stringify(req.body);
+      }
+
+      const response = await fetch(targetUrl, fetchOptions);
+      
+      res.status(response.status);
+      res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
+      
+      const responseText = await response.text();
+      res.send(responseText);
+    } catch (error: any) {
+      console.error('[OnerTravel Proxy Error]:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // API Route: Get current CMS state
   app.get('/api/get-cms-state', (req, res) => {
     try {

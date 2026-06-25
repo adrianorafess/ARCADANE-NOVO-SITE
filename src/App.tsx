@@ -12,6 +12,7 @@ import ContactView from './components/ContactView';
 import PrivacyPolicyView from './components/PrivacyPolicyView';
 import TravelQuizView from './components/TravelQuizView';
 import AdminView from './components/AdminView';
+import CustomPageView from './components/CustomPageView';
 import ExitIntentModal from './components/ExitIntentModal';
 import TravelerUtilityHub from './components/TravelerUtilityHub';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
@@ -19,14 +20,46 @@ import WhatsAppSelectorModal from './components/WhatsAppSelectorModal';
 import ArcadaneIcon from './components/ArcadaneBrandIcon';
 import RafesVisualBuilder from './components/RafesVisualBuilder';
 import { AnimatePresence, motion } from 'motion/react';
-import { getSeoSettings, applySeoSettings, getCustomLogo, getHomeSettings, HomeSettings } from './utils/cmsStore';
+import { getSeoSettings, applySeoSettings, getCustomLogo, getHomeSettings, HomeSettings, getCustomPages } from './utils/cmsStore';
+import { applyAllCustomInjections } from './utils/codeInjector';
+import { trackPageView, trackCustomEvent } from './utils/analyticsTracker';
 
 export default function App() {
-  const [activePage, setActivePage] = useState<PageId>(PageId.Home);
+  const [activePage, setActivePage] = useState<PageId | string>(PageId.Home);
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [homeSettings, setHomeSettings] = useState<HomeSettings>(() => getHomeSettings());
+
+  useEffect(() => {
+    trackPageView(String(activePage));
+    window.scrollTo({ top: 0 });
+    const timer1 = setTimeout(() => window.scrollTo({ top: 0 }), 50);
+    const timer2 = setTimeout(() => window.scrollTo({ top: 0 }), 150);
+    const timer3 = setTimeout(() => window.scrollTo({ top: 0 }), 300);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, [activePage]);
+
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (anchor) {
+        const href = anchor.getAttribute('href');
+        if (href && href.includes('wa.me')) {
+          trackCustomEvent('whatsapp_click', String(activePage));
+        }
+      }
+    };
+    document.addEventListener('click', handleGlobalClick);
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [activePage]);
 
   useEffect(() => {
     const logo = getCustomLogo();
@@ -43,12 +76,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Apply SEO and configurations immediately
+    // Apply SEO and custom code injections immediately
     applySeoSettings(getSeoSettings());
+    applyAllCustomInjections();
 
-    // Listen to changes from CMS to immediately re-apply SEO & Home Settings
+    // Listen to changes from CMS to immediately re-apply SEO, Code Injections & Home Settings
     const handleCmsChange = () => {
       applySeoSettings(getSeoSettings());
+      applyAllCustomInjections();
       setHomeSettings(getHomeSettings());
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
@@ -76,6 +111,13 @@ export default function App() {
   }, []);
 
   const renderActiveView = () => {
+    // If a system page is disabled, fall back to Home
+    if (activePage === PageId.Packages && homeSettings.hidePackages) return <HomeView setActivePage={setActivePage} />;
+    if (activePage === PageId.AboutUs && homeSettings.hideAboutUs) return <HomeView setActivePage={setActivePage} />;
+    if (activePage === PageId.CustomTrip && homeSettings.hideCustomTrip) return <HomeView setActivePage={setActivePage} />;
+    if (activePage === PageId.Blog && homeSettings.hideBlog) return <HomeView setActivePage={setActivePage} />;
+    if (activePage === PageId.ContactUs && homeSettings.hideContactUs) return <HomeView setActivePage={setActivePage} />;
+
     switch (activePage) {
       case PageId.Home:
         return <HomeView setActivePage={setActivePage} />;
@@ -95,8 +137,14 @@ export default function App() {
         return <TravelQuizView />;
       case PageId.Admin:
         return <AdminView />;
-      default:
+      default: {
+        const customPages = getCustomPages();
+        const found = customPages.find(p => p.id === activePage);
+        if (found && found.isActive !== false) {
+          return <CustomPageView page={found} />;
+        }
         return <HomeView setActivePage={setActivePage} />;
+      }
     }
   };
 

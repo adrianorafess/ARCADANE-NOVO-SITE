@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getSeoSettings } from '../utils/cmsStore';
+import { trackCustomEvent } from '../utils/analyticsTracker';
 
 export default function CustomTripView() {
   const [step, setStep] = useState(1);
@@ -86,6 +87,7 @@ export default function CustomTripView() {
     
     // Simulate internal success & open WhatsApp in new window
     setIsSent(true);
+    trackCustomEvent('itinerary_build_click', 'custom-trip');
     window.open(waLink, '_blank');
   };
 

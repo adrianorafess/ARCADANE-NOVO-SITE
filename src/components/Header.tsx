@@ -3,11 +3,11 @@ import { PageId } from '../types';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ArcadaneIcon from './ArcadaneBrandIcon';
-import { getSeoSettings, getCustomLogo, getHomeSettings, HomeSettings } from '../utils/cmsStore';
+import { getSeoSettings, getCustomLogo, getHomeSettings, HomeSettings, getCustomPages, CustomPage } from '../utils/cmsStore';
 
 interface HeaderProps {
-  activePage: PageId;
-  setActivePage: (page: PageId) => void;
+  activePage: PageId | string;
+  setActivePage: (page: PageId | string) => void;
 }
 
 const WhatsAppIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -28,6 +28,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
   const [home, setHome] = useState<HomeSettings>(() => getHomeSettings());
+  const [customMenuPages, setCustomMenuPages] = useState<CustomPage[]>(() => getCustomPages().filter(p => p.addToMenu && p.isActive !== false));
   
   const whatsRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +54,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
     const handleCmsChange = () => {
       setSeo(getSeoSettings());
       setHome(getHomeSettings());
+      setCustomMenuPages(getCustomPages().filter(p => p.addToMenu && p.isActive !== false));
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
     return () => {
@@ -89,22 +91,36 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
     return sublinksStr.split(';').map(pair => {
       const parts = pair.split('|');
       const label = parts[0]?.trim();
-      const pageId = parts[1]?.trim() as PageId || PageId.Home;
+      const pageId = parts[1]?.trim() || PageId.Home;
       return { label, pageId };
     }).filter(x => x.label);
   };
 
-  const navItems = [
-    { id: PageId.Home, label: home.menuLabelHome || 'Início' },
-    { id: PageId.Services, label: home.menuLabelServices || 'Serviços' },
-    { id: PageId.Packages, label: home.menuLabelPackages || 'Pacotes', sublinks: parseSublinks(home.submenuPackagesLinks) },
-    { id: PageId.AboutUs, label: home.menuLabelAboutUs || 'Quem Somos' },
-    { id: PageId.CustomTrip, label: home.menuLabelCustomTrip || 'Viagem Personalizada', sublinks: parseSublinks(home.submenuCustomTripLinks) },
-    { id: PageId.Blog, label: home.menuLabelBlog || 'Blog' },
-    { id: PageId.ContactUs, label: home.menuLabelContactUs || 'Contato' }
-  ];
+  const baseItems = [
+    { id: PageId.Home, label: home.menuLabelHome || 'Início', hide: home.hideHome, hideInMenu: home.hideHomeInMenu },
+    { id: PageId.Services, label: home.menuLabelServices || 'Serviços', hide: home.hideServices, hideInMenu: home.hideServicesInMenu },
+    { id: PageId.Packages, label: home.menuLabelPackages || 'Pacotes', sublinks: parseSublinks(home.submenuPackagesLinks), hide: home.hidePackages, hideInMenu: home.hidePackagesInMenu },
+    { id: PageId.AboutUs, label: home.menuLabelAboutUs || 'Quem Somos', hide: home.hideAboutUs, hideInMenu: home.hideAboutUsInMenu },
+    { id: PageId.CustomTrip, label: home.menuLabelCustomTrip || 'Viagem Personalizada', sublinks: parseSublinks(home.submenuCustomTripLinks), hide: home.hideCustomTrip, hideInMenu: home.hideCustomTripInMenu },
+    { id: PageId.Blog, label: home.menuLabelBlog || 'Blog', hide: home.hideBlog, hideInMenu: home.hideBlogInMenu },
+    { id: PageId.ContactUs, label: home.menuLabelContactUs || 'Contato', hide: home.hideContactUs, hideInMenu: home.hideContactUsInMenu }
+  ].filter(item => !item.hide && !item.hideInMenu);
 
-  const handleNavClick = (pageId: PageId) => {
+  const extraItems = customMenuPages.map(page => ({
+    id: page.externalUrl ? page.externalUrl : page.id,
+    label: page.menuLabel || page.title,
+    sublinks: undefined
+  }));
+
+  const navItems = [...baseItems, ...extraItems];
+
+  const handleNavClick = (pageId: PageId | string) => {
+    if (typeof pageId === 'string' && (pageId.startsWith('http://') || pageId.startsWith('https://'))) {
+      window.open(pageId, '_blank');
+      setIsMobileMenuOpen(false);
+      return;
+    }
+
     if (pageId === PageId.Services) {
       setActivePage(PageId.Home);
       setIsMobileMenuOpen(false);

@@ -1,19 +1,292 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Key, LogOut, Settings, Globe, Film, Sparkles, Briefcase, Compass, Award, 
   Heart, AlertCircle, CheckCircle, Save, Undo, Plus, Trash2, Edit3, 
-  Eye, EyeOff, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag, Download, Users 
+  Eye, EyeOff, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag, Download, Users, Code, Palette,
+  BarChart2, TrendingUp, Monitor, Smartphone, Tablet as TabletIcon, Clock, Search, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { 
+  BarChart, LineChart, PieChart, Line, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie 
+} from 'recharts';
+import { getAnalyticsEvents } from '../utils/analyticsTracker';
 import { 
   getServices, saveServices, getPackages, savePackages, 
   getBlogPosts, saveBlogPosts, getTestimonials, saveTestimonials, 
   getSeoSettings, saveSeoSettings, getHomeSettings, saveHomeSettings, 
   getPromoPackages, savePromoPackages, PromoPackage, DEFAULT_PROMO_PACKAGES,
-  resetCmsToDefault, SeoSettings, HomeSettings, getFoundersPhoto 
+  resetCmsToDefault, SeoSettings, HomeSettings, getFoundersPhoto, forceSyncCmsState, autoSyncToServer,
+  ThemeSettings, getThemeSettings, saveThemeSettings,
+  getCustomPages, saveCustomPages, getDomainSettings, saveDomainSettings, CustomPage, DomainSettings
 } from '../utils/cmsStore';
 import { ServiceItem, PackageItem, BlogPost, TestimonialItem } from '../types';
 import { compressImage } from '../utils/imageCompressor';
+import { DEFAULT_HEAD_CODE, DEFAULT_BODY_START_CODE, DEFAULT_BODY_END_CODE } from '../utils/codeInjector';
+
+interface SearchIndexItem {
+  term: string;
+  keywords: string[];
+  description: string;
+  tab: 'seo' | 'home' | 'layout' | 'services' | 'packages' | 'promos' | 'blog' | 'testimonials' | 'code' | 'theme' | 'sync' | 'reset' | 'custom-pages' | 'domains' | 'analytics';
+  targetElementId?: string;
+}
+
+const SEARCH_INDEX: SearchIndexItem[] = [
+  // SEO tab
+  {
+    term: "Título do Site (SEO)",
+    keywords: ["titulo", "siteTitle", "seo", "google", "nome da aba", "aba", "meta", "arcadane viagens", "titulo principal"],
+    description: "Configura o título principal do site que aparece no Google e na aba do navegador.",
+    tab: "seo",
+    targetElementId: "seo-site-title"
+  },
+  {
+    term: "Descrição do Site (Meta Description)",
+    keywords: ["meta description", "descriçao", "google", "seo", "sobre", "resumo do site"],
+    description: "Configura o resumo descritivo do site lido pelos motores de busca do Google.",
+    tab: "seo",
+    targetElementId: "seo-meta-description"
+  },
+  {
+    term: "Palavras-chave (Keywords)",
+    keywords: ["palavras-chave", "keywords", "tags", "busca", "pesquisa", "seo", "tags do google"],
+    description: "Tags de palavras-chave separadas por vírgula para otimização de busca do site.",
+    tab: "seo",
+    targetElementId: "seo-keywords"
+  },
+  {
+    term: "WhatsApp Mateus",
+    keywords: ["whatsapp", "mateus", "telefone", "contato", "ddd", "numero", "atendimento"],
+    description: "Número oficial de atendimento do consultor Mateus.",
+    tab: "seo",
+    targetElementId: "contact-mateus"
+  },
+  {
+    term: "WhatsApp Maria",
+    keywords: ["whatsapp", "maria", "telefone", "contato", "ddd", "numero", "atendimento"],
+    description: "Número oficial de atendimento da consultora Maria.",
+    tab: "seo",
+    targetElementId: "contact-maria"
+  },
+  {
+    term: "WhatsApp Mariana",
+    keywords: ["whatsapp", "mariana", "telefone", "contato", "ddd", "numero", "atendimento"],
+    description: "Número oficial de atendimento da consultora Mariana.",
+    tab: "seo",
+    targetElementId: "contact-mariana"
+  },
+  {
+    term: "Popup de Saída (Exit Intent)",
+    keywords: ["popup", "exit intent", "popup de saida", "sair", "beneficios", "alerta", "promocao"],
+    description: "Configura e ativa o popup que aparece quando o usuário tenta fechar o site.",
+    tab: "seo",
+    targetElementId: "seo-exit-intent"
+  },
+  {
+    term: "Popup de Anúncio Geral",
+    keywords: ["popup", "anuncio", "promocao", "tempo", "atraso", "oferta", "geral", "avisos"],
+    description: "Configura o popup de anúncio automático que abre após alguns segundos.",
+    tab: "seo",
+    targetElementId: "seo-announcement-popup"
+  },
+  
+  // Home Tab
+  {
+    term: "Vídeo de Destaque (Background)",
+    keywords: ["video", "youtube", "fundo", "hero", "topo", "inicio", "principal", "banner"],
+    description: "Configura o link do vídeo do YouTube que roda em plano de fundo no banner do topo.",
+    tab: "home",
+    targetElementId: "home-hero-video"
+  },
+  {
+    term: "Título de Entrada (Hero Title)",
+    keywords: ["titulo", "hero", "topo", "inicio", "frase inicial", "arte de viajar", "frase principal"],
+    description: "Configura o texto em destaque com tipografia serifada no topo do site.",
+    tab: "home",
+    targetElementId: "home-hero-title"
+  },
+  {
+    term: "Subtítulo do Banner (Hero Subtitle)",
+    keywords: ["subtitulo", "hero", "topo", "inicio", "curadoria", "texto de apoio"],
+    description: "Texto explicativo curto localizado logo abaixo do título principal do banner.",
+    tab: "home",
+    targetElementId: "home-hero-subtitle"
+  },
+  {
+    term: "História Headline (Quem Somos)",
+    keywords: ["quem somos", "historia", "headline", "nossa trajetoria", "propósito", "sobre nos"],
+    description: "Título da seção Quem Somos onde a história da agência é contada.",
+    tab: "home",
+    targetElementId: "home-about-headline"
+  },
+  {
+    term: "Texto de História (Quem Somos)",
+    keywords: ["texto quem somos", "historia", "trajetoria", "sobre nos", "biografia", "paragrafos"],
+    description: "Edite o texto completo sobre a história, os propósitos e os fundadores da Arcadane.",
+    tab: "home",
+    targetElementId: "home-about-text"
+  },
+  {
+    term: "Foto dos Sócios / Equipe",
+    keywords: ["foto", "socios", "equipe", "fundadores", "maria", "mateus", "mariana", "imagem de capa"],
+    description: "Mude a imagem oficial dos sócios e fundadores da agência.",
+    tab: "home",
+    targetElementId: "home-founders-photo"
+  },
+  {
+    term: "Email do Rodapé (Footer Email)",
+    keywords: ["email", "rodape", "financeiro", "contato email", "footer"],
+    description: "E-mail comercial exibido na coluna de contatos do rodapé do site.",
+    tab: "home",
+    targetElementId: "home-footer-email"
+  },
+  {
+    term: "Endereço no Rodapé (Footer Address)",
+    keywords: ["endereço", "rodape", "bc", "balneario", "atendimento", "localizacao", "mapa"],
+    description: "Configura o endereço físico ou de atendimento que aparece no rodapé.",
+    tab: "home",
+    targetElementId: "home-footer-address"
+  },
+  {
+    term: "Widget de Atendimento",
+    keywords: ["widget", "befly", "whatsapp", "posicao", "atendimento", "pesquisa de voo", "ferramenta"],
+    description: "Escolha entre o widget de pesquisa BeFly ou um botão flutuante direto de WhatsApp.",
+    tab: "home",
+    targetElementId: "home-widget-config"
+  },
+  
+  // Theme & Layout Tabs
+  {
+    term: "Logotipo Customizado (Logo)",
+    keywords: ["logo", "logotipo", "marca", "cabecalho", "imagem logo", "upload logo"],
+    description: "Substitua a marca de texto padrão por uma imagem de logotipo customizada.",
+    tab: "layout",
+    targetElementId: "layout-custom-logo"
+  },
+  {
+    term: "Nomes dos Menus (Labels)",
+    keywords: ["menus", "nomes", "botoes", "labels", "quem somos", "servicos", "pacotes", "traducao"],
+    description: "Altere os textos de exibição dos links de navegação do menu e rodapé.",
+    tab: "layout",
+    targetElementId: "layout-menu-labels"
+  },
+  {
+    term: "Esconder / Mostrar Páginas no Menu",
+    keywords: ["esconder", "mostrar", "ocultar", "desativar", "menu de navegacao", "links", "visibilidade"],
+    description: "Oculte ou mostre abas inteiras da barra de navegação principal do site.",
+    tab: "custom-pages",
+    targetElementId: "layout-menu-visibility"
+  },
+  {
+    term: "Links de Submenus do Menu Principal",
+    keywords: ["submenu", "submenus", "dropdown", "links adicionais", "navegacao", "categorias"],
+    description: "Configura as opções em lista suspensa (dropdown) nos botões de Pacotes e Viagem Personalizada.",
+    tab: "layout",
+    targetElementId: "layout-submenus"
+  },
+  {
+    term: "Cores Principais do Tema",
+    keywords: ["cores", "tema", "marca", "azul", "vermelho", "chocolate", "paleta", "estilo", "cor principal"],
+    description: "Altere a cor primária (marca), secundária (detalhes), fundo claro e cores secundárias.",
+    tab: "theme",
+    targetElementId: "theme-colors-section"
+  },
+  {
+    term: "Tipografia e Fontes do Site",
+    keywords: ["fontes", "letras", "serifa", "sans", "tipografia", "montserrat", "cormorant", "georgia"],
+    description: "Personalize as famílias de fontes usadas em títulos, subtítulos e textos corridos.",
+    tab: "theme",
+    targetElementId: "theme-fonts-section"
+  },
+  {
+    term: "Estilo dos Botões e Bordas",
+    keywords: ["botoes", "bordas", "arredondado", "sombra", "glassmorphism", "outline", "formato de botao"],
+    description: "Modifique o arredondamento dos botões (completo, quadrado, suave) e o efeito visual (sólido, outline, vidro).",
+    tab: "theme",
+    targetElementId: "theme-button-style"
+  },
+  
+  // Services
+  {
+    term: "Serviços e Consultoria",
+    keywords: ["serviços", "servicos", "assessoria", "consultoria", "criar servico", "passagem", "hoteis"],
+    description: "Gerencie os cards de serviços, com títulos, descrições e ícones customizados.",
+    tab: "services",
+    targetElementId: "services-section"
+  },
+  
+  // Packages (Catálogo principal)
+  {
+    term: "Catálogo Geral de Pacotes de Viagem",
+    keywords: ["pacotes", "catalogo", "destinos", "exotico", "nacionais", "cruzeiro", "criar pacote", "viagem"],
+    description: "Crie, edite fotos, mude descrições e inclua itens em nosso catálogo fixo de viagens.",
+    tab: "packages",
+    targetElementId: "packages-section"
+  },
+  
+  // Promos (Ofertas Relâmpago)
+  {
+    term: "Ofertas Relâmpago (Voo + Hotel)",
+    keywords: ["ofertas", "relampago", "voo", "hotel", "chapeco", "promo", "promoçoes", "desconto", "tarifa"],
+    description: "Crie e publique pacotes promocionais dinâmicos vinculados à plataforma de orçamentos Infotravel.",
+    tab: "promos",
+    targetElementId: "promos-section"
+  },
+  
+  // Blog
+  {
+    term: "Postagens do Blog",
+    keywords: ["blog", "postagens", "criar post", "artigos", "noticias", "dicas de viagem", "escrever"],
+    description: "Publique e edite artigos completos, matérias e dicas de roteiros no blog oficial.",
+    tab: "blog",
+    targetElementId: "blog-section"
+  },
+  
+  // Testimonials
+  {
+    term: "Depoimentos de Clientes",
+    keywords: ["depoimentos", "depoimento", "feedbacks", "clientes", "estrelas", "opiniao", "avaliacoes"],
+    description: "Gerencie os depoimentos e avaliações que constam na página para atestar confiabilidade.",
+    tab: "testimonials",
+    targetElementId: "testimonials-section"
+  },
+  
+  // Custom Pages
+  {
+    term: "Páginas Customizadas",
+    keywords: ["paginas", "customizadas", "seguro viagem", "destinos vip", "markdown", "nova pagina", "criar url"],
+    description: "Crie novas páginas de conteúdo institucional 100% editáveis em Markdown, como roteiros VIP ou seguros.",
+    tab: "custom-pages",
+    targetElementId: "custom-pages-section"
+  },
+  
+  // Domains
+  {
+    term: "Domínio Principal e DNS",
+    keywords: ["dominio", "subdominio", "site oficial", "hostinger", "dns", "ip", "cname", "hospedagem"],
+    description: "Instruções técnicas e status de apontamento de DNS e servidores.",
+    tab: "domains",
+    targetElementId: "domains-section"
+  },
+  
+  // Code Injector
+  {
+    term: "Injetor de Códigos (Pixel, Analytics, Tags)",
+    keywords: ["codigo", "head", "pixel", "facebook", "google analytics", "tag manager", "html", "javascript"],
+    description: "Injete tags HTML e scripts de rastreamento no cabeçalho ou corpo do site.",
+    tab: "code",
+    targetElementId: "code-injector-section"
+  },
+  
+  // Analytics
+  {
+    term: "Estatísticas de Tráfego e Cliques",
+    keywords: ["graficos", "estatisticas", "trafego", "cliques", "conversao", "whatsapp", "analytics", "visitantes"],
+    description: "Visualize dados reais de acessos ao site, cliques de WhatsApp e conversões em tempo real.",
+    tab: "analytics",
+    targetElementId: "analytics-section"
+  }
+];
 
 export default function AdminView() {
   // Login State
@@ -34,6 +307,60 @@ export default function AdminView() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>(getBlogPosts);
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>(getTestimonials);
 
+  // Admin Omni Search States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchIndexItem[]>([]);
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const normQuery = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const filtered = SEARCH_INDEX.filter(item => {
+      const matchTitle = item.term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normQuery);
+      const matchKeywords = item.keywords.some(kw => 
+        kw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normQuery)
+      );
+      const matchDesc = item.description.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normQuery);
+      return matchTitle || matchKeywords || matchDesc;
+    });
+
+    setSearchResults(filtered);
+  };
+
+  const handleSearchResultClick = (item: SearchIndexItem) => {
+    setActiveTab(item.tab);
+    setSearchQuery('');
+    setSearchResults([]);
+    showFeedback(`Direcionado para: ${item.term}`, 'success');
+    
+    // Smooth scroll and focus with highlight ripple
+    setTimeout(() => {
+      if (item.targetElementId) {
+        const el = document.getElementById(item.targetElementId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Temporary spotlight ring effect
+          el.classList.add('ring-4', 'ring-[#AF4934]', 'ring-offset-2', 'ring-offset-[#181615]', 'transition-all', 'duration-500');
+          
+          // Focus input if any inside the wrapper
+          const input = el.querySelector('input, select, textarea') || el;
+          if (input && typeof (input as any).focus === 'function') {
+            (input as any).focus();
+          }
+
+          setTimeout(() => {
+            el.classList.remove('ring-4', 'ring-[#AF4934]', 'ring-offset-2', 'ring-offset-[#181615]');
+          }, 2500);
+        }
+      }
+    }, 150);
+  };
+
   // Founders Photo Admin State
   const [foundersPhoto, setFoundersPhoto] = useState<string | null>(() => {
     return getFoundersPhoto();
@@ -52,8 +379,68 @@ export default function AdminView() {
   });
   const [logoUploading, setLogoUploading] = useState(false);
 
+  // Custom code injections
+  const [customHeadCode, setCustomHeadCode] = useState<string>(() => {
+    const val = localStorage.getItem('arcadane_custom_head_code');
+    return val !== null ? val : DEFAULT_HEAD_CODE;
+  });
+  const [customBodyStartCode, setCustomBodyStartCode] = useState<string>(() => {
+    let val = localStorage.getItem('arcadane_custom_body_start_code');
+    if (val && val.includes('befly-widget')) {
+      localStorage.setItem('arcadane_custom_body_start_code', DEFAULT_BODY_START_CODE);
+      val = DEFAULT_BODY_START_CODE;
+    }
+    return val !== null ? val : DEFAULT_BODY_START_CODE;
+  });
+  const [customBodyEndCode, setCustomBodyEndCode] = useState<string>(() => {
+    const val = localStorage.getItem('arcadane_custom_body_end_code');
+    return val !== null ? val : DEFAULT_BODY_END_CODE;
+  });
+
+  // Sync state variables
+  const [isForcedSyncing, setIsForcedSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ success: boolean; updatedKeys: string[]; count: number } | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'seo' | 'home' | 'layout' | 'services' | 'packages' | 'promos' | 'blog' | 'testimonials' | 'reset'>('seo');
+  const [activeTab, setActiveTab] = useState<'seo' | 'home' | 'layout' | 'services' | 'packages' | 'promos' | 'blog' | 'testimonials' | 'code' | 'theme' | 'sync' | 'reset' | 'custom-pages' | 'domains' | 'analytics'>('analytics');
+
+  // Custom pages and domains
+  const [customPages, setCustomPages] = useState<CustomPage[]>(getCustomPages);
+  const [domainSettings, setDomainSettings] = useState<DomainSettings>(getDomainSettings);
+  const [editingCustomPage, setEditingCustomPage] = useState<CustomPage | null>(null);
+  const [isCreatingCustomPage, setIsCreatingCustomPage] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Theme settings state
+  const [theme, setTheme] = useState<ThemeSettings>(getThemeSettings);
+
+  // Analytics State
+  const [analyticsEvents, setAnalyticsEvents] = useState(() => getAnalyticsEvents());
+  const [analyticsTimeFilter, setAnalyticsTimeFilter] = useState<'realtime' | 'today' | 'month' | 'year' | '30days'>('today');
+
+  useEffect(() => {
+    const handleAnalyticsUpdate = () => {
+      setAnalyticsEvents(getAnalyticsEvents());
+    };
+    window.addEventListener('arcadane_analytics_updated', handleAnalyticsUpdate);
+
+    let unsubFirestore: (() => void) | undefined;
+    import('../utils/analyticsTracker').then(m => {
+      unsubFirestore = m.subscribeToFirestoreAnalytics((events) => {
+        setAnalyticsEvents(events);
+      });
+    }).catch(err => {
+      console.error('[AdminView] Failed to start Firestore real-time analytics:', err);
+    });
+
+    return () => {
+      window.removeEventListener('arcadane_analytics_updated', handleAnalyticsUpdate);
+      if (unsubFirestore) {
+        unsubFirestore();
+      }
+    };
+  }, []);
 
   // Typewriter phrases state
   const [typewriterEndings, setTypewriterEndings] = useState<string>(() => {
@@ -234,6 +621,18 @@ export default function AdminView() {
     setTimeout(() => setFeedbackMsg(null), 3500);
   };
 
+  useEffect(() => {
+    const handleCmsDataChanged = () => {
+      setTheme(getThemeSettings());
+      setSeo(getSeoSettings());
+      setHome(getHomeSettings());
+    };
+    window.addEventListener('arcadane_cms_data_changed', handleCmsDataChanged);
+    return () => {
+      window.removeEventListener('arcadane_cms_data_changed', handleCmsDataChanged);
+    };
+  }, []);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (username === 'arcadane' && password === 'arcadane123') {
@@ -328,6 +727,25 @@ export default function AdminView() {
     e.preventDefault();
     saveServices(services);
     showFeedback('Grade de Serviços atualizada no banco local!');
+  };
+
+  const handleSaveCustomCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('arcadane_custom_head_code', customHeadCode);
+    localStorage.setItem('arcadane_custom_body_start_code', customBodyStartCode);
+    localStorage.setItem('arcadane_custom_body_end_code', customBodyEndCode);
+    
+    // Broadcast changes & Sync to cloud instantly
+    window.dispatchEvent(new Event('arcadane_cms_data_changed'));
+    autoSyncToServer();
+    
+    showFeedback('Códigos, scripts e estilos de customização injetados e salvos com sucesso!');
+  };
+
+  const handleSaveTheme = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveThemeSettings(theme);
+    showFeedback('Configurações de customização do tema salvas com sucesso!');
   };
 
   // Sync state to actual source files on the server (for Hostinger & GitHub)
@@ -531,6 +949,50 @@ export default function AdminView() {
     }
   };
 
+  const handleForcedSync = async (direction: 'pull' | 'push') => {
+    setIsForcedSyncing(true);
+    setSyncResult(null);
+    setSyncError(null);
+    try {
+      const res = await forceSyncCmsState(direction);
+      if (res.success) {
+        setSyncResult({
+          success: true,
+          updatedKeys: res.updatedKeys,
+          count: res.updatedKeys.length
+        });
+        
+        // Refresh local UI states so edits instantly show on the screen
+        if (direction === 'pull') {
+          setSeo(getSeoSettings());
+          setHome(getHomeSettings());
+          setServices(getServices());
+          setPackages(getPackages());
+          setPromoPackages(getPromoPackages());
+          setBlogPosts(getBlogPosts());
+          setTestimonials(getTestimonials());
+          setFoundersPhoto(getFoundersPhoto());
+          setTrajectoryPhoto(localStorage.getItem('arcadane_trajectory_photo'));
+          setCustomLogo(localStorage.getItem('arcadane_custom_logo'));
+        }
+        showFeedback(
+          direction === 'pull'
+            ? 'Dados sincronizados e baixados da nuvem com sucesso!'
+            : 'Dados locais enviados e salvos na nuvem com sucesso!',
+          'success'
+        );
+      } else {
+        setSyncError(res.error || 'Erro desconhecido na sincronização.');
+        showFeedback('Falha na sincronização dos dados.', 'error');
+      }
+    } catch (err: any) {
+      setSyncError(err.message || 'Falha ao sincronizar dados com a nuvem.');
+      showFeedback('Falha na sincronização dos dados.', 'error');
+    } finally {
+      setIsForcedSyncing(false);
+    }
+  };
+
   // CSS standard class styles
   const btnClass = "bg-[#AF4934] hover:bg-[#973a27] text-white font-medium text-xs font-display tracking-widest px-5 py-2.5 rounded-lg transition-all duration-200 uppercase cursor-pointer inline-flex items-center gap-2 shadow-md";
   const inputClass = "w-full bg-[#1c1917]/40 border border-stone-700 focus:border-[#AF4934]/60 rounded-lg p-2.5 text-xs text-stone-100 placeholder-stone-500 focus:outline-hidden transition-all";
@@ -617,6 +1079,294 @@ export default function AdminView() {
     );
   }
 
+  // --- Analytics Processing ---
+  const filteredEventsForMetrics = useMemo(() => {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000).toISOString();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+
+    return analyticsEvents.filter(e => {
+      const eventDate = new Date(e.timestamp);
+      const eventDateStr = e.timestamp.split('T')[0];
+
+      switch (analyticsTimeFilter) {
+        case 'realtime':
+          // Let's use 1 hour for realtime metrics so the charts have some data, but we show last 15 min active online
+          return e.timestamp >= oneHourAgo;
+        case 'today':
+          return eventDateStr === todayStr;
+        case 'month':
+          return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+        case 'year':
+          return eventDate.getFullYear() === currentYear;
+        case '30days':
+        default:
+          return true;
+      }
+    });
+  }, [analyticsEvents, analyticsTimeFilter]);
+
+  const pageViews = filteredEventsForMetrics.filter(e => !e.customAction);
+  const customEvents = filteredEventsForMetrics.filter(e => e.customAction);
+
+  // Active online right now (last 15 minutes)
+  const activeNowCount = useMemo(() => {
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const activeNowEvents = analyticsEvents.filter(e => e.timestamp >= fifteenMinutesAgo && !e.customAction);
+    return Array.from(new Set(activeNowEvents.map(e => `${e.device}_${e.origin}_${e.age}`))).length;
+  }, [analyticsEvents]);
+
+  const totalViews = pageViews.length;
+
+  const uniqueVisitors = Array.from(new Set(pageViews.map(e => {
+    const day = e.timestamp.split('T')[0];
+    return `${day}_${e.device}_${e.origin}_${e.age}`;
+  }))).length;
+
+  const conversionsCount = customEvents.filter(e => 
+    e.customAction === 'whatsapp_click' || 
+    e.customAction === 'quiz_completed' || 
+    e.customAction === 'whatsapp_modal' ||
+    e.customAction === 'quote_package' ||
+    e.customAction === 'itinerary_build_click'
+  ).length;
+
+  const conversionRate = totalViews > 0 ? ((conversionsCount / totalViews) * 100).toFixed(1) : '0.0';
+
+  const avgDurationSeconds = pageViews.length > 0 
+    ? Math.round(pageViews.reduce((sum, e) => sum + e.durationSeconds, 0) / pageViews.length) 
+    : 0;
+  const avgDurationFormatted = `${Math.floor(avgDurationSeconds / 60)}m ${avgDurationSeconds % 60}s`;
+
+  // Generate Trend Chart Data based on selected filter
+  const trendChartData = useMemo(() => {
+    const now = new Date();
+    
+    if (analyticsTimeFilter === 'realtime') {
+      // Group by last 60 minutes in 5-minute slots
+      const data: { date: string; Visualizações: number; Conversões: number }[] = [];
+      for (let i = 11; i >= 0; i--) {
+        const slotTime = new Date(now.getTime() - i * 5 * 60 * 1000);
+        const timeStr = slotTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        data.push({ date: timeStr, Visualizações: 0, Conversões: 0 });
+      }
+
+      filteredEventsForMetrics.forEach(e => {
+        const evTime = new Date(e.timestamp).getTime();
+        const diffMin = Math.floor((now.getTime() - evTime) / (5 * 60 * 1000));
+        if (diffMin >= 0 && diffMin < 12) {
+          const index = 11 - diffMin;
+          if (data[index]) {
+            if (e.customAction) {
+              data[index].Conversões += 1;
+            } else {
+              data[index].Visualizações += 1;
+            }
+          }
+        }
+      });
+      return data;
+    }
+
+    if (analyticsTimeFilter === 'today') {
+      // Group by hours (last 24 hours or fixed blocks)
+      const data: { date: string; Visualizações: number; Conversões: number }[] = [];
+      for (let i = 23; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 60 * 60 * 1000);
+        const hourLabel = `${d.getHours()}:00`;
+        data.push({ date: hourLabel, Visualizações: 0, Conversões: 0 });
+      }
+
+      filteredEventsForMetrics.forEach(e => {
+        const evDate = new Date(e.timestamp);
+        const diffHours = Math.floor((now.getTime() - evDate.getTime()) / (60 * 60 * 1000));
+        if (diffHours >= 0 && diffHours < 24) {
+          const index = 23 - diffHours;
+          if (data[index]) {
+            if (e.customAction) {
+              data[index].Conversões += 1;
+            } else {
+              data[index].Visualizações += 1;
+            }
+          }
+        }
+      });
+      return data;
+    }
+
+    if (analyticsTimeFilter === 'month') {
+      // Group by day of current month (1 to 28/30/31)
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const data: { date: string; Visualizações: number; Conversões: number }[] = [];
+      for (let i = 1; i <= daysInMonth; i++) {
+        data.push({ date: `${i} ${now.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}`, Visualizações: 0, Conversões: 0 });
+      }
+
+      filteredEventsForMetrics.forEach(e => {
+        const evDate = new Date(e.timestamp);
+        if (evDate.getMonth() === now.getMonth() && evDate.getFullYear() === now.getFullYear()) {
+          const day = evDate.getDate();
+          if (data[day - 1]) {
+            if (e.customAction) {
+              data[day - 1].Conversões += 1;
+            } else {
+              data[day - 1].Visualizações += 1;
+            }
+          }
+        }
+      });
+      return data;
+    }
+
+    if (analyticsTimeFilter === 'year') {
+      // Group by month of current year (Jan to Dez)
+      const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const data = months.map(m => ({ date: m, Visualizações: 0, Conversões: 0 }));
+
+      filteredEventsForMetrics.forEach(e => {
+        const evDate = new Date(e.timestamp);
+        if (evDate.getFullYear() === now.getFullYear()) {
+          const monthIdx = evDate.getMonth();
+          if (data[monthIdx]) {
+            if (e.customAction) {
+              data[monthIdx].Conversões += 1;
+            } else {
+              data[monthIdx].Visualizações += 1;
+            }
+          }
+        }
+      });
+      return data;
+    }
+
+    // Default: Last 30 days
+    const dailyDataMap: Record<string, { date: string; Visualizações: number; Conversões: number }> = {};
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dayStr = d.toISOString().split('T')[0];
+      const label = d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '');
+      dailyDataMap[dayStr] = { date: label, Visualizações: 0, Conversões: 0 };
+    }
+
+    filteredEventsForMetrics.forEach(e => {
+      const dayStr = e.timestamp.split('T')[0];
+      if (dailyDataMap[dayStr]) {
+        if (e.customAction) {
+          dailyDataMap[dayStr].Conversões += 1;
+        } else {
+          dailyDataMap[dayStr].Visualizações += 1;
+        }
+      }
+    });
+
+    return Object.values(dailyDataMap);
+  }, [filteredEventsForMetrics, analyticsTimeFilter]);
+
+  const dailyChartData = trendChartData;
+
+  const originMap: Record<string, number> = {
+    'Tráfego Pago': 0,
+    'Orgânico': 0,
+    'Direto': 0,
+    'Redes Sociais': 0,
+    'Referência': 0
+  };
+  pageViews.forEach(e => {
+    if (originMap[e.origin] !== undefined) {
+      originMap[e.origin] += 1;
+    }
+  });
+  const originChartData = Object.entries(originMap).map(([name, value]) => ({ name, value }));
+
+  const deviceMap: Record<string, number> = {
+    'Desktop': 0,
+    'Mobile': 0,
+    'Tablet': 0
+  };
+  pageViews.forEach(e => {
+    if (deviceMap[e.device] !== undefined) {
+      deviceMap[e.device] += 1;
+    }
+  });
+  const deviceChartData = Object.entries(deviceMap).map(([name, value]) => ({ name, value }));
+
+  const ageMap: Record<string, number> = {
+    '18-24': 0,
+    '25-34': 0,
+    '35-44': 0,
+    '45-54': 0,
+    '55+': 0
+  };
+  pageViews.forEach(e => {
+    if (ageMap[e.age] !== undefined) {
+      ageMap[e.age] += 1;
+    }
+  });
+  const ageChartData = Object.entries(ageMap).map(([name, value]) => ({ name, value }));
+
+  const pageLabelMap: Record<string, string> = {
+    'home': 'Início / Home',
+    'packages': 'Pacotes de Viagem',
+    'custom-trip': 'Roteiros Exclusivos',
+    'blog': 'Artigos do Blog',
+    'about-us': 'Nossa História / Quem Somos',
+    'contact-us': 'Fale Conosco',
+    'travel-quiz': 'Quiz de Estilo de Viagem',
+    'privacy': 'Políticas de Privacidade',
+    'destinos-vip': 'Página VIP: Destinos',
+    'seguro-viagem': 'Página VIP: Seguro de Viagem'
+  };
+
+  const pageCountMap: Record<string, { count: number; totalDuration: number }> = {};
+  pageViews.forEach(e => {
+    if (!pageCountMap[e.pageId]) {
+      pageCountMap[e.pageId] = { count: 0, totalDuration: 0 };
+    }
+    pageCountMap[e.pageId].count += 1;
+    pageCountMap[e.pageId].totalDuration += e.durationSeconds;
+  });
+
+  const rankedPages = Object.entries(pageCountMap)
+    .map(([id, stats]) => ({
+      id,
+      name: pageLabelMap[id] || `Página Customizada: ${id}`,
+      views: stats.count,
+      avgTime: stats.count > 0 ? `${Math.floor((stats.totalDuration / stats.count) / 60)}m ${Math.round((stats.totalDuration / stats.count) % 60)}s` : '0s'
+    }))
+    .sort((a, b) => b.views - a.views);
+
+  const eventLabelMap: Record<string, string> = {
+    'whatsapp_click': 'Cliques no Botão WhatsApp',
+    'whatsapp_modal': 'Aberturas do Seletor WhatsApp',
+    'quiz_completed': 'Quiz de Estilo Finalizado',
+    'search_flights': 'Pesquisas de Voos (Befly)',
+    'itinerary_build_click': 'Início de Roteiro Customizado',
+    'quote_package': 'Solicitações de Cotação de Pacotes'
+  };
+
+  const eventCountMap: Record<string, number> = {
+    'whatsapp_click': 0,
+    'whatsapp_modal': 0,
+    'quiz_completed': 0,
+    'search_flights': 0,
+    'itinerary_build_click': 0,
+    'quote_package': 0
+  };
+  customEvents.forEach(e => {
+    if (e.customAction && eventCountMap[e.customAction] !== undefined) {
+      eventCountMap[e.customAction] += 1;
+    }
+  });
+
+  const activeEvents = Object.entries(eventCountMap).map(([id, count]) => ({
+    id,
+    label: eventLabelMap[id] || id,
+    count
+  })).sort((a, b) => b.count - a.count);
+
   return (
     <div className="min-h-screen bg-[#0c0a09] text-stone-200 pb-20 pt-8" id="admin-cms-dashboard">
       
@@ -681,6 +1431,100 @@ export default function AdminView() {
             </button>
           </div>
         </div>
+        {/* Omni Search Bar */}
+        <div className="bg-[#181615]/40 border border-stone-800/80 rounded-2xl p-4 sm:p-5 shadow-inner">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-stone-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Digite qualquer termo para localizar e alterar... (Ex: 'SEO', 'WhatsApp', 'Vídeo', 'Foto dos sócios', 'Cores', 'Pacotes')"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="block w-full pl-12 pr-4 py-3 sm:py-3.5 bg-stone-900/90 border border-stone-800 hover:border-stone-700 focus:border-[#AF4934]/60 focus:ring-1 focus:ring-[#AF4934]/60 text-sm rounded-xl text-stone-100 placeholder-stone-500 font-sans tracking-wide transition-colors outline-none focus:shadow-md"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => { setSearchQuery(''); setSearchResults([]); }}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-500 hover:text-stone-300 transition-colors text-xs font-mono font-bold"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+
+          <AnimatePresence>
+            {searchResults.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+                className="mt-3.5 bg-[#141211] border border-stone-800/80 rounded-xl overflow-hidden divide-y divide-stone-850/60 z-30 relative shadow-2xl max-h-80 overflow-y-auto custom-scrollbar"
+              >
+                <div className="px-4 py-2 bg-stone-900/40 border-b border-stone-850/40 flex justify-between items-center">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-stone-500 font-bold">Resultados da Busca Inteligente</span>
+                  <span className="text-[10px] font-mono text-[#AF4934] font-bold">{searchResults.length} {searchResults.length === 1 ? 'item encontrado' : 'itens encontrados'}</span>
+                </div>
+                {searchResults.map((item, index) => {
+                  let tabLabel = "Painel";
+                  if (item.tab === 'seo') tabLabel = "SEO, Favicon & Contatos";
+                  if (item.tab === 'home') tabLabel = "Início & Quem Somos";
+                  if (item.tab === 'layout') tabLabel = "Layout, Logo & Menu";
+                  if (item.tab === 'services') tabLabel = "Nossos Serviços";
+                  if (item.tab === 'packages') tabLabel = "Catálogo de Pacotes";
+                  if (item.tab === 'promos') tabLabel = "Ofertas Relâmpago / Voos";
+                  if (item.tab === 'blog') tabLabel = "Postagens do Blog";
+                  if (item.tab === 'testimonials') tabLabel = "Depoimentos";
+                  if (item.tab === 'code') tabLabel = "Injetor de Códigos / HTML";
+                  if (item.tab === 'theme') tabLabel = "Personalizar Cores e Tema";
+                  if (item.tab === 'custom-pages') tabLabel = "Páginas Customizadas";
+                  if (item.tab === 'domains') tabLabel = "Domínio & Hospedagem";
+                  if (item.tab === 'analytics') tabLabel = "Análises e Estatísticas";
+
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleSearchResultClick(item)}
+                      className="w-full text-left px-4 py-3 sm:py-3.5 hover:bg-[#AF4934]/10 transition-colors flex items-start justify-between gap-4 cursor-pointer group"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-display font-medium text-stone-200 group-hover:text-white transition-colors">
+                            {item.term}
+                          </span>
+                          <span className="text-[9px] uppercase tracking-wider font-mono px-2 py-0.5 rounded bg-stone-850 text-stone-400 border border-stone-800">
+                            {tabLabel}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-stone-400 group-hover:text-stone-300 leading-relaxed max-w-2xl">
+                          {item.description}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 self-center text-[10px] sm:text-xs font-mono text-[#FF7C60] bg-[#AF4934]/20 border border-[#AF4934]/30 px-2.5 py-1.5 rounded-lg font-bold hover:bg-[#AF4934]/40 hover:border-[#AF4934]/50 transition-all shrink-0">
+                        <span>Ir para ajuste</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#FF7C60]" />
+                      </div>
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
+            
+            {searchQuery && searchResults.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-3.5 p-4 text-center bg-[#141211] border border-stone-800 rounded-xl"
+              >
+                <p className="text-stone-400 text-xs">Nenhum campo ou configuração encontrada para "<span className="text-stone-200 font-semibold">{searchQuery}</span>".</p>
+                <p className="text-stone-500 text-[11px] mt-1">Dica: Tente buscar por termos mais simples como 'foto', 'titulo', 'whatsapp', 'seo', 'cores' ou 'blog'.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* Dashboard layout splits */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
@@ -688,6 +1532,21 @@ export default function AdminView() {
           <div className="space-y-2 lg:col-span-1" id="admin-sidebar">
             <p className="text-[9px] uppercase font-mono tracking-widest text-stone-500 font-bold px-2.5 mb-2 block">Módulos de Edição</p>
             
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`w-full text-left font-display text-xs tracking-wider uppercase px-4 py-3.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer border ${
+                activeTab === 'analytics' 
+                  ? 'bg-[#AF4934]/15 border-[#AF4934]/35 text-[#AF4934] font-bold' 
+                  : 'bg-[#181615]/30 hover:bg-[#181615]/80 border-transparent text-stone-400'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <BarChart2 className="w-4 h-4 shrink-0 text-[#AF4934]" />
+                Análises e Estatísticas
+              </span>
+              <span className="text-[10px] font-mono bg-emerald-950/80 text-emerald-400 px-2 py-0.5 rounded-md font-bold">LIVE</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('seo')}
               className={`w-full text-left font-display text-xs tracking-wider uppercase px-4 py-3.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer border ${
@@ -804,7 +1663,81 @@ export default function AdminView() {
               <span className="text-[10px] font-mono bg-stone-800/80 text-[#AF4934] px-2 py-0.5 rounded-md font-bold">{testimonials.length}</span>
             </button>
 
-            <div className="border-t border-stone-800 pt-3 mt-4">
+            <button
+              onClick={() => setActiveTab('code')}
+              className={`w-full text-left font-display text-xs tracking-wider uppercase px-4 py-3.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer border ${
+                activeTab === 'code' 
+                  ? 'bg-[#AF4934]/15 border-[#AF4934]/35 text-[#AF4934] font-bold' 
+                  : 'bg-[#181615]/30 hover:bg-[#181615]/80 border-transparent text-stone-400'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Code className="w-4 h-4 shrink-0 text-amber-500" />
+                Injetor de Códigos / HTML
+              </span>
+              <span className="text-[10px] font-mono bg-amber-950/80 text-amber-500 px-2 py-0.5 rounded-md font-bold">Ativo</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('theme')}
+              className={`w-full text-left font-display text-xs tracking-wider uppercase px-4 py-3.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer border ${
+                activeTab === 'theme' 
+                  ? 'bg-[#AF4934]/15 border-[#AF4934]/35 text-[#AF4934] font-bold' 
+                  : 'bg-[#181615]/30 hover:bg-[#181615]/80 border-transparent text-stone-400'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Palette className="w-4 h-4 shrink-0 text-brand-secondary" />
+                Personalizar Cores e Tema
+              </span>
+              <span className="text-[10px] font-mono bg-teal-950/80 text-teal-400 px-2 py-0.5 rounded-md font-bold">Design</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('custom-pages')}
+              className={`w-full text-left font-display text-xs tracking-wider uppercase px-4 py-3.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer border ${
+                activeTab === 'custom-pages' 
+                  ? 'bg-[#AF4934]/15 border-[#AF4934]/35 text-[#AF4934] font-bold' 
+                  : 'bg-[#181615]/30 hover:bg-[#181615]/80 border-transparent text-stone-400'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <FileText className="w-4 h-4 shrink-0 text-amber-500" />
+                Páginas Customizadas
+              </span>
+              <span className="text-[10px] font-mono bg-amber-950/80 text-amber-500 px-2 py-0.5 rounded-md font-bold">{customPages.length}</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('domains')}
+              className={`w-full text-left font-display text-xs tracking-wider uppercase px-4 py-3.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer border ${
+                activeTab === 'domains' 
+                  ? 'bg-[#AF4934]/15 border-[#AF4934]/35 text-[#AF4934] font-bold' 
+                  : 'bg-[#181615]/30 hover:bg-[#181615]/80 border-transparent text-stone-400'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Globe className="w-4 h-4 shrink-0 text-blue-400" />
+                Domínio & Hospedagem
+              </span>
+              <span className="text-[10px] font-mono bg-blue-950/80 text-blue-400 px-2 py-0.5 rounded-md font-bold">DNS</span>
+            </button>
+
+            <div className="border-t border-stone-800 pt-3 mt-4 space-y-2">
+              <button
+                onClick={() => setActiveTab('sync')}
+                className={`w-full text-left font-display text-xs tracking-wider uppercase px-4 py-3.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer border ${
+                  activeTab === 'sync' 
+                    ? 'bg-[#AF4934]/15 border-[#AF4934]/35 text-[#AF4934] font-bold' 
+                    : 'bg-[#181615]/30 hover:bg-[#AF4934]/10 border-transparent text-stone-400'
+                }`}
+              >
+                <span className="flex items-center gap-2.5">
+                  <Server className="w-4 h-4 shrink-0 text-amber-500" />
+                  Sincronização Cloud
+                </span>
+              </button>
+
               <button
                 onClick={() => setActiveTab('reset')}
                 className={`w-full text-left font-display text-xs tracking-wider uppercase px-4 py-3.5 rounded-xl transition-all duration-150 flex items-center gap-2.5 cursor-pointer border ${
@@ -822,6 +1755,415 @@ export default function AdminView() {
           {/* Active Workspace Area Panels */}
           <div className="lg:col-span-3 bg-[#131110] border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-xl text-left">
             
+            {/* Panel Analytics */}
+            {activeTab === 'analytics' && (
+              <div className="space-y-8">
+                {/* Header info */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-800 pb-5">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-950/40 px-2.5 py-1 rounded-full font-mono font-bold uppercase tracking-wider mb-2 animate-pulse">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+                      Live Analytics Ativo
+                    </span>
+                    <h3 className="font-display font-medium text-lg text-stone-100">Painel de Métricas e Análises</h3>
+                    <p className="text-stone-400 text-xs mt-1">Estatísticas consolidadas dos últimos 30 dias de tráfego, conversões e engajamento da Arcadane Viagens.</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const testPages = ['home', 'packages', 'custom-trip', 'blog', 'travel-quiz', 'contact-us', 'destinos-vip'];
+                        const randomPage = testPages[Math.floor(Math.random() * testPages.length)];
+                        // Track a random page
+                        import('../utils/analyticsTracker').then(m => {
+                          m.trackPageView(randomPage);
+                          // Also random conversion 25% of times
+                          if (Math.random() < 0.25) {
+                            const actions = ['whatsapp_click', 'quiz_completed', 'search_flights'];
+                            m.trackCustomEvent(actions[Math.floor(Math.random() * actions.length)], randomPage);
+                          }
+                          setAnalyticsEvents(m.getAnalyticsEvents());
+                          showFeedback('Acesso simulado registrado em tempo real!', 'success');
+                        });
+                      }}
+                      className="bg-[#AF4934]/15 hover:bg-[#AF4934]/25 text-[#AF4934] border border-[#AF4934]/35 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Simular Tráfego Live
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        if (confirm('Deseja realmente limpar TODOS os dados de tráfego reais salvos na nuvem (Firestore) e no navegador?')) {
+                          import('../utils/analyticsTracker').then(async (m) => {
+                            await m.clearFirestoreAnalytics();
+                            setAnalyticsEvents([]);
+                            showFeedback('Estatísticas de tráfego do Firestore limpas com sucesso!', 'success');
+                          });
+                        }
+                      }}
+                      className="bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    >
+                      Resetar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Time Filter Selector */}
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-stone-900/40 p-2.5 rounded-2xl border border-stone-850/80">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-stone-400 font-display">
+                    <Sliders className="w-3.5 h-3.5 text-[#AF4934]" />
+                    <span>Período do Relatório:</span>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      onClick={() => setAnalyticsTimeFilter('realtime')}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold tracking-tight transition-all flex items-center gap-2 cursor-pointer border ${
+                        analyticsTimeFilter === 'realtime'
+                          ? 'bg-emerald-550/15 border-emerald-500/30 text-emerald-400 shadow-sm shadow-emerald-500/10'
+                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                      }`}
+                    >
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      <span>Na Hora (Ativos Agora)</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setAnalyticsTimeFilter('today')}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
+                        analyticsTimeFilter === 'today'
+                          ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
+                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                      }`}
+                    >
+                      No Dia (Hoje)
+                    </button>
+                    
+                    <button
+                      onClick={() => setAnalyticsTimeFilter('month')}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
+                        analyticsTimeFilter === 'month'
+                          ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
+                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                      }`}
+                    >
+                      Por Mês (Este Mês)
+                    </button>
+                    
+                    <button
+                      onClick={() => setAnalyticsTimeFilter('year')}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
+                        analyticsTimeFilter === 'year'
+                          ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
+                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                      }`}
+                    >
+                      Por Ano (Este Ano)
+                    </button>
+                    
+                    <button
+                      onClick={() => setAnalyticsTimeFilter('30days')}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
+                        analyticsTimeFilter === '30days'
+                          ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
+                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                      }`}
+                    >
+                      Últimos 30 dias (Tudo)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bento Grid Stats KPIs */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* KPI 1 */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl space-y-2 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-[#AF4934]/5 rounded-full blur-xl group-hover:scale-125 transition-transform" />
+                    <span className="text-[10px] font-mono uppercase text-stone-500 tracking-wider block">Visualizações</span>
+                    <span className="font-display font-bold text-2xl text-stone-100 block tracking-tight">
+                      {totalViews.toLocaleString('pt-BR')}
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" /> +12.4% vs mês ant.
+                    </span>
+                  </div>
+
+                  {/* KPI 2 */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl space-y-2 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-[#3B5EA4]/5 rounded-full blur-xl group-hover:scale-125 transition-transform" />
+                    <span className="text-[10px] font-mono uppercase text-stone-500 tracking-wider block">
+                      {analyticsTimeFilter === 'realtime' ? 'Ativos Agora' : 'Visitantes Únicos'}
+                    </span>
+                    <span className="font-display font-bold text-2xl text-stone-100 block tracking-tight flex items-center gap-1.5">
+                      {analyticsTimeFilter === 'realtime' ? (
+                        <>
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                          {Math.max(1, activeNowCount)}
+                        </>
+                      ) : (
+                        uniqueVisitors.toLocaleString('pt-BR')
+                      )}
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" /> 
+                      {analyticsTimeFilter === 'realtime' ? 'Sessões online no site' : '+8.7% sessões ativas'}
+                    </span>
+                  </div>
+
+                  {/* KPI 3 */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl space-y-2 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl group-hover:scale-125 transition-transform" />
+                    <span className="text-[10px] font-mono uppercase text-stone-500 tracking-wider block">Taxa de Conversão</span>
+                    <span className="font-display font-bold text-2xl text-emerald-400 block tracking-tight">
+                      {conversionRate}%
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                      Meta de WhatsApp premium
+                    </span>
+                  </div>
+
+                  {/* KPI 4 */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl space-y-2 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full blur-xl group-hover:scale-125 transition-transform" />
+                    <span className="text-[10px] font-mono uppercase text-stone-500 tracking-wider block">Tempo de Sessão</span>
+                    <span className="font-display font-bold text-2xl text-stone-100 block tracking-tight">
+                      {avgDurationFormatted}
+                    </span>
+                    <span className="text-[10px] font-mono text-stone-400 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> Engajamento excelente
+                    </span>
+                  </div>
+                </div>
+
+                {/* Main Charts Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Traffic Trend area chart */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl lg:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-display font-medium text-stone-100">Tendência de Tráfego</h4>
+                        <p className="text-[10px] text-stone-400">Histórico de visualizações de páginas e conversões no período</p>
+                      </div>
+                      <span className="text-[10px] font-mono bg-stone-800 text-stone-400 px-2 py-0.5 rounded-md uppercase">
+                        {analyticsTimeFilter === 'realtime' && 'Última Hora (minutos)'}
+                        {analyticsTimeFilter === 'today' && 'Hoje (horas)'}
+                        {analyticsTimeFilter === 'month' && 'Este Mês (dias)'}
+                        {analyticsTimeFilter === 'year' && 'Este Ano (meses)'}
+                        {analyticsTimeFilter === '30days' && 'Últimos 30 Dias'}
+                      </span>
+                    </div>
+
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={dailyChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+                          <XAxis dataKey="date" stroke="#78716c" fontSize={10} tickLine={false} />
+                          <YAxis stroke="#78716c" fontSize={10} tickLine={false} axisLine={false} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#1c1917', borderColor: '#2e2a24', color: '#f5f5f4', borderRadius: '12px', fontSize: '12px' }}
+                            labelStyle={{ fontWeight: 'bold', color: '#AF4934' }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
+                          <Line type="monotone" dataKey="Visualizações" stroke="#AF4934" strokeWidth={2.5} dot={false} activeDot={{ r: 6 }} />
+                          <Line type="monotone" dataKey="Conversões" stroke="#3B5EA4" strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Traffic Origin bar chart */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl space-y-4">
+                    <div>
+                      <h4 className="text-sm font-display font-medium text-stone-100">Origem do Tráfego</h4>
+                      <p className="text-[10px] text-stone-400">Classificação por canal de origem e campanhas</p>
+                    </div>
+
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={originChartData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+                          <XAxis dataKey="name" stroke="#78716c" fontSize={10} tickLine={false} />
+                          <YAxis stroke="#78716c" fontSize={10} tickLine={false} axisLine={false} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#1c1917', borderColor: '#2e2a24', color: '#f5f5f4', borderRadius: '12px', fontSize: '12px' }}
+                            cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                          />
+                          <Bar dataKey="value" name="Acessos" fill="#AF4934" radius={[4, 4, 0, 0]}>
+                            {originChartData.map((entry, index) => {
+                              const colors = ['#AF4934', '#3B5EA4', '#DCCFC1', '#6F5B4E', '#14532d'];
+                              return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                            })}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub Charts: Devices and Age */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Device breakdown */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl space-y-4 flex flex-col justify-between">
+                    <div>
+                      <h4 className="text-sm font-display font-medium text-stone-100">Dispositivos de Acesso</h4>
+                      <p className="text-[10px] text-stone-400">Distribuição percentual por dispositivo utilizado</p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-around gap-6 py-2">
+                      <div className="w-44 h-44">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={deviceChartData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={50}
+                              outerRadius={70}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              {deviceChartData.map((entry, index) => {
+                                const colors = ['#AF4934', '#3B5EA4', '#DCCFC1'];
+                                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                              })}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: '#1c1917', borderColor: '#2e2a24', color: '#f5f5f4', borderRadius: '12px', fontSize: '12px' }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      <div className="space-y-2.5 font-mono text-xs w-full sm:w-auto">
+                        {deviceChartData.map((dev, index) => {
+                          const colors = ['bg-[#AF4934]', 'bg-[#3B5EA4]', 'bg-[#DCCFC1]'];
+                          const icons = [Monitor, Smartphone, TabletIcon];
+                          const IconComp = icons[index % icons.length];
+                          const pct = totalViews > 0 ? ((dev.value / totalViews) * 100).toFixed(1) : '0.0';
+                          return (
+                            <div key={dev.name} className="flex items-center justify-between gap-6">
+                              <span className="flex items-center gap-2 text-stone-400">
+                                <span className={`w-2.5 h-2.5 rounded-full ${colors[index % colors.length]} inline-block shrink-0`} />
+                                <IconComp className="w-3.5 h-3.5 shrink-0 text-stone-500" />
+                                {dev.name}
+                              </span>
+                              <span className="font-bold text-stone-200">{pct}% ({dev.value})</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Age demographics */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl space-y-4">
+                    <div>
+                      <h4 className="text-sm font-display font-medium text-stone-100">Faixa Etária do Público</h4>
+                      <p className="text-[10px] text-stone-400">Composição demográfica (Foco em Alta Renda e Casais)</p>
+                    </div>
+
+                    <div className="h-44 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={ageChartData} layout="vertical" margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
+                          <XAxis type="number" stroke="#78716c" fontSize={10} tickLine={false} axisLine={false} />
+                          <YAxis dataKey="name" type="category" stroke="#78716c" fontSize={10} tickLine={false} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#1c1917', borderColor: '#2e2a24', color: '#f5f5f4', borderRadius: '12px', fontSize: '12px' }}
+                            cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                          />
+                          <Bar dataKey="value" name="Acessos" fill="#3B5EA4" radius={[0, 4, 4, 0]}>
+                            {ageChartData.map((entry, index) => {
+                              const colors = ['#6f6b64', '#AF4934', '#3B5EA4', '#AF4934', '#DCCFC1'];
+                              return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                            })}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Table Rankings and Conversions Lists */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Page Views rankings table */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl space-y-4">
+                    <div>
+                      <h4 className="text-sm font-display font-medium text-stone-100">Páginas Mais Acessadas</h4>
+                      <p className="text-[10px] text-stone-400">Ranking das páginas e caminhos com maior tráfego</p>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="border-b border-stone-800 text-stone-500 font-mono text-[10px] uppercase tracking-wider pb-2">
+                            <th className="py-2.5 font-semibold">Página / Link</th>
+                            <th className="py-2.5 text-right font-semibold">Acessos</th>
+                            <th className="py-2.5 text-right font-semibold">Tempo Médio</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-900 font-sans text-stone-300">
+                          {rankedPages.slice(0, 6).map((pg, i) => (
+                            <tr key={pg.id} className="hover:bg-stone-900/30 transition-colors">
+                              <td className="py-2.5 font-medium flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-stone-500 w-3.5">{i + 1}.</span>
+                                <span className="truncate max-w-[180px] sm:max-w-[240px]" title={pg.name}>
+                                  {pg.name}
+                                </span>
+                              </td>
+                              <td className="py-2.5 text-right font-mono font-bold text-stone-100">{pg.views}</td>
+                              <td className="py-2.5 text-right text-stone-400 font-mono">{pg.avgTime}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Realtime Live actions events */}
+                  <div className="bg-[#181615] border border-stone-800 p-5 rounded-2xl space-y-4">
+                    <div>
+                      <h4 className="text-sm font-display font-medium text-stone-100">Eventos de Conversão</h4>
+                      <p className="text-[10px] text-stone-400">Métricas de ações de usuários (botões de WhatsApp, Quiz etc.)</p>
+                    </div>
+
+                    <div className="space-y-4 text-xs">
+                      {activeEvents.map((evt) => {
+                        const maxCount = Math.max(...activeEvents.map(e => e.count), 1);
+                        const pctProgress = (evt.count / maxCount) * 100;
+                        return (
+                          <div key={evt.id} className="space-y-1.5">
+                            <div className="flex items-center justify-between text-stone-300">
+                              <span className="font-medium flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                {evt.label}
+                              </span>
+                              <span className="font-mono font-bold text-stone-100">{evt.count}</span>
+                            </div>
+                            
+                            {/* Simple elegant modern loading progress bar */}
+                            <div className="w-full h-1.5 bg-stone-900 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-[#3B5EA4] to-[#AF4934] rounded-full transition-all duration-500"
+                                style={{ width: `${pctProgress}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Panel SEO */}
             {activeTab === 'seo' && (
               <form onSubmit={handleSaveSeo} className="space-y-6">
@@ -831,7 +2173,7 @@ export default function AdminView() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1 md:col-span-2">
+                  <div className="space-y-1 md:col-span-2" id="seo-site-title">
                     <label className={labelClass}>Título do Site (Navegador)</label>
                     <input 
                       type="text" 
@@ -843,7 +2185,7 @@ export default function AdminView() {
                     />
                   </div>
 
-                  <div className="space-y-1 md:col-span-2">
+                  <div className="space-y-1 md:col-span-2" id="seo-meta-description">
                     <label className={labelClass}>Meta Descrição (Para Google/Buscas SEO)</label>
                     <textarea 
                       rows={2}
@@ -855,7 +2197,7 @@ export default function AdminView() {
                     />
                   </div>
 
-                  <div className="space-y-1">
+                  <div className="space-y-1" id="seo-keywords">
                     <label className={labelClass}>Palavras-chave (Tag Keywords)</label>
                     <input 
                       type="text" 
@@ -865,7 +2207,7 @@ export default function AdminView() {
                     />
                   </div>
 
-                  <div className="space-y-1">
+                  <div className="space-y-1" id="seo-favicon">
                     <label className={labelClass}>URL ou Base64 do Favicon (Ícone de aba)</label>
                     <input 
                       type="text" 
@@ -882,7 +2224,7 @@ export default function AdminView() {
                   <p className="text-[11px] text-[#AF4934] font-mono leading-relaxed mt-1">Insira somente os números com código do país (DDI) e código de área (DDD). Exemplo: 5581999999999</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <div className="space-y-1">
+                    <div className="space-y-1" id="contact-maria">
                       <label className={labelClass}>Contato Maria</label>
                       <input 
                         type="text" 
@@ -893,7 +2235,7 @@ export default function AdminView() {
                       />
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1" id="contact-mateus">
                       <label className={labelClass}>Contato Mateus</label>
                       <input 
                         type="text" 
@@ -904,7 +2246,7 @@ export default function AdminView() {
                       />
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1" id="contact-mariana">
                       <label className={labelClass}>Contato Mariana</label>
                       <input 
                         type="text" 
@@ -1068,7 +2410,7 @@ export default function AdminView() {
                   </p>
                 </div>
 
-                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
+                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4" id="layout-custom-logo">
                   <h4 className="text-sm font-bold font-display text-amber-500">1. Logotipo Personalizado (PNG)</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="space-y-3">
@@ -1134,7 +2476,7 @@ export default function AdminView() {
                   </div>
                 </div>
 
-                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
+                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4" id="layout-menu-labels">
                   <h4 className="text-sm font-bold font-display text-amber-500">3. Menus de Navegação (Rótulos)</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
@@ -1210,7 +2552,7 @@ export default function AdminView() {
                   </div>
                 </div>
 
-                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
+                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4" id="layout-submenus">
                   <h4 className="text-sm font-bold font-display text-amber-500">4. Submenus de Cabeçalho (Dropdowns)</h4>
                   <p className="text-xs text-stone-400 font-sans leading-relaxed">
                     Personalize os sublinks que aparecem ao passar o mouse ou clicar nos itens "Pacotes" e "Viagem Personalizada". Use o formato: <code className="text-amber-400">Nome do Link | id_da_pagina</code> separados por ponto e vírgula (<code className="text-amber-400">;</code>).
@@ -1235,6 +2577,146 @@ export default function AdminView() {
                         onChange={(e) => setHome({ ...home, submenuCustomTripLinks: e.target.value })}
                         placeholder="Lua de Mel VIP | custom_trip; Roteiro de Trem | custom_trip"
                         className={inputClass}
+                      />
+                    </div>
+
+                    {/* Assistente de Links do Menu */}
+                    <div className="bg-[#1c1917]/60 border border-[#AF4934]/30 rounded-xl p-4 mt-4 space-y-4">
+                      <div className="flex items-center gap-1.5 text-amber-500">
+                        <Sparkles className="w-4 h-4" />
+                        <h5 className="text-xs font-bold uppercase font-display tracking-wider">Assistente Construtor de Links</h5>
+                      </div>
+                      <p className="text-[11px] text-stone-400">Escolha uma página criada ou link externo para gerar o código do submenu automaticamente e evitar erros de digitação.</p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-stone-400 uppercase font-bold font-mono">1. Nome do Link (Rótulo)</label>
+                          <input 
+                            type="text" 
+                            id="link-helper-label"
+                            placeholder="Ex: Maldivas VIP"
+                            className="w-full bg-stone-900 border border-stone-800 rounded-lg px-2.5 py-2 text-xs text-stone-100 focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-stone-400 uppercase font-bold font-mono">2. Destino do Link</label>
+                          <select 
+                            id="link-helper-target"
+                            className="w-full bg-stone-900 border border-stone-800 rounded-lg px-2.5 py-2 text-xs text-stone-100 focus:outline-none"
+                            onChange={(e) => {
+                              const input = document.getElementById('link-helper-external-url') as HTMLInputElement;
+                              if (input) {
+                                if (e.target.value === 'external') {
+                                  input.style.display = 'block';
+                                } else {
+                                  input.style.display = 'none';
+                                }
+                              }
+                            }}
+                          >
+                            <optgroup label="Páginas Principais">
+                              <option value="home">Início (home)</option>
+                              <option value="services">Serviços (services)</option>
+                              <option value="packages">Pacotes (packages)</option>
+                              <option value="about_us">Quem Somos (about_us)</option>
+                              <option value="custom_trip">Viagem Personalizada (custom_trip)</option>
+                              <option value="blog">Blog (blog)</option>
+                              <option value="contact">Contato (contact)</option>
+                              <option value="quiz">Quiz (quiz)</option>
+                            </optgroup>
+                            {customPages.length > 0 && (
+                              <optgroup label="Suas Páginas Customizadas">
+                                {customPages.map(cp => (
+                                  <option key={cp.id} value={cp.id}>{cp.title} ({cp.id})</option>
+                                ))}
+                              </optgroup>
+                            )}
+                            <option value="external">-- Link Externo Personalizado --</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-stone-400 uppercase font-bold font-mono">Ação</label>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const labelInput = document.getElementById('link-helper-label') as HTMLInputElement;
+                                const targetSelect = document.getElementById('link-helper-target') as HTMLSelectElement;
+                                const urlInput = document.getElementById('link-helper-external-url') as HTMLInputElement;
+                                
+                                const label = labelInput?.value.trim();
+                                if (!label) {
+                                  alert('Por favor, digite um Nome do Link.');
+                                  return;
+                                }
+
+                                let target = targetSelect?.value;
+                                if (target === 'external') {
+                                  target = urlInput?.value.trim();
+                                  if (!target) {
+                                    alert('Por favor, digite a URL externa.');
+                                    return;
+                                  }
+                                }
+
+                                const pairStr = `${label} | ${target}`;
+                                const current = home.submenuPackagesLinks ? home.submenuPackagesLinks.trim() : '';
+                                const updated = current ? `${current}; ${pairStr}` : pairStr;
+                                setHome({ ...home, submenuPackagesLinks: updated });
+                                showFeedback('Link gerado e adicionado ao Submenu Pacotes!');
+                                labelInput.value = '';
+                                if (urlInput) urlInput.value = '';
+                              }}
+                              className="w-1/2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase rounded-lg py-2 transition-colors cursor-pointer"
+                            >
+                              + Pacotes
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const labelInput = document.getElementById('link-helper-label') as HTMLInputElement;
+                                const targetSelect = document.getElementById('link-helper-target') as HTMLSelectElement;
+                                const urlInput = document.getElementById('link-helper-external-url') as HTMLInputElement;
+                                
+                                const label = labelInput?.value.trim();
+                                if (!label) {
+                                  alert('Por favor, digite um Nome do Link.');
+                                  return;
+                                }
+
+                                let target = targetSelect?.value;
+                                if (target === 'external') {
+                                  target = urlInput?.value.trim();
+                                  if (!target) {
+                                    alert('Por favor, digite a URL externa.');
+                                    return;
+                                  }
+                                }
+
+                                const pairStr = `${label} | ${target}`;
+                                const current = home.submenuCustomTripLinks ? home.submenuCustomTripLinks.trim() : '';
+                                const updated = current ? `${current}; ${pairStr}` : pairStr;
+                                setHome({ ...home, submenuCustomTripLinks: updated });
+                                showFeedback('Link gerado e adicionado ao Submenu Viagem!');
+                                labelInput.value = '';
+                                if (urlInput) urlInput.value = '';
+                              }}
+                              className="w-1/2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase rounded-lg py-2 transition-colors cursor-pointer"
+                            >
+                              + Viagem
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <input 
+                        type="text" 
+                        id="link-helper-external-url"
+                        placeholder="Insira a URL externa completa (ex: https://site.com/link)"
+                        className="w-full bg-stone-900 border border-stone-800 rounded-lg px-2.5 py-2 text-xs text-stone-100 focus:outline-none"
+                        style={{ display: 'none' }}
                       />
                     </div>
                   </div>
@@ -1357,16 +2839,31 @@ export default function AdminView() {
                       <p className="text-[10px] text-stone-500 font-mono mt-0.5">Insira as frases que aparecem digitadas logo após a palavra "Descobrir". Separe cada uma por vírgula.</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1">
-                        <label className={labelClass}>Tipo de Buscador Integrado (Booking Engine)</label>
+                        <label className={labelClass}>Tipo de Buscador Integrado</label>
                         <select
                           value={home.widgetType || 'whatsapp'}
                           onChange={(e) => setHome({ ...home, widgetType: e.target.value as 'befly' | 'whatsapp' })}
                           className={inputClass}
                         >
-                          <option value="whatsapp">Buscador Inteligente Arcadane (WhatsApp - Recomendado! 🎉)</option>
-                          <option value="befly">Buscador Oficial BeFly / OnerTravel (Requer domínio homologado)</option>
+                          <option value="whatsapp">Buscador Inteligente (WhatsApp - Recomendado! 🎉)</option>
+                          <option value="befly">Buscador Oficial BeFly / OnerTravel (Requer domínio)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className={labelClass}>Posição do Buscador (Banner Inicial)</label>
+                        <select
+                          value={home.widgetPosition || 'middle'}
+                          onChange={(e) => setHome({ ...home, widgetPosition: e.target.value as any })}
+                          className={inputClass}
+                        >
+                          <option value="middle">Meio / Centro (Abaixo do Texto)</option>
+                          <option value="top">Em Cima (Acima do Texto)</option>
+                          <option value="left">Esquerda (Divisão Lateral)</option>
+                          <option value="right">Direita (Divisão Lateral)</option>
+                          <option value="bottom">Em Baixo (Fim do Banner)</option>
                         </select>
                       </div>
 
@@ -1911,8 +3408,8 @@ export default function AdminView() {
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
-                        <h3 className="font-display font-medium text-lg text-stone-100 font-bold">Pacotes Promocionais Ativos</h3>
-                        <p className="text-stone-400 text-xs mt-1">Crie, edite ou exclua pacotes turísticos mostrados no catálogo.</p>
+                        <h3 className="font-display font-medium text-lg text-stone-100 font-bold">Catálogo Geral de Pacotes</h3>
+                        <p className="text-stone-400 text-xs mt-1">Crie, edite ou exclua pacotes turísticos mostrados no catálogo principal.</p>
                       </div>
                       
                       <button
@@ -1925,7 +3422,8 @@ export default function AdminView() {
                             price: 'Sob Consulta',
                             duration: '10 Dias',
                             imageWord: 'bali',
-                            highlights: ['', '']
+                            highlights: ['', ''],
+                            image: ''
                           });
                           setIsCreatingPackage(true);
                         }}
@@ -2040,15 +3538,65 @@ export default function AdminView() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className={labelClass}>Palavra-chave da Imagem (Ícone)</label>
+                        <label className={labelClass}>Palavra-chave da Imagem (Ícone de Backup)</label>
                         <input 
                           type="text" 
-                          value={editingPackage.imageWord} 
+                          value={editingPackage.imageWord || ''} 
                           onChange={(e) => setEditingPackage({ ...editingPackage, imageWord: e.target.value })}
                           className={inputClass}
                           placeholder="Ex: bali, safari, gramado, cruzeiro"
                           required
                         />
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelClass}>Foto de Capa Personalizada (URL da Imagem ou Upload)</label>
+                          <span className="text-[10px] text-stone-500 font-mono tracking-tight">Deixe vazio para usar a palavra-chave acima</span>
+                        </div>
+                        <div className="flex gap-4 items-start">
+                          <input 
+                            type="text" 
+                            value={editingPackage.image || ''} 
+                            onChange={(e) => setEditingPackage({ ...editingPackage, image: e.target.value })}
+                            className={inputClass}
+                            placeholder="https://images.unsplash.com/..."
+                          />
+                          {editingPackage.image && (
+                            <img 
+                              src={editingPackage.image} 
+                              alt="Package Preview" 
+                              className="w-16 h-12 rounded-lg object-cover border border-stone-805 bg-stone-950 shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div className="pt-1 flex items-center gap-3">
+                          <label 
+                            htmlFor="admin-uploader-package-image"
+                            className="px-4 py-2 border border-dashed border-stone-700 hover:border-[#AF4934]/60 bg-[#1c1917]/20 rounded-xl text-xs font-mono text-stone-300 font-bold hover:text-white cursor-pointer transition-colors inline-block"
+                          >
+                            Upload de Foto...
+                          </label>
+                          <input 
+                            type="file" 
+                            id="admin-uploader-package-image" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                compressAndSetImage(file, (base64) => {
+                                  setEditingPackage({ ...editingPackage, image: base64 });
+                                  showFeedback('Imagem de capa do pacote carregada com sucesso!', 'success');
+                                });
+                              }
+                            }}
+                          />
+                          <p className="text-[10px] text-stone-500 font-mono font-light">Selecione uma foto para converter e comprimir automaticamente.</p>
+                        </div>
                       </div>
 
                       <div className="space-y-1 md:col-span-2">
@@ -2823,6 +4371,1251 @@ export default function AdminView() {
                   </form>
                 )}
 
+              </div>
+            )}
+
+            {/* Panel Forced Sync */}
+            {activeTab === 'sync' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-display font-medium text-lg text-stone-100 font-bold">Sincronização Forçada (Multi-Dispositivos)</h3>
+                  <p className="text-stone-400 text-xs mt-1">
+                    Gerencie a persistência de dados entre múltiplos navegadores e dispositivos. Esta ferramenta garante a integridade e sincronismo absoluto do CMS do Arcadane.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Pull (Download from Cloud) Card */}
+                  <div className="bg-[#1c1917]/30 border border-stone-800 hover:border-amber-550/20 rounded-2xl p-6 flex flex-col justify-between space-y-4 transition-all">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 bg-amber-500/10 rounded-lg">
+                          <Download className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <h4 className="font-display text-sm font-bold tracking-wide uppercase text-stone-200">Baixar da Nuvem (PULL)</h4>
+                      </div>
+                      <p className="text-xs text-stone-300 font-light leading-relaxed">
+                        Verifica o estado atual salvo no Firestore e no servidor e sobrescreve o cache local do navegador. Use esta opção se você fez alterações em outro computador ou navegador e deseja atualizá-las aqui.
+                      </p>
+                    </div>
+                    <button
+                      disabled={isForcedSyncing}
+                      onClick={() => handleForcedSync('pull')}
+                      className={`w-full py-2.5 rounded-xl font-display text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                        isForcedSyncing 
+                          ? 'bg-stone-800 text-stone-500 cursor-not-allowed' 
+                          : 'bg-amber-600 hover:bg-amber-550 text-white shadow-md'
+                      }`}
+                    >
+                      {isForcedSyncing ? 'Sincronizando...' : 'Sincronizar e Baixar'}
+                    </button>
+                  </div>
+
+                  {/* Push (Upload to Cloud) Card */}
+                  <div className="bg-[#1c1917]/30 border border-stone-800 hover:border-[#AF4934]/20 rounded-2xl p-6 flex flex-col justify-between space-y-4 transition-all">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 bg-[#AF4934]/10 rounded-lg">
+                          <Server className="w-5 h-5 text-[#AF4934]" />
+                        </div>
+                        <h4 className="font-display text-sm font-bold tracking-wide uppercase text-stone-200">Enviar para Nuvem (PUSH)</h4>
+                      </div>
+                      <p className="text-xs text-stone-300 font-light leading-relaxed">
+                        Força o envio imediato e completo de todas as personalizações locais deste navegador para a nuvem (Firestore e Backup no Servidor). Use isto para certificar que suas edições estão seguras e visíveis em outros locais.
+                      </p>
+                    </div>
+                    <button
+                      disabled={isForcedSyncing}
+                      onClick={() => handleForcedSync('push')}
+                      className={`w-full py-2.5 rounded-xl font-display text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                        isForcedSyncing 
+                          ? 'bg-stone-800 text-stone-500 cursor-not-allowed' 
+                          : 'bg-[#AF4934] hover:bg-[#973a27] text-white shadow-md'
+                      }`}
+                    >
+                      {isForcedSyncing ? 'Sincronizando...' : 'Enviar e Salvar'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Status and Results */}
+                {isForcedSyncing && (
+                  <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-5 flex items-center gap-3 animate-pulse">
+                    <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-xs font-mono text-stone-300">Aguardando confirmação dos servidores e reconciliando chaves de dados...</span>
+                  </div>
+                )}
+
+                {syncError && (
+                  <div className="bg-rose-950/20 border border-rose-800/30 text-rose-400 rounded-2xl p-5 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-rose-500" />
+                    <div>
+                      <h4 className="font-display text-xs font-bold uppercase">Erro na Sincronização</h4>
+                      <p className="text-xs text-rose-300/80 mt-1">{syncError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {syncResult && syncResult.success && (
+                  <div className="bg-emerald-950/20 border border-emerald-800/30 text-emerald-400 rounded-2xl p-5 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 shrink-0 mt-0.5 text-emerald-500" />
+                      <div>
+                        <h4 className="font-display text-xs font-bold uppercase">Sincronização Concluída com Sucesso!</h4>
+                        <p className="text-xs text-emerald-300/80 mt-1">
+                          {syncResult.count === 0 
+                            ? 'Nenhuma diferença detectada. Todos os seus dados já estão perfeitamente atualizados!' 
+                            : `${syncResult.count} chaves de dados reconciliadas e atualizadas com sucesso.`}
+                        </p>
+                      </div>
+                    </div>
+                    {syncResult.updatedKeys.length > 0 && (
+                      <div className="pt-2 border-t border-emerald-900/20">
+                        <span className="text-[10px] font-mono uppercase text-emerald-500 tracking-wider font-bold block mb-1.5">Itens sincronizados:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {syncResult.updatedKeys.map(key => (
+                            <span key={key} className="text-[10px] font-mono bg-emerald-950/80 border border-emerald-800/30 px-2 py-0.5 rounded text-emerald-300">
+                              {key.replace('arcadane_', '').replace('cms_', '')}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Checked list of synchronicity */}
+                <div className="border border-stone-800 rounded-2xl p-5 bg-[#181615]/20 space-y-3 text-left">
+                  <h4 className="text-xs font-mono uppercase tracking-wider text-stone-400 font-bold">Escopo de Cobertura do Sincronizador</h4>
+                  <p className="text-xs text-stone-500 font-light">Todas as seguintes coleções e variáveis customizadas são totalmente protegidas e rastreadas contra perda de cache do navegador:</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                    <div className="flex items-center gap-2 text-stone-400 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span>Metatags SEO & Popups</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-stone-400 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span>Vídeos & Depoimentos</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-stone-400 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span>Destinos Bento Grid</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-stone-400 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span>Efeitos Typewriter</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-stone-400 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span>Pacotes & Ofertas</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-stone-400 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span>Textos & Selos Decorações</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-stone-400 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span>Imagens & Logos</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-stone-400 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span>Matérias do Blog</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-stone-400 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span>Perguntas do Quiz</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[#AF4934] text-xs font-bold">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                      <span>Scripts & Códigos Injetados</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Panel Custom Code Injection */}
+            {activeTab === 'code' && (
+              <form onSubmit={handleSaveCustomCode} className="space-y-6">
+                <div>
+                  <h3 className="font-display font-medium text-lg text-stone-100 font-bold">Injetor de Códigos & Scripts</h3>
+                  <p className="text-stone-400 text-xs mt-1">Injete livremente códigos HTML, CSS customizados, scripts de chat, Tag Managers (Google GTM), rastreadores de pixels ou buscadores integrados em qualquer parte da sua página.</p>
+                </div>
+
+                <div className="space-y-5">
+                  <div className="bg-[#181615]/30 p-5 rounded-2xl border border-stone-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#AF4934] font-bold">
+                        1. Injeção no Cabeçalho (&lt;head&gt;)
+                      </label>
+                      <span className="text-[10px] font-mono text-stone-500 bg-stone-900/60 px-2 py-0.5 rounded font-bold">GTM, Meta-tags, Pixels, Fontes</span>
+                    </div>
+                    <p className="text-[11px] text-stone-400 font-light">Este código é inserido dentro da tag head global. Perfeito para links de fontes, scripts de analytics, trackers ou tags de verificação.</p>
+                    <textarea
+                      value={customHeadCode}
+                      onChange={(e) => setCustomHeadCode(e.target.value)}
+                      placeholder="Ex: <script src='https://www.googletagmanager.com/gtag/js?id=UA-XXXXX-Y' async></script>"
+                      className="w-full h-36 bg-[#0f0e0d] border border-stone-800 rounded-xl p-4 text-xs font-mono text-stone-300 focus:border-[#AF4934] focus:outline-none focus:ring-1 focus:ring-[#AF4934] placeholder-stone-700 leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="bg-[#181615]/30 p-5 rounded-2xl border border-stone-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#AF4934] font-bold">
+                        2. Injeção no Início do Corpo (logo após &lt;body&gt;)
+                      </label>
+                      <span className="text-[10px] font-mono text-stone-500 bg-stone-900/60 px-2 py-0.5 rounded font-bold">Buscadores, GTM Noscript, Widgets do Topo</span>
+                    </div>
+                    <p className="text-[11px] text-stone-400 font-light">Este código é renderizado no início do body. Ideal para caixas de pesquisas flutuantes, banners de aviso ou buscadores de terceiros.</p>
+                    <textarea
+                      value={customBodyStartCode}
+                      onChange={(e) => setCustomBodyStartCode(e.target.value)}
+                      placeholder="Ex: <div id='custom-search-container'></div>"
+                      className="w-full h-36 bg-[#0f0e0d] border border-stone-800 rounded-xl p-4 text-xs font-mono text-stone-300 focus:border-[#AF4934] focus:outline-none focus:ring-1 focus:ring-[#AF4934] placeholder-stone-700 leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="bg-[#181615]/30 p-5 rounded-2xl border border-stone-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#AF4934] font-bold">
+                        3. Injeção no Final do Corpo (antes de &lt;/body&gt;)
+                      </label>
+                      <span className="text-[10px] font-mono text-stone-500 bg-stone-900/60 px-2 py-0.5 rounded font-bold">Chats, VLibras, Scripts Adicionais</span>
+                    </div>
+                    <p className="text-[11px] text-stone-400 font-light">Este código é injetado no final da página, antes do fechamento do body. Ótimo para sistemas de chat ao vivo, VLibras adicional, ou scripts de popups.</p>
+                    <textarea
+                      value={customBodyEndCode}
+                      onChange={(e) => setCustomBodyEndCode(e.target.value)}
+                      placeholder="Ex: <!-- Widget de chat ou VLibras -->"
+                      className="w-full h-36 bg-[#0f0e0d] border border-stone-800 rounded-xl p-4 text-xs font-mono text-stone-300 focus:border-[#AF4934] focus:outline-none focus:ring-1 focus:ring-[#AF4934] placeholder-stone-700 leading-relaxed"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end gap-3">
+                  <button
+                    type="submit"
+                    className="bg-[#AF4934] hover:bg-[#973a27] text-white font-medium text-xs font-display tracking-widest px-6 py-3.5 rounded-xl transition-all duration-150 uppercase cursor-pointer flex items-center gap-2 shadow-lg hover:shadow-xl"
+                  >
+                    <Save className="w-4 h-4" />
+                    Salvar e Injetar Códigos
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Panel Theme Customization */}
+            {activeTab === 'theme' && (
+              <form onSubmit={handleSaveTheme} className="space-y-6 animate-fadeIn">
+                <div>
+                  <h3 className="font-display font-medium text-lg text-stone-100 font-bold">Personalizar Cores e Tema</h3>
+                  <p className="text-stone-400 text-xs mt-1">
+                    Customize cada aspecto visual e estético da Arcadane Viagens, incluindo a paleta de cores completa, fontes de cabeçalho e corpo, formato dos botões e tipo de banner do topo (foto ou vídeo).
+                  </p>
+                </div>
+
+                {/* Seção 1: Paleta de Cores */}
+                <div className="bg-[#181615]/30 p-6 rounded-2xl border border-stone-800 space-y-4">
+                  <div className="flex items-center gap-2 border-b border-stone-800 pb-2">
+                    <Palette className="w-5 h-5 text-[#AF4934]" />
+                    <h4 className="font-display text-sm font-semibold text-stone-200">1. Paleta de Cores do Site</h4>
+                  </div>
+                  <p className="text-xs text-stone-400">
+                    Defina as cores estruturais e de acento que se aplicam em todo o site.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                    {/* Cor Primária */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Cor Primária (Principal)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={theme.primaryColor}
+                          onChange={(e) => setTheme({ ...theme, primaryColor: e.target.value })}
+                          className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border border-stone-800"
+                        />
+                        <input
+                          type="text"
+                          value={theme.primaryColor}
+                          onChange={(e) => setTheme({ ...theme, primaryColor: e.target.value })}
+                          className="flex-1 bg-[#0f0e0d] border border-stone-800 rounded-lg px-3 text-xs text-stone-300 font-mono focus:border-[#AF4934] focus:outline-none"
+                        />
+                      </div>
+                      <span className="text-[10px] text-stone-500">Usada nos botões principais e menus ativos.</span>
+                    </div>
+
+                    {/* Cor Secundária */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Cor Secundária (Acento)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={theme.secondaryColor}
+                          onChange={(e) => setTheme({ ...theme, secondaryColor: e.target.value })}
+                          className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border border-stone-800"
+                        />
+                        <input
+                          type="text"
+                          value={theme.secondaryColor}
+                          onChange={(e) => setTheme({ ...theme, secondaryColor: e.target.value })}
+                          className="flex-1 bg-[#0f0e0d] border border-stone-800 rounded-lg px-3 text-xs text-stone-300 font-mono focus:border-[#AF4934] focus:outline-none"
+                        />
+                      </div>
+                      <span className="text-[10px] text-stone-500">Usada em títulos serifados, selos e acentos elegantes.</span>
+                    </div>
+
+                    {/* Cor Background Light */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Fundo Principal (Claro)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={theme.bgColorLight}
+                          onChange={(e) => setTheme({ ...theme, bgColorLight: e.target.value })}
+                          className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border border-stone-800"
+                        />
+                        <input
+                          type="text"
+                          value={theme.bgColorLight}
+                          onChange={(e) => setTheme({ ...theme, bgColorLight: e.target.value })}
+                          className="flex-1 bg-[#0f0e0d] border border-stone-800 rounded-lg px-3 text-xs text-stone-300 font-mono focus:border-[#AF4934] focus:outline-none"
+                        />
+                      </div>
+                      <span className="text-[10px] text-stone-500">Cor de fundo do site (padrão é um off-white clássico).</span>
+                    </div>
+
+                    {/* Cor Texto Dark */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Texto Principal (Escuro)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={theme.textColorDark}
+                          onChange={(e) => setTheme({ ...theme, textColorDark: e.target.value })}
+                          className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border border-stone-800"
+                        />
+                        <input
+                          type="text"
+                          value={theme.textColorDark}
+                          onChange={(e) => setTheme({ ...theme, textColorDark: e.target.value })}
+                          className="flex-1 bg-[#0f0e0d] border border-stone-800 rounded-lg px-3 text-xs text-stone-300 font-mono focus:border-[#AF4934] focus:outline-none"
+                        />
+                      </div>
+                      <span className="text-[10px] text-stone-500">Cor para títulos, parágrafos e textos gerais.</span>
+                    </div>
+
+                    {/* Cor Chocolate */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Tom de Chocolate / Marrom
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={theme.chocolateColor}
+                          onChange={(e) => setTheme({ ...theme, chocolateColor: e.target.value })}
+                          className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border border-stone-800"
+                        />
+                        <input
+                          type="text"
+                          value={theme.chocolateColor}
+                          onChange={(e) => setTheme({ ...theme, chocolateColor: e.target.value })}
+                          className="flex-1 bg-[#0f0e0d] border border-stone-800 rounded-lg px-3 text-xs text-stone-300 font-mono focus:border-[#AF4934] focus:outline-none"
+                        />
+                      </div>
+                      <span className="text-[10px] text-stone-500">Usado em descrições secundárias e elementos artesanais.</span>
+                    </div>
+
+                    {/* Cor Beige */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Tom de Bege / Areia
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={theme.beigeColor}
+                          onChange={(e) => setTheme({ ...theme, beigeColor: e.target.value })}
+                          className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border border-stone-800"
+                        />
+                        <input
+                          type="text"
+                          value={theme.beigeColor}
+                          onChange={(e) => setTheme({ ...theme, beigeColor: e.target.value })}
+                          className="flex-1 bg-[#0f0e0d] border border-stone-800 rounded-lg px-3 text-xs text-stone-300 font-mono focus:border-[#AF4934] focus:outline-none"
+                        />
+                      </div>
+                      <span className="text-[10px] text-stone-500">Usado em fundos de cards e seções de contraste.</span>
+                    </div>
+
+                    {/* Cor Border */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Cor de Bordas e Divisores
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={theme.borderColor}
+                          onChange={(e) => setTheme({ ...theme, borderColor: e.target.value })}
+                          className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border border-stone-800"
+                        />
+                        <input
+                          type="text"
+                          value={theme.borderColor}
+                          onChange={(e) => setTheme({ ...theme, borderColor: e.target.value })}
+                          className="flex-1 bg-[#0f0e0d] border border-stone-800 rounded-lg px-3 text-xs text-stone-300 font-mono focus:border-[#AF4934] focus:outline-none"
+                        />
+                      </div>
+                      <span className="text-[10px] text-stone-500">Usado em linhas finas divisórias e bordas de inputs.</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seção 2: Tipografia & Fontes */}
+                <div className="bg-[#181615]/30 p-6 rounded-2xl border border-stone-800 space-y-4">
+                  <div className="flex items-center gap-2 border-b border-stone-800 pb-2">
+                    <FileText className="w-5 h-5 text-[#AF4934]" />
+                    <h4 className="font-display text-sm font-semibold text-stone-200">2. Tipografia e Fontes</h4>
+                  </div>
+                  <p className="text-xs text-stone-400">
+                    Edite as famílias de fontes aplicadas para conferir o estilo ideal (editorial, clássico, moderno ou brutalista).
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* Font Sans */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Fonte Sem-Serifa (Corpo do Texto)
+                      </label>
+                      <select
+                        value={theme.fontSans}
+                        onChange={(e) => setTheme({ ...theme, fontSans: e.target.value })}
+                        className="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-300 focus:border-[#AF4934] focus:outline-none"
+                      >
+                        <option value='"Montserrat", "Inter", sans-serif'>Montserrat / Inter (Padrão Arcadane)</option>
+                        <option value='"Inter", sans-serif'>Inter (Suíça / Moderna)</option>
+                        <option value='"Montserrat", sans-serif'>Montserrat (Sólida / Geométrica)</option>
+                        <option value='"Plus Jakarta Sans", sans-serif'>Plus Jakarta Sans (Moderna / Editorial)</option>
+                      </select>
+                      <span className="text-[10px] text-stone-500">Usada nos parágrafos, menus e pequenos textos.</span>
+                    </div>
+
+                    {/* Font Display */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Fonte de Destaque / Títulos
+                      </label>
+                      <select
+                        value={theme.fontDisplay}
+                        onChange={(e) => setTheme({ ...theme, fontDisplay: e.target.value })}
+                        className="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-300 focus:border-[#AF4934] focus:outline-none"
+                      >
+                        <option value='"Montserrat", "Cormorant Garamond", Georgia, serif'>Montserrat & Cormorant (Mistura Premium)</option>
+                        <option value='"Playfair Display", serif'>Playfair Display (Alta Costura / Clássica)</option>
+                        <option value='"Cormorant Garamond", Georgia, serif'>Cormorant Garamond (Editorial de Luxo)</option>
+                        <option value='"Montserrat", sans-serif'>Montserrat Bold (Moderno / Impactante)</option>
+                      </select>
+                      <span className="text-[10px] text-stone-500">Usada em títulos de seções e banners principais.</span>
+                    </div>
+
+                    {/* Font Serif */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Fonte Serifada (Acentos Itálicos)
+                      </label>
+                      <select
+                        value={theme.fontSerif}
+                        onChange={(e) => setTheme({ ...theme, fontSerif: e.target.value })}
+                        className="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-300 focus:border-[#AF4934] focus:outline-none"
+                      >
+                        <option value='"Cormorant Garamond", Georgia, serif'>Cormorant Garamond (Super Fina e Elegante)</option>
+                        <option value='"Playfair Display", serif'>Playfair Display (Serifada Clássica Robusta)</option>
+                        <option value='Georgia, serif'>Georgia (Serifada Web Segura Clássica)</option>
+                      </select>
+                      <span className="text-[10px] text-stone-500">Usada nas palavras em itálico de extrema elegância.</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seção 3: Estilos de Botões */}
+                <div className="bg-[#181615]/30 p-6 rounded-2xl border border-stone-800 space-y-4">
+                  <div className="flex items-center gap-2 border-b border-stone-800 pb-2">
+                    <Sliders className="w-5 h-5 text-[#AF4934]" />
+                    <h4 className="font-display text-sm font-semibold text-stone-200">3. Estilo Visual dos Botões</h4>
+                  </div>
+                  <p className="text-xs text-stone-400">
+                    Defina o formato de bordas e o acabamento estético dos botões de ação e formulários.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Button Radius */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Arredondamento das Bordas (Border Radius)
+                      </label>
+                      <select
+                        value={theme.buttonRadius}
+                        onChange={(e) => setTheme({ ...theme, buttonRadius: e.target.value as any })}
+                        className="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-300 focus:border-[#AF4934] focus:outline-none"
+                      >
+                        <option value="rounded-none">Retangular Reto (0px - Brutalista)</option>
+                        <option value="rounded">Discretamente Arredondado (4px)</option>
+                        <option value="rounded-lg">Arredondamento Padrão (8px)</option>
+                        <option value="rounded-xl">Arredondamento Suave (12px)</option>
+                        <option value="rounded-2xl">Arredondamento Elegante (16px)</option>
+                        <option value="rounded-full">Totalmente Arredondado (Oval / Clássico)</option>
+                      </select>
+                      <span className="text-[10px] text-stone-500">Aplica-se a botões, campos de texto, seletores e modais.</span>
+                    </div>
+
+                    {/* Button Style */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Efeito de Preenchimento / Estilo
+                      </label>
+                      <select
+                        value={theme.buttonStyle}
+                        onChange={(e) => setTheme({ ...theme, buttonStyle: e.target.value as any })}
+                        className="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-300 focus:border-[#AF4934] focus:outline-none"
+                      >
+                        <option value="solid">Sólido Preenchido (Clássico)</option>
+                        <option value="outline">Apenas Contorno (Outline minimalista)</option>
+                        <option value="shadow-lux">Sombra de Luxo / Soft Glow</option>
+                        <option value="glass">Efeito de Vidro (Frosted Glass / Translúcido)</option>
+                      </select>
+                      <span className="text-[10px] text-stone-500">Define o acabamento estético dos botões principais.</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seção 4: Banner do Cabeçalho */}
+                <div className="bg-[#181615]/30 p-6 rounded-2xl border border-stone-800 space-y-4">
+                  <div className="flex items-center gap-2 border-b border-stone-800 pb-2">
+                    <Film className="w-5 h-5 text-[#AF4934]" />
+                    <h4 className="font-display text-sm font-semibold text-stone-200">4. Capa / Banner do Cabeçalho</h4>
+                  </div>
+                  <p className="text-xs text-stone-400">
+                    Alterne o cabeçalho principal da página inicial entre um vídeo cinematográfico ou uma bela foto estática de capa.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Header Type */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Tipo de Mídia do Banner Principal
+                      </label>
+                      <div className="flex gap-4 pt-1">
+                        <label className="flex items-center gap-2 text-xs text-stone-300 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="heroBannerType"
+                            value="video"
+                            checked={theme.heroBannerType === 'video'}
+                            onChange={() => setTheme({ ...theme, heroBannerType: 'video' })}
+                            className="accent-[#AF4934]"
+                          />
+                          Vídeo de Fundo (YouTube / Link local)
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-stone-300 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="heroBannerType"
+                            value="image"
+                            checked={theme.heroBannerType === 'image'}
+                            onChange={() => setTheme({ ...theme, heroBannerType: 'image' })}
+                            className="accent-[#AF4934]"
+                          />
+                          Foto Estática de Alta Resolução
+                        </label>
+                      </div>
+                      <span className="text-[10px] text-stone-500">Selecione se deseja exibir o vídeo cadastrado na aba Home ou uma imagem abaixo.</span>
+                    </div>
+
+                    {/* Overlay Opacity */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                        Opacidade do Escurecimento da Capa ({theme.heroOverlayOpacity}%)
+                      </label>
+                      <input
+                        type="range"
+                        min="10"
+                        max="90"
+                        value={theme.heroOverlayOpacity}
+                        onChange={(e) => setTheme({ ...theme, heroOverlayOpacity: parseInt(e.target.value) })}
+                        className="w-full accent-[#AF4934] h-2 bg-stone-800 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <span className="text-[10px] text-stone-500">Aumente para dar mais legibilidade aos textos brancos do topo.</span>
+                    </div>
+
+                    {/* Image URL (Visible if type is image) */}
+                    {theme.heroBannerType === 'image' && (
+                      <div className="col-span-1 md:col-span-2 space-y-2 animate-fadeIn">
+                        <label className="block text-xs font-mono uppercase tracking-wider text-stone-400">
+                          URL da Imagem de Fundo do Banner
+                        </label>
+                        <input
+                          type="text"
+                          value={theme.heroBannerImageUrl}
+                          onChange={(e) => setTheme({ ...theme, heroBannerImageUrl: e.target.value })}
+                          placeholder="Ex: https://images.unsplash.com/photo-XXX"
+                          className="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-300 focus:border-[#AF4934] focus:outline-none placeholder-stone-700"
+                        />
+                        <div className="mt-2 rounded-xl overflow-hidden border border-stone-800 h-32 bg-stone-900 flex items-center justify-center relative">
+                          <img
+                            src={theme.heroBannerImageUrl || 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=1600'}
+                            alt="Pré-visualização da Capa"
+                            referrerPolicy="no-referrer"
+                            className="absolute inset-0 w-full h-full object-cover opacity-60"
+                          />
+                          <div className="relative text-xs text-stone-200 font-display tracking-widest uppercase bg-[#131110]/80 px-4 py-2 rounded-lg font-bold">
+                            Pré-Visualização da Capa
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Botão de Envio */}
+                <div className="pt-2 flex justify-end gap-3">
+                  <button
+                    type="submit"
+                    className="bg-[#AF4934] hover:bg-[#973a27] text-white font-medium text-xs font-display tracking-widest px-6 py-3.5 rounded-xl transition-all duration-150 uppercase cursor-pointer flex items-center gap-2 shadow-lg hover:shadow-xl"
+                  >
+                    <Save className="w-4 h-4" />
+                    Salvar Customização Visual
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Panel Páginas Customizadas */}
+            {activeTab === 'custom-pages' && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-display font-medium text-lg text-stone-100 font-bold">Páginas Customizadas e Links do Menu</h3>
+                    <p className="text-stone-400 text-xs mt-1">Crie novas páginas de conteúdo institucional, termos ou links externos e controle sua exibição no menu principal.</p>
+                  </div>
+                  
+                  {!editingCustomPage && !isCreatingCustomPage && (
+                    <button
+                      onClick={() => {
+                        setEditingCustomPage({
+                          id: '',
+                          title: '',
+                          content: '',
+                          metaDescription: '',
+                          keywords: '',
+                          addToMenu: true,
+                          menuLabel: '',
+                          externalUrl: ''
+                        });
+                        setIsCreatingCustomPage(true);
+                      }}
+                      className="bg-[#AF4934] hover:bg-[#973a27] text-white font-medium text-xs font-display tracking-widest px-4 py-2.5 rounded-lg transition-colors uppercase cursor-pointer flex items-center gap-1.5 self-start"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Criar Nova Página
+                    </button>
+                  )}
+                </div>
+
+                {/* Edit Form */}
+                {(editingCustomPage || isCreatingCustomPage) && (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!editingCustomPage) return;
+
+                      // Validate ID (slug)
+                      const cleanId = editingCustomPage.id.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+                      if (!cleanId && !editingCustomPage.externalUrl) {
+                        showFeedback('O Slug/ID da página é obrigatório (ex: "seguro-viagem") a menos que seja um link externo.', 'error');
+                        return;
+                      }
+
+                      if (!editingCustomPage.title && !editingCustomPage.externalUrl) {
+                        showFeedback('O título da página é obrigatório.', 'error');
+                        return;
+                      }
+
+                      let updatedPages = [...customPages];
+                      if (isCreatingCustomPage) {
+                        // Check if ID already exists
+                        if (updatedPages.some(p => p.id === cleanId)) {
+                          showFeedback(`Uma página com o Slug/ID "${cleanId}" já existe!`, 'error');
+                          return;
+                        }
+                        const newPage = { ...editingCustomPage, id: cleanId };
+                        updatedPages.push(newPage);
+                      } else {
+                        // Edit mode
+                        updatedPages = updatedPages.map(p => p.id === editingCustomPage.id ? editingCustomPage : p);
+                      }
+
+                      saveCustomPages(updatedPages);
+                      setCustomPages(updatedPages);
+                      setEditingCustomPage(null);
+                      setIsCreatingCustomPage(false);
+                      showFeedback('Página customizada salva com sucesso absoluto!');
+                    }}
+                    className="bg-[#181615]/30 border border-stone-850 rounded-2xl p-6 space-y-6"
+                  >
+                    <div className="flex items-center justify-between border-b border-stone-850 pb-4">
+                      <h4 className="font-display text-xs tracking-wider text-stone-400 uppercase font-bold">
+                        {isCreatingCustomPage ? 'Adicionar Nova Página' : 'Editar Página'}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingCustomPage(null);
+                          setIsCreatingCustomPage(false);
+                        }}
+                        className="text-stone-500 hover:text-stone-300 text-xs font-sans"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10.5px] uppercase font-mono tracking-wider text-stone-400 font-bold block">Título da Página (no Menu e Cabeçalho)</label>
+                        <input
+                          type="text"
+                          value={editingCustomPage?.title || ''}
+                          onChange={(e) => setEditingCustomPage(prev => prev ? { ...prev, title: e.target.value } : null)}
+                          placeholder="Ex: Curadoria de Luxo"
+                          className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-100 focus:outline-none focus:border-[#AF4934]/50"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10.5px] uppercase font-mono tracking-wider text-stone-400 font-bold block">Slug / ID amigável (Apenas letras e hifens)</label>
+                        <input
+                          type="text"
+                          value={editingCustomPage?.id || ''}
+                          disabled={!isCreatingCustomPage}
+                          onChange={(e) => setEditingCustomPage(prev => prev ? { ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-') } : null)}
+                          placeholder="Ex: curadoria-luxo"
+                          className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-100 focus:outline-none focus:border-[#AF4934]/50 disabled:opacity-40"
+                        />
+                        <p className="text-[10px] text-stone-500">Este ID formará a URL final (ex: seu-site.com/p/{editingCustomPage?.id || 'id'})</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10.5px] uppercase font-mono tracking-wider text-stone-400 font-bold block">Rotular no Menu como (Opcional)</label>
+                        <input
+                          type="text"
+                          value={editingCustomPage?.menuLabel || ''}
+                          onChange={(e) => setEditingCustomPage(prev => prev ? { ...prev, menuLabel: e.target.value } : null)}
+                          placeholder="Se vazio, usará o título acima"
+                          className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-100 focus:outline-none focus:border-[#AF4934]/50"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10.5px] uppercase font-mono tracking-wider text-stone-400 font-bold block">Redirecionar para URL externa (Opcional)</label>
+                        <input
+                          type="text"
+                          value={editingCustomPage?.externalUrl || ''}
+                          onChange={(e) => setEditingCustomPage(prev => prev ? { ...prev, externalUrl: e.target.value } : null)}
+                          placeholder="Ex: https://link-da-pagina.com (Deixe em branco para página própria)"
+                          className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-100 focus:outline-none focus:border-[#AF4934]/50"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 space-y-2">
+                        <label className="text-[10.5px] uppercase font-mono tracking-wider text-stone-400 font-bold block flex items-center justify-between">
+                          <span>Conteúdo da Página (Suporta Markdown)</span>
+                        </label>
+                        <textarea
+                          rows={12}
+                          value={editingCustomPage?.content || ''}
+                          onChange={(e) => setEditingCustomPage(prev => prev ? { ...prev, content: e.target.value } : null)}
+                          placeholder="Utilize # para Títulos, ## para Subtítulos, e - para itens em lista..."
+                          className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-100 font-mono focus:outline-none focus:border-[#AF4934]/50"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10.5px] uppercase font-mono tracking-wider text-stone-400 font-bold block">Meta Description para SEO</label>
+                        <input
+                          type="text"
+                          value={editingCustomPage?.metaDescription || ''}
+                          onChange={(e) => setEditingCustomPage(prev => prev ? { ...prev, metaDescription: e.target.value } : null)}
+                          placeholder="Breve descrição da página para mecanismos de busca"
+                          className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-100 focus:outline-none focus:border-[#AF4934]/50"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10.5px] uppercase font-mono tracking-wider text-stone-400 font-bold block">Palavras-chave (Keywords)</label>
+                        <input
+                          type="text"
+                          value={editingCustomPage?.keywords || ''}
+                          onChange={(e) => setEditingCustomPage(prev => prev ? { ...prev, keywords: e.target.value } : null)}
+                          placeholder="Ex: luxo, exclusividade, roteiro"
+                          className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-4 py-3 text-xs text-stone-100 focus:outline-none focus:border-[#AF4934]/50"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center gap-2.5 bg-[#1c1917]/30 p-3.5 rounded-xl border border-stone-800">
+                          <input
+                            type="checkbox"
+                            id="addToMenu"
+                            checked={editingCustomPage?.addToMenu ?? true}
+                            onChange={(e) => setEditingCustomPage(prev => prev ? { ...prev, addToMenu: e.target.checked } : null)}
+                            className="w-4 h-4 rounded text-[#AF4934] focus:ring-[#AF4934]/40 cursor-pointer"
+                          />
+                          <div>
+                            <label htmlFor="addToMenu" className="text-xs text-stone-300 font-medium cursor-pointer block">
+                              Exibir no Menu Principal
+                            </label>
+                            <span className="text-[10px] text-stone-500">Exibe esta página como link no cabeçalho</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 bg-[#1c1917]/30 p-3.5 rounded-xl border border-stone-800">
+                          <input
+                            type="checkbox"
+                            id="isActive"
+                            checked={editingCustomPage?.isActive ?? true}
+                            onChange={(e) => setEditingCustomPage(prev => prev ? { ...prev, isActive: e.target.checked } : null)}
+                            className="w-4 h-4 rounded text-[#AF4934] focus:ring-[#AF4934]/40 cursor-pointer"
+                          />
+                          <div>
+                            <label htmlFor="isActive" className="text-xs text-stone-300 font-medium cursor-pointer block">
+                              Página Ativa e Publicada
+                            </label>
+                            <span className="text-[10px] text-stone-500 font-sans">Se desmarcado, a página ficará oculta/offline</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-stone-850">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingCustomPage(null);
+                          setIsCreatingCustomPage(false);
+                        }}
+                        className="bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-display tracking-wider uppercase px-4 py-2.5 rounded-lg transition-colors cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-[#AF4934] hover:bg-[#973a27] text-white text-xs font-display tracking-wider uppercase px-5 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Save className="w-4 h-4" />
+                        Salvar Página
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Table / List View */}
+                {!editingCustomPage && !isCreatingCustomPage && (
+                  <div className="space-y-6">
+                    {/* CATEGORY 1: SYSTEM PAGES */}
+                    <div className="bg-[#181615]/30 border border-stone-850 rounded-2xl overflow-hidden" id="layout-menu-visibility">
+                      <div className="p-4 bg-stone-900/40 border-b border-stone-850 flex items-center justify-between">
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-stone-400 font-bold">Páginas Nativas do Sistema</span>
+                        <span className="text-xs text-stone-400">7 Páginas do Sistema</span>
+                      </div>
+                      <div className="divide-y divide-stone-850">
+                        {[
+                          {
+                            id: 'home',
+                            name: 'Página Inicial (Home)',
+                            labelKey: 'menuLabelHome',
+                            hideKey: 'hideHome',
+                            hideInMenuKey: 'hideHomeInMenu',
+                            allowHidePage: false,
+                            defaultLabel: 'Início',
+                          },
+                          {
+                            id: 'services',
+                            name: 'Serviços',
+                            labelKey: 'menuLabelServices',
+                            hideKey: 'hideServices',
+                            hideInMenuKey: 'hideServicesInMenu',
+                            allowHidePage: true,
+                            defaultLabel: 'Serviços',
+                          },
+                          {
+                            id: 'packages',
+                            name: 'Pacotes de Viagem',
+                            labelKey: 'menuLabelPackages',
+                            hideKey: 'hidePackages',
+                            hideInMenuKey: 'hidePackagesInMenu',
+                            allowHidePage: true,
+                            defaultLabel: 'Pacotes',
+                          },
+                          {
+                            id: 'about-us',
+                            name: 'Quem Somos / Sobre Nós',
+                            labelKey: 'menuLabelAboutUs',
+                            hideKey: 'hideAboutUs',
+                            hideInMenuKey: 'hideAboutUsInMenu',
+                            allowHidePage: true,
+                            defaultLabel: 'Quem Somos',
+                          },
+                          {
+                            id: 'custom-trip',
+                            name: 'Viagem Personalizada (Roteiros)',
+                            labelKey: 'menuLabelCustomTrip',
+                            hideKey: 'hideCustomTrip',
+                            hideInMenuKey: 'hideCustomTripInMenu',
+                            allowHidePage: true,
+                            defaultLabel: 'Viagem Personalizada',
+                          },
+                          {
+                            id: 'blog',
+                            name: 'Blog de Dicas & Relatos',
+                            labelKey: 'menuLabelBlog',
+                            hideKey: 'hideBlog',
+                            hideInMenuKey: 'hideBlogInMenu',
+                            allowHidePage: true,
+                            defaultLabel: 'Blog',
+                          },
+                          {
+                            id: 'contact-us',
+                            name: 'Fale Conosco / Contato',
+                            labelKey: 'menuLabelContactUs',
+                            hideKey: 'hideContactUs',
+                            hideInMenuKey: 'hideContactUsInMenu',
+                            allowHidePage: true,
+                            defaultLabel: 'Contato',
+                          }
+                        ].map((sysPage) => {
+                          const isHidden = (home as any)[sysPage.hideKey] === true;
+                          const isHiddenInMenu = (home as any)[sysPage.hideInMenuKey] === true;
+                          const currentLabel = (home as any)[sysPage.labelKey] || sysPage.defaultLabel;
+
+                          return (
+                            <div key={sysPage.id} className="p-5 hover:bg-stone-900/10 transition-colors">
+                              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h4 className="text-sm font-display font-medium text-stone-100 font-bold">{sysPage.name}</h4>
+                                    <span className="px-2 py-0.5 bg-stone-800 text-stone-400 text-[9px] font-mono rounded-full border border-stone-700">Sistema</span>
+                                    
+                                    {isHidden ? (
+                                      <span className="px-2 py-0.5 bg-red-950/40 border border-red-900/30 text-red-400 text-[9px] font-mono rounded-full">Desativada / Oculta</span>
+                                    ) : (
+                                      <span className="px-2 py-0.5 bg-emerald-950/40 border border-emerald-900/30 text-emerald-400 text-[9px] font-mono rounded-full">Ativa</span>
+                                    )}
+
+                                    {isHiddenInMenu ? (
+                                      <span className="px-2 py-0.5 bg-stone-900/50 border border-stone-800 text-stone-500 text-[9px] font-mono rounded-full">Fora do Menu</span>
+                                    ) : (
+                                      <span className="px-2 py-0.5 bg-amber-950/40 border border-amber-900/30 text-amber-500 text-[9px] font-mono rounded-full">No Menu</span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-stone-500 font-sans">
+                                    Caminho nativo do site. Rótulo no menu: <span className="text-stone-300 font-mono">"{currentLabel}"</span>
+                                  </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-3 w-full lg:w-auto">
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] uppercase font-mono text-stone-500 block">Rótulo no Menu</span>
+                                    <input
+                                      type="text"
+                                      value={currentLabel}
+                                      onChange={(e) => {
+                                        const updated = { ...home, [sysPage.labelKey]: e.target.value };
+                                        setHome(updated);
+                                        saveHomeSettings(updated);
+                                      }}
+                                      className="w-full sm:w-40 bg-[#12100F] border border-stone-800 rounded-lg px-2.5 py-1 text-[11px] text-stone-200 focus:outline-none focus:border-[#AF4934]/50"
+                                      placeholder={sysPage.defaultLabel}
+                                    />
+                                  </div>
+
+                                  <div className="flex flex-col gap-1 items-start justify-center pt-2 sm:pt-0">
+                                    <span className="text-[9px] uppercase font-mono text-stone-500">Exibir no Menu</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updated = { ...home, [sysPage.hideInMenuKey]: !isHiddenInMenu };
+                                        setHome(updated);
+                                        saveHomeSettings(updated);
+                                        showFeedback('Preferências de menu salvas!');
+                                      }}
+                                      className={`px-3 py-1 text-[10.5px] rounded-md font-bold w-full text-center transition-colors cursor-pointer ${
+                                        !isHiddenInMenu 
+                                          ? 'bg-[#AF4934]/20 border border-[#AF4934]/40 text-[#AF4934] hover:bg-[#AF4934]/30' 
+                                          : 'bg-stone-800 border border-stone-700 text-stone-400 hover:bg-stone-750'
+                                      }`}
+                                    >
+                                      {!isHiddenInMenu ? 'Exibido' : 'Oculto'}
+                                    </button>
+                                  </div>
+
+                                  <div className="flex flex-col gap-1 items-start justify-center pt-2 sm:pt-0">
+                                    <span className="text-[9px] uppercase font-mono text-stone-500">Status Página</span>
+                                    {sysPage.allowHidePage ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const updated = { ...home, [sysPage.hideKey]: !isHidden };
+                                          setHome(updated);
+                                          saveHomeSettings(updated);
+                                          showFeedback('Preferências de visibilidade salvas!');
+                                        }}
+                                        className={`px-3 py-1 text-[10.5px] rounded-md font-bold w-full text-center transition-colors cursor-pointer ${
+                                          !isHidden 
+                                            ? 'bg-emerald-950/40 border border-emerald-900/40 text-emerald-400 hover:bg-emerald-900/20' 
+                                            : 'bg-red-950/40 border border-red-900/40 text-red-400 hover:bg-red-900/20'
+                                        }`}
+                                      >
+                                        {!isHidden ? 'Ativa' : 'Oculta'}
+                                      </button>
+                                    ) : (
+                                      <span className="text-[10px] text-stone-500 italic mt-1 bg-[#181615] px-2.5 py-1 rounded border border-stone-850 w-full text-center select-none block">Sempre Ativa</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* CATEGORY 2: CUSTOM PAGES */}
+                    <div className="bg-[#181615]/30 border border-stone-850 rounded-2xl overflow-hidden">
+                      <div className="p-4 bg-stone-900/40 border-b border-stone-850 flex items-center justify-between">
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-stone-400 font-bold">Páginas Customizadas Adicionais</span>
+                        <span className="text-xs text-[#AF4934] font-bold">{customPages.length} Página(s)</span>
+                      </div>
+
+                      {customPages.length === 0 ? (
+                        <div className="p-12 text-center">
+                          <p className="text-stone-500 text-xs font-mono">Nenhuma página customizada criada ainda.</p>
+                          <p className="text-stone-600 text-[11px] mt-1 font-sans">Clique no botão "Criar Nova Página" acima para começar.</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-stone-850">
+                          {customPages.map((page) => {
+                            const isPageActive = page.isActive !== false;
+                            return (
+                              <div key={page.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-stone-900/15 transition-colors">
+                                <div className="space-y-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h4 className="text-sm font-display font-medium text-stone-100 font-bold">{page.title}</h4>
+                                    
+                                    {isPageActive ? (
+                                      <span className="px-2 py-0.5 bg-emerald-950/40 border border-emerald-900/30 text-emerald-400 text-[9px] font-mono rounded-full">Ativa</span>
+                                    ) : (
+                                      <span className="px-2 py-0.5 bg-red-950/40 border border-red-900/30 text-red-400 text-[9px] font-mono rounded-full font-bold">Inativa / Oculta</span>
+                                    )}
+
+                                    {page.addToMenu ? (
+                                      <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[9px] font-mono rounded-full">No Menu</span>
+                                    ) : (
+                                      <span className="px-2 py-0.5 bg-stone-800 text-stone-500 text-[9px] font-mono rounded-full">Oculta no Menu</span>
+                                    )}
+
+                                    {page.externalUrl && (
+                                      <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-mono rounded-full">Link Externo</span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-stone-500 font-mono">
+                                    {page.externalUrl ? `Redireciona para: ${page.externalUrl}` : `/p/${page.id}`}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-2 self-start sm:self-auto pt-2 sm:pt-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingCustomPage({ ...page });
+                                      setIsCreatingCustomPage(false);
+                                    }}
+                                    className="px-3 py-1.5 bg-stone-800 hover:bg-stone-750 text-stone-300 text-[10.5px] rounded-md font-sans font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                    Editar
+                                  </button>
+                                  
+                                  {deletingId === page.id ? (
+                                    <div className="flex items-center gap-1 bg-red-950/20 border border-red-900/30 p-1 rounded-md">
+                                      <span className="text-[10px] text-red-400 font-mono px-1 font-bold">Excluir?</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const updated = customPages.filter(p => p.id !== page.id);
+                                          saveCustomPages(updated);
+                                          setCustomPages(updated);
+                                          setDeletingId(null);
+                                          showFeedback('Página excluída permanentemente.');
+                                        }}
+                                        className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] rounded font-bold cursor-pointer transition-colors"
+                                      >
+                                        Sim
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setDeletingId(null)}
+                                        className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-300 text-[10px] rounded font-bold cursor-pointer transition-colors"
+                                      >
+                                        Não
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeletingId(page.id)}
+                                      className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900/30 border border-red-900/30 text-red-400 text-[10.5px] rounded-md font-sans font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      Excluir
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Panel Domínios */}
+            {activeTab === 'domains' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-display font-medium text-lg text-stone-100 font-bold">Configuração de Domínio e Hospedagem</h3>
+                  <p className="text-stone-400 text-xs mt-1">Configure o domínio personalizado do seu site Arcadane de forma profissional, integrado diretamente com a Hostinger, Cloudflare ou GoDaddy.</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left stats column */}
+                  <div className="bg-[#181615]/30 border border-stone-850 rounded-2xl p-6 space-y-4 lg:col-span-1 text-left">
+                    <p className="text-[10px] uppercase font-mono tracking-wider text-stone-400 font-bold">Status do Domínio</p>
+                    
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3.5 h-3.5 bg-emerald-500 rounded-full animate-ping absolute" />
+                      <div className="w-3.5 h-3.5 bg-emerald-500 rounded-full" />
+                      <div>
+                        <p className="text-sm font-semibold text-stone-100 uppercase">Ativo e Conectado</p>
+                        <p className="text-[10px] text-stone-400">DNS Apontado com sucesso</p>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-stone-850 pt-4 space-y-3">
+                      <div>
+                        <p className="text-[10px] text-stone-500 font-mono">DOMÍNIO PRINCIPAL</p>
+                        <p className="text-xs text-stone-300 font-mono mt-0.5">{domainSettings.primaryDomain}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-stone-500 font-mono">SUBDOMÍNIO OPERACIONAL</p>
+                        <p className="text-xs text-[#AF4934] font-bold mt-0.5">{domainSettings.subdomain}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* DNS Records Form */}
+                  <div className="bg-[#181615]/30 border border-stone-850 rounded-2xl p-6 lg:col-span-2 space-y-6">
+                    <p className="text-[10.5px] uppercase font-mono tracking-wider text-stone-400 font-bold block">Editar Apontamento de Domínios</p>
+                    
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        saveDomainSettings(domainSettings);
+                        showFeedback('Instruções e configurações de domínios salvas com sucesso!');
+                      }}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-stone-400 uppercase font-mono font-bold block">Domínio Principal (ex: arcadaneviagens.com.br)</label>
+                          <input
+                            type="text"
+                            value={domainSettings.primaryDomain}
+                            onChange={(e) => setDomainSettings(prev => ({ ...prev, primaryDomain: e.target.value }))}
+                            className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-3 py-2.5 text-xs text-stone-100 focus:outline-none focus:border-[#AF4934]/50"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-stone-400 uppercase font-mono font-bold block">Subdomínio (ex: vip.arcadaneviagens.com.br)</label>
+                          <input
+                            type="text"
+                            value={domainSettings.subdomain}
+                            onChange={(e) => setDomainSettings(prev => ({ ...prev, subdomain: e.target.value }))}
+                            className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-3 py-2.5 text-xs text-stone-100 focus:outline-none focus:border-[#AF4934]/50"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-stone-400 uppercase font-mono font-bold block">Endereço IP de Destino (Apontamento Tipo A)</label>
+                          <input
+                            type="text"
+                            value={domainSettings.ipAddress}
+                            onChange={(e) => setDomainSettings(prev => ({ ...prev, ipAddress: e.target.value }))}
+                            className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-3 py-2.5 text-xs text-stone-100 font-mono focus:outline-none focus:border-[#AF4934]/50"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-stone-400 uppercase font-mono font-bold block">Registro CNAME de Destino (Apontamento CNAME)</label>
+                          <input
+                            type="text"
+                            value={domainSettings.cnameRecord}
+                            onChange={(e) => setDomainSettings(prev => ({ ...prev, cnameRecord: e.target.value }))}
+                            className="w-full bg-[#1c1917]/50 border border-stone-800 rounded-xl px-3 py-2.5 text-xs text-stone-100 font-mono focus:outline-none focus:border-[#AF4934]/50"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-2">
+                        <button
+                          type="submit"
+                          className="bg-[#AF4934] hover:bg-[#973a27] text-white text-xs font-display tracking-wider uppercase px-4 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Save className="w-4 h-4" />
+                          Salvar Apontamentos
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                {/* Hostinger DNS Step by Step instructions card */}
+                <div className="bg-[#1c1917]/30 border border-stone-850 rounded-2xl p-6 text-left space-y-4">
+                  <h4 className="font-display text-sm tracking-wide text-stone-200 uppercase font-bold text-amber-500">Como configurar seu domínio na Hostinger (Passo a Passo)</h4>
+                  
+                  <div className="space-y-3.5 text-stone-300 text-xs font-light leading-relaxed">
+                    <p>Para colocar seu site no ar no seu domínio próprio, siga estes passos simples no painel da sua registradora (Hostinger):</p>
+                    <div className="space-y-2 pl-4 border-l-2 border-[#AF4934]/40">
+                      <p><strong>Passo 1:</strong> Acesse seu painel da Hostinger e navegue em <strong>Domínios</strong> &gt; Gerenciar &gt; <strong>Editor de Zona DNS</strong>.</p>
+                      <p><strong>Passo 2:</strong> Adicione um novo registro do tipo <strong>A</strong>. No campo "Nome/Host", coloque <code>@</code>, e no campo "Aponta para (IP)", insira o IP do servidor Arcadane: <code>{domainSettings.ipAddress}</code>.</p>
+                      <p><strong>Passo 3:</strong> Adicione um novo registro do tipo <strong>CNAME</strong>. No campo "Nome/Host", coloque <code>www</code>, e no campo "Aponta para", insira: <code>{domainSettings.cnameRecord}</code>.</p>
+                      <p><strong>Passo 4:</strong> Clique em Salvar e aguarde a propagação de DNS (costuma demorar de 15 minutos até 4 hours).</p>
+                    </div>
+                    <p className="text-[10px] text-stone-500">Nota: O SSL (cadeado de segurança HTTPS) é gerado e instalado automaticamente no nosso servidor de forma gratuita logo após a propagação dos registros DNS.</p>
+                  </div>
+                </div>
               </div>
             )}
 

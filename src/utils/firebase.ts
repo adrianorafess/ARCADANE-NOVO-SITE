@@ -81,7 +81,23 @@ export function setupFirebaseRealtimeListener(onUpdate: (key: string, data: any)
     'luxury_trips',
     'founders_photo',
     'trajectory_photo',
-    'custom_logo'
+    'custom_logo',
+    'bento_destinations',
+    'video_url',
+    'search_mode',
+    'typewriter_endings',
+    'seal_top_text',
+    'seal_bottom_text',
+    'seal_number',
+    'seal_label1',
+    'seal_label2',
+    'quiz_banner_badge',
+    'quiz_banner_title',
+    'quiz_banner_desc',
+    'custom_head_code',
+    'custom_body_start_code',
+    'custom_body_end_code',
+    'theme_settings'
   ];
 
   const unsubscribes: (() => void)[] = [];

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, X, Check, ExternalLink } from 'lucide-react';
 import { getSeoSettings } from '../utils/cmsStore';
+import { trackCustomEvent } from '../utils/analyticsTracker';
 
 const WhatsAppIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg 
@@ -107,6 +108,7 @@ export default function FloatingWhatsApp() {
                   href={c.link}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackCustomEvent('whatsapp_click', 'floating_whatsapp')}
                   className="block group rounded-2xl border border-stone-800 bg-black/30 hover:bg-stone-950 p-3.5 transition-all text-left relative overflow-hidden"
                 >
                   {/* Decorative faint glow */}

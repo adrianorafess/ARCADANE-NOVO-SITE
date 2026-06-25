@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MessageSquare, Phone, ShieldCheck, Sparkles, User, Users } from 'lucide-react';
 import { getSeoSettings } from '../utils/cmsStore';
+import { trackCustomEvent } from '../utils/analyticsTracker';
 
 interface Contact {
   name: string;
@@ -119,7 +120,10 @@ export default function WhatsAppSelectorModal() {
                     href={completeLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={closeModal}
+                    onClick={() => {
+                      trackCustomEvent('whatsapp_click', 'whatsapp_modal');
+                      closeModal();
+                    }}
                     className="block group rounded-2xl border border-[#DCCFC1]/60 bg-white/40 hover:bg-white p-4 sm:p-5 transition-all text-left relative overflow-hidden"
                   >
                     {/* Interactive left bar */}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getPackages } from '../utils/cmsStore';
 import { Compass, Calendar, Plane, CreditCard, ArrowRight, ExternalLink, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { trackCustomEvent } from '../utils/analyticsTracker';
 
 const getFallbackImage = (word: string) => {
   switch (word?.toLowerCase()) {
@@ -56,6 +57,7 @@ export default function PackagesView() {
 
   const handleRequestPackage = (title: string, duration: string) => {
     const text = `Olá Arcadane! Vim pelo site e me interessei no pacote "${title}" (${duration}). Gostaria de falar com um consultor para receber mais detalhes e personalizar meu roteiro!`;
+    trackCustomEvent('quote_package', 'packages');
     window.dispatchEvent(new CustomEvent('open_whatsapp_modal', { detail: { message: text } }));
   };
 

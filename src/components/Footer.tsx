@@ -3,7 +3,7 @@ import { PageId } from '../types';
 import { Phone, Mail, MapPin, Instagram, ArrowRight, Compass, Sparkles, Trash2, Plus, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import ArcadaneIcon from './ArcadaneBrandIcon';
-import { getSeoSettings, getHomeSettings, saveHomeSettings, saveSeoSettings, getCustomLogo } from '../utils/cmsStore';
+import { getSeoSettings, getHomeSettings, saveHomeSettings, saveSeoSettings, getCustomLogo, getLastUpdatedTime } from '../utils/cmsStore';
 import { useRafesEditor } from './RafesVisualBuilder';
 
 interface FooterProps {
@@ -18,6 +18,7 @@ export default function Footer({ setActivePage }: FooterProps) {
   const [subscribed, setSubscribed] = useState(false);
   const [seo, setSeo] = useState(() => getSeoSettings());
   const [home, setHome] = useState(() => getHomeSettings());
+  const [lastUpdated, setLastUpdated] = useState(() => getLastUpdatedTime());
 
   useEffect(() => {
     const stored = getCustomLogo();
@@ -35,6 +36,7 @@ export default function Footer({ setActivePage }: FooterProps) {
     const handleCmsChange = () => {
       setSeo(getSeoSettings());
       setHome(getHomeSettings());
+      setLastUpdated(getLastUpdatedTime());
     };
 
     window.addEventListener('arcadane_logo_changed', handleLogoChange);
@@ -678,21 +680,28 @@ export default function Footer({ setActivePage }: FooterProps) {
 
       {/* CREDITS & COPYRIGHT INNER ROW */}
       <div className="bg-[#6F5B4E] border-t border-[#DCCFC1]/30 py-8 relative z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-[10px] text-[#F3EEE3] font-mono tracking-wider gap-4">
-          <p className="font-medium text-center sm:text-left text-[#FDFBF6]/90">
-            {home.footerCopyright || '© 2026 Arcadane Viagens LTDA. Todos os direitos reservados. CNPJ 48.799.471/0001-38.'}
-          </p>
-          <div className="flex items-center gap-2">
-            <span>Desenvolvido com maestria por</span>
-            <a 
-              href="https://www.rafes.com.br" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-[#FDFBF6] hover:text-[#F3EEE3] font-bold tracking-widest uppercase transition-colors"
-            >
-              rafes.com.br
-            </a>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-4">
+          <div className="w-full flex flex-col sm:flex-row items-center justify-between text-[10px] text-[#F3EEE3] font-mono tracking-wider gap-4">
+            <p className="font-medium text-center sm:text-left text-[#FDFBF6]/90">
+              {home.footerCopyright || '© 2026 Arcadane Viagens LTDA. Todos os direitos reservados. CNPJ 48.799.471/0001-38.'}
+            </p>
+            <div className="flex items-center gap-2">
+              <span>Orgulhosamente criado por:</span>
+              <a 
+                href="https://www.rafes.com.br" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-[#FDFBF6] hover:text-[#F3EEE3] font-bold tracking-widest uppercase transition-colors"
+              >
+                rafes.com.br
+              </a>
+            </div>
           </div>
+          {lastUpdated && (
+            <div className="text-[8.5px] text-[#FDFBF6]/40 font-mono tracking-widest text-center mt-1 pt-2 border-t border-[#DCCFC1]/10 w-full">
+              {lastUpdated}
+            </div>
+          )}
         </div>
       </div>
 

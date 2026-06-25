@@ -4,9 +4,10 @@ import { BLOG_POSTS } from '../data';
 import TestimonialsCarousel from './TestimonialsCarousel';
 import LuxuryItineraries from './LuxuryItineraries';
 import PromotionalPackages from './PromotionalPackages';
-import { getHomeSettings, saveHomeSettings, getServices, saveServices, getSeoSettings, getTrajectoryPhoto } from '../utils/cmsStore';
+import { getHomeSettings, saveHomeSettings, getServices, saveServices, getSeoSettings, getTrajectoryPhoto, getThemeSettings, ThemeSettings } from '../utils/cmsStore';
 import { compressImage } from '../utils/imageCompressor';
 import { useRafesEditor } from './RafesVisualBuilder';
+import { trackCustomEvent } from '../utils/analyticsTracker';
 import { 
   Briefcase, Car, Hotel, ShieldCheck, Ticket, Sparkles, Heart, 
   Navigation, Compass, Plane, Languages, Sliders, ArrowUpRight, Star,
@@ -156,6 +157,11 @@ const BeflySearchWidget = () => {
             type="button"
             onClick={() => {
               const text = `Olá Arcadane! Gostaria de cotar ${activeTab === 'voos' ? 'voos' : activeTab === 'hoteis' ? 'hospedagem' : 'um pacote completo'} de ${origem} para ${destino} saindo em ${dataIda} e retornando em ${dataVolta} para ${passageiros}.`;
+              if (activeTab === 'voos') {
+                trackCustomEvent('search_flights', 'home');
+              } else {
+                trackCustomEvent('quote_package', 'home');
+              }
               window.open(`https://wa.me/5547992008571?text=${encodeURIComponent(text)}`, '_blank');
             }}
             className="w-full py-2.5 px-4 bg-brand-primary hover:bg-brand-primary/95 text-white font-semibold text-xs sm:text-sm rounded-lg shadow-md transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
@@ -181,105 +187,7 @@ const BeflySearchWidget = () => {
 };
 
 const FloatingBuscador = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [settings, setSettings] = useState(() => getHomeSettings());
-  const [isVisible, setIsVisible] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(true);
-
-  useEffect(() => {
-    const handleCmsChange = () => {
-      setSettings(getHomeSettings());
-    };
-    window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
-    return () => window.removeEventListener('arcadane_cms_data_changed', handleCmsChange);
-  }, []);
-
-  const useRealBeflyWidget = settings.widgetType === 'befly';
-
-  useEffect(() => {
-    const handleScroll = () => {
-      // Show when user scrolls past 500px down on PC
-      if (window.scrollY > 500) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Inject widget HTML when visible and not minimized
-  useEffect(() => {
-    if (useRealBeflyWidget && isVisible && !isMinimized && containerRef.current) {
-      // We schedule a microtask or small timeout to ensure the DOM is painted and ready
-      const timer = setTimeout(() => {
-        if (containerRef.current) {
-          containerRef.current.innerHTML = `
-            <div id="wrapper">
-              <befly-widget language="pt-br" new-tab="true"></befly-widget>
-            </div>
-          `;
-        }
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [useRealBeflyWidget, isVisible, isMinimized]);
-
-  if (!useRealBeflyWidget || !isVisible) return null;
-
-  return (
-    <div className="hidden lg:block fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <AnimatePresence>
-        {isMinimized ? (
-          <motion.button
-            key="minimized-pill"
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            onClick={() => setIsMinimized(false)}
-            className="flex items-center gap-2.5 px-6 py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-display font-bold text-xs rounded-full shadow-2xl hover:shadow-brand-primary/20 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 cursor-pointer border border-white/10 whitespace-nowrap"
-          >
-            <Plane className="w-4 h-4 text-brand-secondary animate-bounce" />
-            <span className="tracking-wider uppercase">BUSCADOR DE PASSAGENS</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
-          </motion.button>
-        ) : (
-          <motion.div
-            key="expanded-card"
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            className="w-[540px] bg-white rounded-2xl shadow-2xl border border-brand-border/40 overflow-hidden flex flex-col text-left"
-          >
-            {/* Header */}
-            <div className="bg-brand-primary/5 px-4.5 py-3 border-b border-brand-border/10 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-brand-primary">
-                  Buscador Oficial Arcadane
-                </span>
-              </div>
-              <button
-                onClick={() => setIsMinimized(true)}
-                className="p-1 rounded-lg hover:bg-black/5 text-stone-500 hover:text-stone-800 transition-colors cursor-pointer flex items-center gap-1.5 text-[10px] font-mono font-bold"
-                title="Minimizar Buscador"
-              >
-                <span>MINIMIZAR</span>
-                <ChevronDown className="w-4 h-4 text-brand-primary" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-4 bg-white max-h-[420px] overflow-y-auto">
-              <div ref={containerRef} className="w-full min-h-[140px]" />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+  return null;
 };
 
 
@@ -707,6 +615,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
   const [homeSettings, setHomeSettings] = useState(() => getHomeSettings());
   const [services, setServices] = useState<ServiceItem[]>(() => getServices());
   const [seo, setSeo] = useState(() => getSeoSettings());
+  const [theme, setTheme] = useState<ThemeSettings>(() => getThemeSettings());
 
   // Seal / Badge Custom fields
   const [sealTopText, setSealTopText] = useState(() => localStorage.getItem('arcadane_seal_top_text') || "ARCADANE CURADORIA EXCLUSIVA");
@@ -731,6 +640,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
       }
       setServices(getServices());
       setSeo(getSeoSettings());
+      setTheme(getThemeSettings());
 
       setSealTopText(localStorage.getItem('arcadane_seal_top_text') || "ARCADANE CURADORIA EXCLUSIVA");
       setSealBottomText(localStorage.getItem('arcadane_seal_bottom_text') || "VIAGENS EXTRAORDINÁRIAS");
@@ -854,6 +764,13 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
 
     const encoded = encodeURIComponent(textPayload);
     const mateusPhone = seo.contactWhatsAppMateus || '554791492704';
+    
+    if (activeTab === 'voos') {
+      trackCustomEvent('search_flights', 'home');
+    } else {
+      trackCustomEvent('quote_package', 'home');
+    }
+    
     window.open(`https://wa.me/${mateusPhone}?text=${encoded}`, '_blank');
   };
 
@@ -923,7 +840,15 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
       >
         {/* Full Video Background Layer with Ambient Overlays */}
         <div className="absolute inset-0 -z-10 bg-black overflow-hidden">
-          {youtubeId ? (
+          {theme.heroBannerType === 'image' ? (
+            <div 
+              className="absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-500"
+              style={{ 
+                backgroundImage: `url(${theme.heroBannerImageUrl || 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=1600'})`,
+                opacity: 0.85
+              }}
+            />
+          ) : youtubeId ? (
             isPlaying ? (
               <div className="absolute inset-0 w-full h-full pointer-events-none flex items-center justify-center">
                 <iframe
@@ -965,62 +890,126 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
           )}
           {/* Gradients to blend with header and search card */}
           <div className="absolute inset-0 bg-gradient-to-b from-stone-950/70 via-black/35 to-stone-950/90" />
+          {/* Custom user darkness overlay slider */}
+          <div 
+            className="absolute inset-0 bg-black pointer-events-none"
+            style={{ opacity: (theme.heroOverlayOpacity ?? 40) / 100 }}
+          />
         </div>
 
-        {/* Hero Central Text Callout */}
-        <div className="w-full z-10 pt-2 sm:pt-4 pb-2">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-            
-            {/* Tag badge with link to Instagram */}
-            <a 
-              href="https://www.instagram.com/arcadaneviagens/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-1 bg-black/45 backdrop-blur-md border border-white/10 text-white/95 rounded-full text-[10px] font-mono tracking-widest uppercase hover:bg-brand-primary/25 hover:border-[#AF4934]/40 transition-all"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-              <span>@ARCADANEVIAGENS</span>
-            </a>
- 
-            {/* Immersive Title with Elegant Hand-picked Fonts and Typewriter Animation */}
-            <div className="min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px] xl:min-h-[220px] flex items-center justify-center w-full">
-              <TypewriterTitle rafesOpen={rafesOpen} editField={editField} />
-            </div>
- 
-            <div className="flex items-center justify-center gap-3 pt-1">
-              <button
-                onClick={togglePlay}
-                className="w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 border border-white/15 flex items-center justify-center transition-all active:scale-95 text-white/90"
-                title={isPlaying ? "Pausar Vídeo" : "Reproduzir Vídeo"}
-              >
-                {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white translate-x-0.5" />}
-              </button>
-            </div>
- 
-          </div>
-        </div>
-
-        {/* Floating Custom Booking Engine & Search Bar (Aligned Bottom of Hero) */}
-        <div className="w-full max-w-6xl mx-auto px-4 pb-8 relative z-10 mt-6 sm:mt-8 lg:mt-10" id="booking-area">
+        {/* Dynamic Widget & Hero Text Layout based on widgetPosition */}
+        {(() => {
+          const pos = homeSettings.widgetPosition || 'middle';
           
-          {/* Real Live Befly Widget Container */}
-          <div className="bg-white rounded-2xl shadow-2xl border border-brand-border p-4.5 sm:p-5 lg:p-7 text-brand-dark max-w-6xl mx-auto text-left relative">
-            
-            {/* Perfect Responsive Wrapper: Horizontal Scroll only on Mobile, Native Widths on PC */}
-            <div className="w-full overflow-x-auto overflow-y-hidden pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-              <div className="min-w-[850px] lg:min-w-0 pr-4 sm:pr-0">
-                <BeflySearchWidget />
+          const textElement = (
+            <div className={`w-full z-10 pt-2 sm:pt-4 pb-2 ${pos === 'left' || pos === 'right' ? 'lg:text-left' : 'text-center'}`}>
+              <div className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 ${pos === 'left' || pos === 'right' ? 'lg:mx-0 lg:max-w-none lg:px-0' : 'text-center'}`}>
+                {/* Tag badge with link to Instagram */}
+                <div className={`flex items-center ${pos === 'left' || pos === 'right' ? 'lg:justify-start justify-center' : 'justify-center'}`}>
+                  <a 
+                    href="https://www.instagram.com/arcadaneviagens/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-1 bg-black/45 backdrop-blur-md border border-white/10 text-white/95 rounded-full text-[10px] font-mono tracking-widest uppercase hover:bg-brand-primary/25 hover:border-[#AF4934]/40 transition-all"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
+                    <span>@ARCADANEVIAGENS</span>
+                  </a>
+                </div>
+     
+                {/* Immersive Title with Elegant Hand-picked Fonts and Typewriter Animation */}
+                <div className={`min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px] xl:min-h-[220px] flex items-center w-full ${pos === 'left' || pos === 'right' ? 'lg:justify-start justify-center' : 'justify-center'}`}>
+                  <TypewriterTitle rafesOpen={rafesOpen} editField={editField} />
+                </div>
+     
+                <div className={`flex items-center gap-3 pt-1 ${pos === 'left' || pos === 'right' ? 'lg:justify-start justify-center' : 'justify-center'}`}>
+                  <button
+                    onClick={togglePlay}
+                    className="w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 border border-white/15 flex items-center justify-center transition-all active:scale-95 text-white/90"
+                    title={isPlaying ? "Pausar Vídeo" : "Reproduzir Vídeo"}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white translate-x-0.5" />}
+                  </button>
+                </div>
               </div>
             </div>
+          );
 
-            {/* Mini helper hint on small devices */}
-            <div className="block lg:hidden text-center mt-3 border-t border-gray-100 pt-3 select-none">
-              <span className="inline-flex items-center gap-1.5 bg-stone-50 text-stone-500 px-3 py-1 font-mono text-[9px] rounded-full uppercase tracking-wider leading-none">
-                ↔ Deslize para as laterais se precisar preencher todos os campos
-              </span>
+          const widgetElement = (
+            <div className={`w-full max-w-6xl mx-auto px-4 pb-8 relative z-10 ${pos === 'left' || pos === 'right' ? 'lg:mx-0 lg:max-w-none lg:px-0' : ''}`} id="booking-area">
+              {/* Real Live Befly Widget Container */}
+              <div className="bg-white rounded-2xl shadow-2xl border border-brand-border p-4.5 sm:p-5 lg:p-7 text-brand-dark max-w-6xl mx-auto text-left relative">
+                {/* Perfect Responsive Wrapper: Horizontal Scroll only on Mobile, Native Widths on PC */}
+                <div className="w-full overflow-x-auto overflow-y-hidden pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+                  <div className="min-w-[850px] lg:min-w-0 pr-4 sm:pr-0">
+                    <BeflySearchWidget />
+                  </div>
+                </div>
+
+                {/* Mini helper hint on small devices */}
+                <div className="block lg:hidden text-center mt-3 border-t border-gray-100 pt-3 select-none">
+                  <span className="inline-flex items-center gap-1.5 bg-stone-50 text-stone-500 px-3 py-1 font-mono text-[9px] rounded-full uppercase tracking-wider leading-none">
+                    ↔ Deslize para as laterais se precisar preencher todos os campos
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+
+          if (pos === 'top') {
+            return (
+              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8 z-10 mt-6">
+                {widgetElement}
+                {textElement}
+              </div>
+            );
+          }
+
+          if (pos === 'left') {
+            return (
+              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center z-10 mt-6">
+                <div className="lg:col-span-6 xl:col-span-7 order-2 lg:order-1">
+                  {widgetElement}
+                </div>
+                <div className="lg:col-span-6 xl:col-span-5 order-1 lg:order-2">
+                  {textElement}
+                </div>
+              </div>
+            );
+          }
+
+          if (pos === 'right') {
+            return (
+              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center z-10 mt-6">
+                <div className="lg:col-span-6 xl:col-span-5 order-1">
+                  {textElement}
+                </div>
+                <div className="lg:col-span-6 xl:col-span-7 order-2">
+                  {widgetElement}
+                </div>
+              </div>
+            );
+          }
+
+          if (pos === 'bottom') {
+            return (
+              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8 z-10 mt-6 justify-end h-full">
+                {textElement}
+                <div className="mt-auto pt-6">
+                  {widgetElement}
+                </div>
+              </div>
+            );
+          }
+
+          // Default is middle / center
+          return (
+            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8 z-10 mt-6">
+              {textElement}
+              {widgetElement}
+            </div>
+          );
+        })()}
       </section>
 
       {/* 2. Core Service List Section */}
@@ -2136,8 +2125,6 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
           </div>
         )}
       </AnimatePresence>
-
-      <FloatingBuscador />
 
     </div>
   );

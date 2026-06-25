@@ -1,7 +1,7 @@
 import { ServiceItem, TestimonialItem, PackageItem, BlogPost, LuxuryTrip } from '../types';
 import { SERVICES as DEFAULT_SERVICES, TESTIMONIALS as DEFAULT_TESTIMONIALS, PACKAGES as DEFAULT_PACKAGES, BLOG_POSTS as DEFAULT_BLOG_POSTS } from '../data';
 import fallbackData from './cmsStoreFallback.json';
-import { saveToFirebase, setupFirebaseRealtimeListener } from './firebase';
+import { saveToFirebase, setupFirebaseRealtimeListener, loadFromFirebase } from './firebase';
 
 let isSyncingFromFirebase = false;
 
@@ -32,6 +32,27 @@ export interface SeoSettings {
   secondaryColor?: string;
 }
 
+export interface ThemeSettings {
+  primaryColor: string;
+  secondaryColor: string;
+  bgColorLight: string;
+  textColorDark: string;
+  chocolateColor: string;
+  beigeColor: string;
+  borderColor: string;
+  
+  fontSans: string;
+  fontDisplay: string;
+  fontSerif: string;
+  
+  buttonRadius: 'rounded-none' | 'rounded' | 'rounded-lg' | 'rounded-xl' | 'rounded-2xl' | 'rounded-full';
+  buttonStyle: 'solid' | 'outline' | 'shadow-lux' | 'glass';
+  
+  heroBannerType: 'video' | 'image';
+  heroBannerImageUrl: string;
+  heroOverlayOpacity: number;
+}
+
 export interface HomeSettings {
   heroTitle: string;
   heroSubtitle: string;
@@ -46,6 +67,7 @@ export interface HomeSettings {
   customTripSubtitle?: string;
   customTripButtonText?: string;
   widgetType?: 'befly' | 'whatsapp';
+  widgetPosition?: 'top' | 'bottom' | 'left' | 'right' | 'middle';
   
   // Custom Dynamic Layout configurations
   preloaderType?: 'pulse' | 'spin' | 'flip' | 'modern' | 'zoom';
@@ -67,7 +89,74 @@ export interface HomeSettings {
   // Submenus configuration strings (label|targetPageId or label|url)
   submenuPackagesLinks?: string;
   submenuCustomTripLinks?: string;
+
+  // Show/Hide pages in menu
+  hideHomeInMenu?: boolean;
+  hideServicesInMenu?: boolean;
+  hidePackagesInMenu?: boolean;
+  hideAboutUsInMenu?: boolean;
+  hideCustomTripInMenu?: boolean;
+  hideBlogInMenu?: boolean;
+  hideContactUsInMenu?: boolean;
+
+  // Show/Hide pages on site entirely
+  hideHome?: boolean;
+  hideServices?: boolean;
+  hidePackages?: boolean;
+  hideAboutUs?: boolean;
+  hideCustomTrip?: boolean;
+  hideBlog?: boolean;
+  hideContactUs?: boolean;
 }
+
+export interface CustomPage {
+  id: string; // Slug/ID
+  title: string;
+  content: string; // Markdown / Text
+  metaDescription?: string;
+  keywords?: string;
+  addToMenu?: boolean;
+  menuLabel?: string;
+  externalUrl?: string; // If this is an external redirect link instead of a custom page
+  isActive?: boolean;
+}
+
+export interface DomainSettings {
+  primaryDomain: string;
+  subdomain: string;
+  dnsStatus: 'active' | 'pending_dns' | 'not_configured';
+  ipAddress: string;
+  cnameRecord: string;
+}
+
+export const DEFAULT_CUSTOM_PAGES: CustomPage[] = [
+  {
+    id: 'destinos-vip',
+    title: 'Destinos VIP e Exclusivos',
+    content: '### Viagens Sob Medida de Altíssimo Padrão\n\nA Arcadane Viagens orgulhosamente oferece serviços de assessoria especializada para destinos altamente exclusivos no mundo todo. Desde ilhas privadas nas Maldivas até chalés de neve nos Alpes Suíços.\n\nFale conosco para desenhar a sua próxima grande aventura com a sofisticação e os detalhes impecáveis que só a Arcadane pode entregar.',
+    metaDescription: 'Descubra os destinos VIP e de luxo mais exclusivos do mundo com assessoria completa Arcadane Viagens.',
+    keywords: 'luxo, vip, viagens exclusivas, maldivas, alpes',
+    addToMenu: true,
+    menuLabel: 'Destinos VIP'
+  },
+  {
+    id: 'seguro-viagem',
+    title: 'Seguro Viagem Premium',
+    content: '### Segurança e Proteção Completa em Suas Viagens\n\nViajar com tranquilidade é o maior luxo de todos. Nossa curadoria inclui apólices de seguro viagem de alto padrão com coberturas robustas para despesas médicas, extravio de bagagem de luxo e cancelamentos imprevistos.\n\nGaranta a melhor cobertura internacional com nossa equipe de concierge dedicada.',
+    metaDescription: 'Proteja a sua jornada de alto padrão com a nossa assistência e seguro de viagem premium.',
+    keywords: 'seguro viagem, cobertura de luxo, assistência internacional, concierge',
+    addToMenu: false,
+    menuLabel: 'Seguro Viagem'
+  }
+];
+
+export const DEFAULT_DOMAIN_SETTINGS: DomainSettings = {
+  primaryDomain: 'www.arcadaneviagens.com.br',
+  subdomain: 'vip.arcadaneviagens.com.br',
+  dnsStatus: 'active',
+  ipAddress: '185.224.137.42',
+  cnameRecord: 'cname.hostinger.com'
+};
 
 export interface PromoPackage {
   id: string;
@@ -110,6 +199,27 @@ const DEFAULT_SEO_SETTINGS: SeoSettings = {
   secondaryColor: "#AF4934"
 };
 
+export const DEFAULT_THEME_SETTINGS: ThemeSettings = {
+  primaryColor: '#3B5EA4',
+  secondaryColor: '#AF4934',
+  bgColorLight: '#FDFBF6',
+  textColorDark: '#3A2F28',
+  chocolateColor: '#6F5B4E',
+  beigeColor: '#F3EEE3',
+  borderColor: '#DCCFC1',
+  
+  fontSans: '"Montserrat", "Inter", sans-serif',
+  fontDisplay: '"Montserrat", "Cormorant Garamond", Georgia, serif',
+  fontSerif: '"Cormorant Garamond", Georgia, serif',
+  
+  buttonRadius: 'rounded-full',
+  buttonStyle: 'solid',
+  
+  heroBannerType: 'video',
+  heroBannerImageUrl: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=1600',
+  heroOverlayOpacity: 55,
+};
+
 const DEFAULT_HOME_SETTINGS: HomeSettings = {
   heroTitle: "A arte de viajar <span class=\"font-serif font-normal italic text-brand-secondary\">sob medida</span>",
   heroSubtitle: "Curadoria de destinos exclusivos, hotéis extraordinários e planejamento técnico de excelência.",
@@ -124,6 +234,7 @@ const DEFAULT_HOME_SETTINGS: HomeSettings = {
   customTripSubtitle: "Experiências exclusivas, desenhadas para você.",
   customTripButtonText: "Clique e fale com a Arcadane!",
   widgetType: "befly",
+  widgetPosition: "middle",
   
   // Custom Dynamic Layout configurations
   preloaderType: "pulse",
@@ -144,7 +255,25 @@ const DEFAULT_HOME_SETTINGS: HomeSettings = {
   
   // Submenus configuration strings (label|targetPageId or label|url)
   submenuPackagesLinks: "África & Ilhas|packages;América do Sul|packages;Ásia|packages;Caribe|packages;Europa|packages;Oceania|packages;EUA & Parques|packages",
-  submenuCustomTripLinks: "Lua de Mel Exclusiva|custom_trip;Navegações de Luxo|packages;Viagens de Trem|packages;Estações de Esqui|custom_trip"
+  submenuCustomTripLinks: "Lua de Mel Exclusiva|custom_trip;Navegações de Luxo|packages;Viagens de Trem|packages;Estações de Esqui|custom_trip",
+
+  // Show/Hide pages in menu defaults
+  hideHomeInMenu: false,
+  hideServicesInMenu: false,
+  hidePackagesInMenu: false,
+  hideAboutUsInMenu: false,
+  hideCustomTripInMenu: false,
+  hideBlogInMenu: false,
+  hideContactUsInMenu: false,
+
+  // Show/Hide pages on site entirely defaults
+  hideHome: false,
+  hideServices: false,
+  hidePackages: false,
+  hideAboutUs: false,
+  hideCustomTrip: false,
+  hideBlog: false,
+  hideContactUs: false
 };
 
 export const DEFAULT_PROMO_PACKAGES: PromoPackage[] = [
@@ -380,6 +509,9 @@ const KEYS = {
   SEO: 'arcadane_cms_seo_settings',
   HOME: 'arcadane_cms_home_settings',
   LUXURY_TRIPS: 'arcadane_cms_luxury_trips',
+  THEME: 'arcadane_theme_settings',
+  CUSTOM_PAGES: 'arcadane_cms_custom_pages',
+  DOMAINS: 'arcadane_cms_domain_settings',
 };
 
 // Helpers
@@ -391,6 +523,7 @@ const fallbackTestimonials = fallbackData.arcadane_cms_testimonials as Testimoni
 const fallbackSeoSettings = fallbackData.arcadane_cms_seo_settings as SeoSettings | null;
 const fallbackHomeSettings = fallbackData.arcadane_cms_home_settings as HomeSettings | null;
 const fallbackLuxuryTrips = fallbackData.arcadane_cms_luxury_trips as LuxuryTrip[] | null;
+const fallbackThemeSettings = (fallbackData as any).arcadane_cms_theme_settings as ThemeSettings | null;
 
 const FALLBACK_SERVICES = fallbackServices && fallbackServices.length > 0 ? fallbackServices : DEFAULT_SERVICES;
 const FALLBACK_PACKAGES = fallbackPackages && fallbackPackages.length > 0 ? fallbackPackages : DEFAULT_PACKAGES;
@@ -400,6 +533,7 @@ const FALLBACK_TESTIMONIALS = fallbackTestimonials && fallbackTestimonials.lengt
 const FALLBACK_SEO_SETTINGS = fallbackSeoSettings ? { ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings } : DEFAULT_SEO_SETTINGS;
 const FALLBACK_HOME_SETTINGS = fallbackHomeSettings ? { ...DEFAULT_HOME_SETTINGS, ...fallbackHomeSettings } : DEFAULT_HOME_SETTINGS;
 const FALLBACK_LUXURY_TRIPS = fallbackLuxuryTrips && fallbackLuxuryTrips.length > 0 ? fallbackLuxuryTrips : DEFAULT_LUXURY_TRIPS;
+const FALLBACK_THEME_SETTINGS = fallbackThemeSettings ? { ...DEFAULT_THEME_SETTINGS, ...fallbackThemeSettings } : DEFAULT_THEME_SETTINGS;
 
 export function getServices(): ServiceItem[] {
   if (typeof window === 'undefined') return FALLBACK_SERVICES;
@@ -580,6 +714,205 @@ export function saveHomeSettings(settings: HomeSettings): void {
   broadcastChange();
 }
 
+export function getLastUpdatedTime(): string {
+  if (typeof window === 'undefined') return '';
+  let revision = localStorage.getItem('arcadane_cms_revision');
+  if (!revision) {
+    const now = new Date();
+    revision = now.toISOString();
+    localStorage.setItem('arcadane_cms_revision', revision);
+  }
+  try {
+    const date = new Date(revision);
+    if (isNaN(date.getTime())) return '';
+    
+    // Format to PT-BR: DD/MM/AAAA às HH:MM
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `Versão do site atualizada em: ${day}/${month}/${year} às ${hours}:${minutes}`;
+  } catch (e) {
+    return '';
+  }
+}
+
+export function getThemeSettings(): ThemeSettings {
+  if (typeof window === 'undefined') return FALLBACK_THEME_SETTINGS;
+  const data = localStorage.getItem(KEYS.THEME);
+  if (!data) {
+    localStorage.setItem(KEYS.THEME, JSON.stringify(FALLBACK_THEME_SETTINGS));
+    return FALLBACK_THEME_SETTINGS;
+  }
+  try {
+    return { ...FALLBACK_THEME_SETTINGS, ...JSON.parse(data) };
+  } catch (e) {
+    return FALLBACK_THEME_SETTINGS;
+  }
+}
+
+export function saveThemeSettings(settings: ThemeSettings): void {
+  localStorage.setItem(KEYS.THEME, JSON.stringify(settings));
+  applyThemeSettings(settings);
+  broadcastChange();
+  autoSyncToServer();
+}
+
+export function getCustomPages(): CustomPage[] {
+  if (typeof window === 'undefined') return DEFAULT_CUSTOM_PAGES;
+  const data = localStorage.getItem(KEYS.CUSTOM_PAGES);
+  if (!data) {
+    localStorage.setItem(KEYS.CUSTOM_PAGES, JSON.stringify(DEFAULT_CUSTOM_PAGES));
+    return DEFAULT_CUSTOM_PAGES;
+  }
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return DEFAULT_CUSTOM_PAGES;
+  }
+}
+
+export function saveCustomPages(pages: CustomPage[]): void {
+  localStorage.setItem(KEYS.CUSTOM_PAGES, JSON.stringify(pages));
+  broadcastChange();
+  autoSyncToServer();
+}
+
+export function getDomainSettings(): DomainSettings {
+  if (typeof window === 'undefined') return DEFAULT_DOMAIN_SETTINGS;
+  const data = localStorage.getItem(KEYS.DOMAINS);
+  if (!data) {
+    localStorage.setItem(KEYS.DOMAINS, JSON.stringify(DEFAULT_DOMAIN_SETTINGS));
+    return DEFAULT_DOMAIN_SETTINGS;
+  }
+  try {
+    return { ...DEFAULT_DOMAIN_SETTINGS, ...JSON.parse(data) };
+  } catch (e) {
+    return DEFAULT_DOMAIN_SETTINGS;
+  }
+}
+
+export function saveDomainSettings(settings: DomainSettings): void {
+  localStorage.setItem(KEYS.DOMAINS, JSON.stringify(settings));
+  broadcastChange();
+  autoSyncToServer();
+}
+
+export function applyThemeSettings(settings?: ThemeSettings): void {
+  if (typeof document === 'undefined') return;
+  const theme = settings || getThemeSettings();
+
+  const primary = theme.primaryColor || '#3B5EA4';
+  const secondary = theme.secondaryColor || '#AF4934';
+  const bgLight = theme.bgColorLight || '#FDFBF6';
+  const textDark = theme.textColorDark || '#3A2F28';
+  const chocolate = theme.chocolateColor || '#6F5B4E';
+  const beige = theme.beigeColor || '#F3EEE3';
+  const border = theme.borderColor || '#DCCFC1';
+
+  const fontSans = theme.fontSans || '"Montserrat", "Inter", sans-serif';
+  const fontDisplay = theme.fontDisplay || '"Montserrat", "Cormorant Garamond", Georgia, serif';
+  const fontSerif = theme.fontSerif || '"Cormorant Garamond", Georgia, serif';
+
+  const docEl = document.documentElement;
+  docEl.style.setProperty('--color-brand-primary', primary);
+  docEl.style.setProperty('--color-brand-secondary', secondary);
+  docEl.style.setProperty('--color-brand-light', bgLight);
+  docEl.style.setProperty('--color-brand-dark', textDark);
+  docEl.style.setProperty('--color-brand-chocolate', chocolate);
+  docEl.style.setProperty('--color-brand-beige', beige);
+  docEl.style.setProperty('--color-brand-border', border);
+
+  docEl.style.setProperty('--font-sans', fontSans);
+  docEl.style.setProperty('--font-display', fontDisplay);
+  docEl.style.setProperty('--font-serif', fontSerif);
+
+  // Remove existing style block if present
+  let styleEl = document.getElementById('arcadane-theme-overrides');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'arcadane-theme-overrides';
+    document.head.appendChild(styleEl);
+  }
+
+  // Map radius
+  const radiusMap: Record<string, string> = {
+    'rounded-none': '0px',
+    'rounded': '4px',
+    'rounded-lg': '8px',
+    'rounded-xl': '12px',
+    'rounded-2xl': '16px',
+    'rounded-full': '9999px',
+  };
+  const radiusVal = radiusMap[theme.buttonRadius] || '9999px';
+
+  // Build button style css override
+  let buttonStyleCss = '';
+  if (theme.buttonStyle === 'outline') {
+    buttonStyleCss = `
+      button.bg-brand-primary, .btn-primary, [role="button"].bg-brand-primary {
+        background-color: transparent !important;
+        background: transparent !important;
+        color: var(--color-brand-primary) !important;
+        border: 2px solid var(--color-brand-primary) !important;
+      }
+      button.bg-brand-secondary, .btn-secondary, [role="button"].bg-brand-secondary {
+        background-color: transparent !important;
+        background: transparent !important;
+        color: var(--color-brand-secondary) !important;
+        border: 2px solid var(--color-brand-secondary) !important;
+      }
+    `;
+  } else if (theme.buttonStyle === 'shadow-lux') {
+    buttonStyleCss = `
+      button, .btn, [role="button"], .wa-btn {
+        box-shadow: 0 10px 25px -5px var(--color-brand-primary)33 !important;
+      }
+    `;
+  } else if (theme.buttonStyle === 'glass') {
+    buttonStyleCss = `
+      button.bg-brand-primary, .btn-primary, [role="button"].bg-brand-primary {
+        background-color: rgba(59, 94, 164, 0.1) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        color: var(--color-brand-primary) !important;
+        border: 1px solid var(--color-brand-primary)50 !important;
+      }
+    `;
+  }
+
+  styleEl.textContent = `
+    :root {
+      --color-brand-primary: ${primary} !important;
+      --color-brand-secondary: ${secondary} !important;
+      --color-brand-light: ${bgLight} !important;
+      --color-brand-dark: ${textDark} !important;
+      --color-brand-chocolate: ${chocolate} !important;
+      --color-brand-beige: ${beige} !important;
+      --color-brand-border: ${border} !important;
+
+      --font-sans: ${fontSans} !important;
+      --font-display: ${fontDisplay} !important;
+      --font-serif: ${fontSerif} !important;
+    }
+
+    body {
+      background-color: var(--color-brand-light) !important;
+      color: var(--color-brand-dark) !important;
+    }
+
+    /* Core button shape overrides */
+    button, .btn, [role="button"], .wa-btn, select, input {
+      border-radius: ${radiusVal} !important;
+    }
+
+    /* Custom Button style overrides */
+    ${buttonStyleCss}
+  `;
+}
+
 export function getLuxuryItineraries(): LuxuryTrip[] {
   if (typeof window === 'undefined') return FALLBACK_LUXURY_TRIPS;
   const data = localStorage.getItem(KEYS.LUXURY_TRIPS);
@@ -661,6 +994,18 @@ export function getTrajectoryPhoto(): string | null {
   return data;
 }
 
+export function getCustomCodeInjection(position: 'head' | 'body_start' | 'body_end'): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(`arcadane_custom_${position}_code`) || '';
+}
+
+export function saveCustomCodeInjection(position: 'head' | 'body_start' | 'body_end', code: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(`arcadane_custom_${position}_code`, code);
+  broadcastChange();
+  autoSyncToServer();
+}
+
 // Reset entire database to defaults
 export function resetCmsToDefault(): void {
   localStorage.removeItem(KEYS.SERVICES);
@@ -721,6 +1066,7 @@ export function applySeoSettings(settings: SeoSettings): void {
 // Custom event notifier to update components instantly
 export function broadcastChange(): void {
   if (typeof window !== 'undefined') {
+    localStorage.setItem('arcadane_cms_revision', new Date().toISOString());
     window.dispatchEvent(new Event('arcadane_cms_data_changed'));
   }
 }
@@ -748,7 +1094,19 @@ export async function autoSyncToServer(): Promise<void> {
       bento_destinations: JSON.parse(localStorage.getItem('arcadane_bento_destinations') || 'null'),
       video_url: localStorage.getItem('arcadane_video_url'),
       search_mode: localStorage.getItem('arcadane_search_mode'),
-      typewriter_endings: JSON.parse(localStorage.getItem('arcadane_typewriter_endings') || 'null')
+      typewriter_endings: JSON.parse(localStorage.getItem('arcadane_typewriter_endings') || 'null'),
+      seal_top_text: localStorage.getItem('arcadane_seal_top_text'),
+      seal_bottom_text: localStorage.getItem('arcadane_seal_bottom_text'),
+      seal_number: localStorage.getItem('arcadane_seal_number'),
+      seal_label1: localStorage.getItem('arcadane_seal_label1'),
+      seal_label2: localStorage.getItem('arcadane_seal_label2'),
+      quiz_banner_badge: localStorage.getItem('arcadane_quiz_banner_badge'),
+      quiz_banner_title: localStorage.getItem('arcadane_quiz_banner_title'),
+      quiz_banner_desc: localStorage.getItem('arcadane_quiz_banner_desc'),
+      custom_head_code: localStorage.getItem('arcadane_custom_head_code'),
+      custom_body_start_code: localStorage.getItem('arcadane_custom_body_start_code'),
+      custom_body_end_code: localStorage.getItem('arcadane_custom_body_end_code'),
+      theme_settings: JSON.parse(localStorage.getItem(KEYS.THEME) || 'null')
     };
 
     // Save each individual non-null key to Firebase Firestore so they are loaded immediately on Hostinger or other devices
@@ -770,7 +1128,23 @@ export async function autoSyncToServer(): Promise<void> {
       arcadane_cms_luxury_trips: dataToSync.luxury_trips,
       arcadane_founders_photo: dataToSync.founders_photo,
       arcadane_trajectory_photo: dataToSync.trajectory_photo,
-      arcadane_custom_logo: dataToSync.custom_logo
+      arcadane_custom_logo: dataToSync.custom_logo,
+      arcadane_bento_destinations: dataToSync.bento_destinations,
+      arcadane_video_url: dataToSync.video_url,
+      arcadane_search_mode: dataToSync.search_mode,
+      arcadane_typewriter_endings: dataToSync.typewriter_endings,
+      arcadane_seal_top_text: dataToSync.seal_top_text,
+      arcadane_seal_bottom_text: dataToSync.seal_bottom_text,
+      arcadane_seal_number: dataToSync.seal_number,
+      arcadane_seal_label1: dataToSync.seal_label1,
+      arcadane_seal_label2: dataToSync.seal_label2,
+      arcadane_quiz_banner_badge: dataToSync.quiz_banner_badge,
+      arcadane_quiz_banner_title: dataToSync.quiz_banner_title,
+      arcadane_quiz_banner_desc: dataToSync.quiz_banner_desc,
+      arcadane_custom_head_code: dataToSync.custom_head_code,
+      arcadane_custom_body_start_code: dataToSync.custom_body_start_code,
+      arcadane_custom_body_end_code: dataToSync.custom_body_end_code,
+      arcadane_theme_settings: dataToSync.theme_settings
     };
 
     await fetch('/api/save-cms-state', {
@@ -849,6 +1223,12 @@ export async function initializeCmsStore(): Promise<void> {
         localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(DEFAULT_LUXURY_TRIPS));
       }
       
+      if (fallbackThemeSettings) {
+        localStorage.setItem(KEYS.THEME, JSON.stringify({ ...DEFAULT_THEME_SETTINGS, ...fallbackThemeSettings }));
+      } else {
+        localStorage.setItem(KEYS.THEME, JSON.stringify(DEFAULT_THEME_SETTINGS));
+      }
+      
       if (fallbackData.arcadane_founders_photo) {
         localStorage.setItem('arcadane_founders_photo', fallbackData.arcadane_founders_photo);
       }
@@ -868,6 +1248,13 @@ export async function initializeCmsStore(): Promise<void> {
       applySeoSettings(JSON.parse(currentSeo));
     } else {
       applySeoSettings(fallbackSeoSettings ? { ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings } : DEFAULT_SEO_SETTINGS);
+    }
+
+    const currentTheme = localStorage.getItem(KEYS.THEME);
+    if (currentTheme) {
+      applyThemeSettings(JSON.parse(currentTheme));
+    } else {
+      applyThemeSettings(fallbackThemeSettings ? { ...DEFAULT_THEME_SETTINGS, ...fallbackThemeSettings } : DEFAULT_THEME_SETTINGS);
     }
   } catch (err) {
     console.warn('Failed to perform initial localStorage check:', err);
@@ -906,16 +1293,38 @@ export async function initializeCmsStore(): Promise<void> {
         updateKey('arcadane_founders_photo', serverData.arcadane_founders_photo);
         updateKey('arcadane_trajectory_photo', serverData.arcadane_trajectory_photo);
         updateKey('arcadane_custom_logo', serverData.arcadane_custom_logo);
+        updateKey('arcadane_bento_destinations', serverData.arcadane_bento_destinations);
+        updateKey('arcadane_video_url', serverData.arcadane_video_url);
+        updateKey('arcadane_search_mode', serverData.arcadane_search_mode);
+        updateKey('arcadane_typewriter_endings', serverData.arcadane_typewriter_endings);
+        updateKey('arcadane_seal_top_text', serverData.arcadane_seal_top_text);
+        updateKey('arcadane_seal_bottom_text', serverData.arcadane_seal_bottom_text);
+        updateKey('arcadane_seal_number', serverData.arcadane_seal_number);
+        updateKey('arcadane_seal_label1', serverData.arcadane_seal_label1);
+        updateKey('arcadane_seal_label2', serverData.arcadane_seal_label2);
+        updateKey('arcadane_quiz_banner_badge', serverData.arcadane_quiz_banner_badge);
+        updateKey('arcadane_quiz_banner_title', serverData.arcadane_quiz_banner_title);
+        updateKey('arcadane_quiz_banner_desc', serverData.arcadane_quiz_banner_desc);
+        updateKey('arcadane_custom_head_code', serverData.arcadane_custom_head_code);
+        updateKey('arcadane_custom_body_start_code', serverData.arcadane_custom_body_start_code);
+        updateKey('arcadane_custom_body_end_code', serverData.arcadane_custom_body_end_code);
+        updateKey(KEYS.THEME, serverData.arcadane_theme_settings);
         updateKey('arcadane_cms_revision', serverData.updatedAt);
 
         if (updated) {
           console.log('CMS state updated from server. Broadcasting change...');
           broadcastChange();
-          // Apply new SEO settings
+          // Apply new SEO and Theme settings
           const freshSeo = localStorage.getItem(KEYS.SEO);
           if (freshSeo) {
             try {
               applySeoSettings(JSON.parse(freshSeo));
+            } catch (e) {}
+          }
+          const freshTheme = localStorage.getItem(KEYS.THEME);
+          if (freshTheme) {
+            try {
+              applyThemeSettings(JSON.parse(freshTheme));
             } catch (e) {}
           }
         }
@@ -947,6 +1356,18 @@ export async function initializeCmsStore(): Promise<void> {
       else if (key === 'video_url') localKey = 'arcadane_video_url';
       else if (key === 'search_mode') localKey = 'arcadane_search_mode';
       else if (key === 'typewriter_endings') localKey = 'arcadane_typewriter_endings';
+      else if (key === 'seal_top_text') localKey = 'arcadane_seal_top_text';
+      else if (key === 'seal_bottom_text') localKey = 'arcadane_seal_bottom_text';
+      else if (key === 'seal_number') localKey = 'arcadane_seal_number';
+      else if (key === 'seal_label1') localKey = 'arcadane_seal_label1';
+      else if (key === 'seal_label2') localKey = 'arcadane_seal_label2';
+      else if (key === 'quiz_banner_badge') localKey = 'arcadane_quiz_banner_badge';
+      else if (key === 'quiz_banner_title') localKey = 'arcadane_quiz_banner_title';
+      else if (key === 'quiz_banner_desc') localKey = 'arcadane_quiz_banner_desc';
+      else if (key === 'custom_head_code') localKey = 'arcadane_custom_head_code';
+      else if (key === 'custom_body_start_code') localKey = 'arcadane_custom_body_start_code';
+      else if (key === 'custom_body_end_code') localKey = 'arcadane_custom_body_end_code';
+      else if (key === 'theme_settings') localKey = KEYS.THEME;
 
       if (localKey && remoteData !== undefined && remoteData !== null) {
         const currentVal = localStorage.getItem(localKey);
@@ -960,6 +1381,8 @@ export async function initializeCmsStore(): Promise<void> {
             localStorage.setItem(localKey, remoteValStr);
             if (key === 'seo_settings') {
               applySeoSettings(remoteData);
+            } else if (key === 'theme_settings') {
+              applyThemeSettings(remoteData);
             }
             broadcastChange();
           } finally {
@@ -984,5 +1407,215 @@ if (typeof window !== 'undefined') {
   window.addEventListener('arcadane_logo_changed', () => {
     autoSyncToServer();
   });
+}
+
+// Bidirectional Forced Sync function to reconcile browser storage with Firebase & Backup Server
+export async function forceSyncCmsState(direction: 'pull' | 'push'): Promise<{ success: boolean; updatedKeys: string[]; error?: string }> {
+  if (typeof window === 'undefined') {
+    return { success: false, updatedKeys: [], error: 'Window context is required for synchronization' };
+  }
+
+  const KEYS_MAPPING: Record<string, string> = {
+    services: KEYS.SERVICES,
+    packages: KEYS.PACKAGES,
+    promo_packages: KEYS.PROMO_PACKAGES,
+    blog_posts: KEYS.BLOG_POSTS,
+    testimonials: KEYS.TESTIMONIALS,
+    seo_settings: KEYS.SEO,
+    home_settings: KEYS.HOME,
+    luxury_trips: KEYS.LUXURY_TRIPS,
+    founders_photo: 'arcadane_founders_photo',
+    trajectory_photo: 'arcadane_trajectory_photo',
+    custom_logo: 'arcadane_custom_logo',
+    bento_destinations: 'arcadane_bento_destinations',
+    video_url: 'arcadane_video_url',
+    search_mode: 'arcadane_search_mode',
+    typewriter_endings: 'arcadane_typewriter_endings',
+    seal_top_text: 'arcadane_seal_top_text',
+    seal_bottom_text: 'arcadane_seal_bottom_text',
+    seal_number: 'arcadane_seal_number',
+    seal_label1: 'arcadane_seal_label1',
+    seal_label2: 'arcadane_seal_label2',
+    quiz_banner_badge: 'arcadane_quiz_banner_badge',
+    quiz_banner_title: 'arcadane_quiz_banner_title',
+    quiz_banner_desc: 'arcadane_quiz_banner_desc',
+    custom_head_code: 'arcadane_custom_head_code',
+    custom_body_start_code: 'arcadane_custom_body_start_code',
+    custom_body_end_code: 'arcadane_custom_body_end_code',
+    theme_settings: KEYS.THEME
+  };
+
+  const updatedKeys: string[] = [];
+
+  try {
+    if (direction === 'pull') {
+      console.log('[Sync] Force pulling CMS state from server backup and Firebase...');
+      
+      // 1. Pull from backup server
+      try {
+        const response = await fetch('/api/get-cms-state');
+        if (response.ok) {
+          const serverData = await response.json();
+          if (serverData && typeof serverData === 'object') {
+            const updateKey = (localKey: string, serverVal: any) => {
+              if (serverVal !== undefined && serverVal !== null) {
+                const currentVal = localStorage.getItem(localKey);
+                const serverValStr = typeof serverVal === 'string' ? serverVal : JSON.stringify(serverVal);
+                if (currentVal !== serverValStr) {
+                  localStorage.setItem(localKey, serverValStr);
+                  if (!updatedKeys.includes(localKey)) updatedKeys.push(localKey);
+                }
+              }
+            };
+
+            updateKey(KEYS.SERVICES, serverData.arcadane_cms_services);
+            updateKey(KEYS.PACKAGES, serverData.arcadane_cms_packages);
+            updateKey(KEYS.PROMO_PACKAGES, serverData.arcadane_cms_promo_packages);
+            updateKey(KEYS.BLOG_POSTS, serverData.arcadane_cms_blog_posts);
+            updateKey(KEYS.TESTIMONIALS, serverData.arcadane_cms_testimonials);
+            updateKey(KEYS.SEO, serverData.arcadane_cms_seo_settings);
+            updateKey(KEYS.HOME, serverData.arcadane_cms_home_settings);
+            updateKey(KEYS.LUXURY_TRIPS, serverData.arcadane_cms_luxury_trips);
+            updateKey('arcadane_founders_photo', serverData.arcadane_founders_photo);
+            updateKey('arcadane_trajectory_photo', serverData.arcadane_trajectory_photo);
+            updateKey('arcadane_custom_logo', serverData.arcadane_custom_logo);
+            updateKey('arcadane_bento_destinations', serverData.arcadane_bento_destinations);
+            updateKey('arcadane_video_url', serverData.arcadane_video_url);
+            updateKey('arcadane_search_mode', serverData.arcadane_search_mode);
+            updateKey('arcadane_typewriter_endings', serverData.arcadane_typewriter_endings);
+            updateKey('arcadane_seal_top_text', serverData.arcadane_seal_top_text);
+            updateKey('arcadane_seal_bottom_text', serverData.arcadane_seal_bottom_text);
+            updateKey('arcadane_seal_number', serverData.arcadane_seal_number);
+            updateKey('arcadane_seal_label1', serverData.arcadane_seal_label1);
+            updateKey('arcadane_seal_label2', serverData.arcadane_seal_label2);
+            updateKey('arcadane_quiz_banner_badge', serverData.arcadane_quiz_banner_badge);
+            updateKey('arcadane_quiz_banner_title', serverData.arcadane_quiz_banner_title);
+            updateKey('arcadane_quiz_banner_desc', serverData.arcadane_quiz_banner_desc);
+            updateKey('arcadane_custom_head_code', serverData.arcadane_custom_head_code);
+            updateKey('arcadane_custom_body_start_code', serverData.arcadane_custom_body_start_code);
+            updateKey('arcadane_custom_body_end_code', serverData.arcadane_custom_body_end_code);
+            updateKey(KEYS.THEME, serverData.arcadane_theme_settings);
+            updateKey('arcadane_cms_revision', serverData.updatedAt);
+          }
+        }
+      } catch (err) {
+        console.warn('[Sync] Pull from Node server failed:', err);
+      }
+
+      // 2. Pull from Firebase Firestore
+      isSyncingFromFirebase = true;
+      try {
+        await Promise.all(
+          Object.entries(KEYS_MAPPING).map(async ([fbKey, localKey]) => {
+            const data = await loadFromFirebase(fbKey);
+            if (data !== undefined && data !== null) {
+              const currentVal = localStorage.getItem(localKey);
+              const remoteValStr = typeof data === 'string' ? data : JSON.stringify(data);
+              if (currentVal !== remoteValStr) {
+                localStorage.setItem(localKey, remoteValStr);
+                if (!updatedKeys.includes(localKey)) updatedKeys.push(localKey);
+                if (fbKey === 'seo_settings') {
+                  applySeoSettings(data);
+                } else if (fbKey === 'theme_settings') {
+                  applyThemeSettings(data);
+                }
+              }
+            }
+          })
+        );
+      } finally {
+        setTimeout(() => {
+          isSyncingFromFirebase = false;
+        }, 100);
+      }
+
+      if (updatedKeys.length > 0) {
+        broadcastChange();
+      }
+
+      return { success: true, updatedKeys };
+
+    } else {
+      console.log('[Sync] Force pushing local CMS state to server backup and Firebase...');
+
+      const dataToPush = {
+        services: JSON.parse(localStorage.getItem(KEYS.SERVICES) || 'null'),
+        packages: JSON.parse(localStorage.getItem(KEYS.PACKAGES) || 'null'),
+        promo_packages: JSON.parse(localStorage.getItem(KEYS.PROMO_PACKAGES) || 'null'),
+        blog_posts: JSON.parse(localStorage.getItem(KEYS.BLOG_POSTS) || 'null'),
+        testimonials: JSON.parse(localStorage.getItem(KEYS.TESTIMONIALS) || 'null'),
+        seo_settings: JSON.parse(localStorage.getItem(KEYS.SEO) || 'null'),
+        home_settings: JSON.parse(localStorage.getItem(KEYS.HOME) || 'null'),
+        luxury_trips: JSON.parse(localStorage.getItem(KEYS.LUXURY_TRIPS) || 'null'),
+        founders_photo: localStorage.getItem('arcadane_founders_photo'),
+        trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
+        custom_logo: localStorage.getItem('arcadane_custom_logo'),
+        bento_destinations: JSON.parse(localStorage.getItem('arcadane_bento_destinations') || 'null'),
+        video_url: localStorage.getItem('arcadane_video_url'),
+        search_mode: localStorage.getItem('arcadane_search_mode'),
+        typewriter_endings: JSON.parse(localStorage.getItem('arcadane_typewriter_endings') || 'null'),
+        seal_top_text: localStorage.getItem('arcadane_seal_top_text'),
+        seal_bottom_text: localStorage.getItem('arcadane_seal_bottom_text'),
+        seal_number: localStorage.getItem('arcadane_seal_number'),
+        seal_label1: localStorage.getItem('arcadane_seal_label1'),
+        seal_label2: localStorage.getItem('arcadane_seal_label2'),
+        quiz_banner_badge: localStorage.getItem('arcadane_quiz_banner_badge'),
+        quiz_banner_title: localStorage.getItem('arcadane_quiz_banner_title'),
+        quiz_banner_desc: localStorage.getItem('arcadane_quiz_banner_desc'),
+        theme_settings: JSON.parse(localStorage.getItem(KEYS.THEME) || 'null')
+      };
+
+      // Push to Firebase Firestore
+      await Promise.all(
+        Object.entries(dataToPush).map(async ([key, value]) => {
+          if (value !== null && value !== undefined) {
+            await saveToFirebase(key, value);
+            updatedKeys.push(key);
+          }
+        })
+      );
+
+      // Push to fallback server JSON
+      const legacyData = {
+        arcadane_cms_services: dataToPush.services,
+        arcadane_cms_packages: dataToPush.packages,
+        arcadane_cms_promo_packages: dataToPush.promo_packages,
+        arcadane_cms_blog_posts: dataToPush.blog_posts,
+        arcadane_cms_testimonials: dataToPush.testimonials,
+        arcadane_cms_seo_settings: dataToPush.seo_settings,
+        arcadane_cms_home_settings: dataToPush.home_settings,
+        arcadane_cms_luxury_trips: dataToPush.luxury_trips,
+        arcadane_founders_photo: dataToPush.founders_photo,
+        arcadane_trajectory_photo: dataToPush.trajectory_photo,
+        arcadane_custom_logo: dataToPush.custom_logo,
+        arcadane_bento_destinations: dataToPush.bento_destinations,
+        arcadane_video_url: dataToPush.video_url,
+        arcadane_search_mode: dataToPush.search_mode,
+        arcadane_typewriter_endings: dataToPush.typewriter_endings,
+        arcadane_seal_top_text: dataToPush.seal_top_text,
+        arcadane_seal_bottom_text: dataToPush.seal_bottom_text,
+        arcadane_seal_number: dataToPush.seal_number,
+        arcadane_seal_label1: dataToPush.seal_label1,
+        arcadane_seal_label2: dataToPush.seal_label2,
+        arcadane_quiz_banner_badge: dataToPush.quiz_banner_badge,
+        arcadane_quiz_banner_title: dataToPush.quiz_banner_title,
+        arcadane_quiz_banner_desc: dataToPush.quiz_banner_desc,
+        arcadane_theme_settings: dataToPush.theme_settings
+      };
+
+      await fetch('/api/save-cms-state', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(legacyData),
+      });
+
+      return { success: true, updatedKeys };
+    }
+  } catch (error: any) {
+    console.error('[Sync] Forced synchronization failed:', error);
+    return { success: false, updatedKeys, error: error.message || 'Unknown synchronization error' };
+  }
 }
 
