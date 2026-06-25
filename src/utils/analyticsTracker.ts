@@ -222,19 +222,8 @@ export function subscribeToFirestoreAnalytics(onUpdate: (events: AnalyticsEvent[
       localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
       onUpdate(events);
     } else {
-      // Seed initial 150 events to avoid a blank display on first launch, while maintaining absolute real persistence
-      const seeded = generateSeededHistory();
-      const recentSeeded = seeded.slice(-150);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(recentSeeded));
-      
-      const batch = writeBatch(db);
-      recentSeeded.forEach((ev) => {
-        const docRef = doc(collection(db, 'analytics_events'));
-        batch.set(docRef, ev);
-      });
-      batch.commit().catch(err => console.warn('[Analytics Seeding Error]:', err));
-      
-      onUpdate(recentSeeded);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      onUpdate([]);
     }
   }, (error) => {
     console.error('[Analytics Subscription Error]:', error);
@@ -270,10 +259,8 @@ export function getAnalyticsEvents(): AnalyticsEvent[] {
     }
   }
 
-  // Generate and save seed history
-  const seeded = generateSeededHistory().slice(-150);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-  return seeded;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+  return [];
 }
 
 // Record a new page view

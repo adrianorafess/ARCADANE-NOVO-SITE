@@ -101,7 +101,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
     { id: PageId.Services, label: home.menuLabelServices || 'Serviços', hide: home.hideServices, hideInMenu: home.hideServicesInMenu },
     { id: PageId.Packages, label: home.menuLabelPackages || 'Pacotes', sublinks: parseSublinks(home.submenuPackagesLinks), hide: home.hidePackages, hideInMenu: home.hidePackagesInMenu },
     { id: PageId.AboutUs, label: home.menuLabelAboutUs || 'Quem Somos', hide: home.hideAboutUs, hideInMenu: home.hideAboutUsInMenu },
-    { id: PageId.CustomTrip, label: home.menuLabelCustomTrip || 'Viagem Personalizada', sublinks: parseSublinks(home.submenuCustomTripLinks), hide: home.hideCustomTrip, hideInMenu: home.hideCustomTripInMenu },
+    { id: PageId.CustomTrip, label: home.menuLabelCustomTrip || 'Viagem Personalizada', sublinks: undefined, hide: home.hideCustomTrip, hideInMenu: home.hideCustomTripInMenu },
     { id: PageId.Blog, label: home.menuLabelBlog || 'Blog', hide: home.hideBlog, hideInMenu: home.hideBlogInMenu },
     { id: PageId.ContactUs, label: home.menuLabelContactUs || 'Contato', hide: home.hideContactUs, hideInMenu: home.hideContactUsInMenu }
   ].filter(item => !item.hide && !item.hideInMenu);

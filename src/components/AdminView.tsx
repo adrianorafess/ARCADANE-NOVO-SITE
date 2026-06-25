@@ -417,7 +417,9 @@ export default function AdminView() {
 
   // Analytics State
   const [analyticsEvents, setAnalyticsEvents] = useState(() => getAnalyticsEvents());
-  const [analyticsTimeFilter, setAnalyticsTimeFilter] = useState<'realtime' | 'today' | 'month' | 'year' | '30days'>('today');
+  const [analyticsTimeFilter, setAnalyticsTimeFilter] = useState<'realtime' | 'today' | 'month' | 'year' | '30days' | 'custom'>('realtime');
+  const [startDateFilter, setStartDateFilter] = useState<string>('');
+  const [endDateFilter, setEndDateFilter] = useState<string>('');
 
   useEffect(() => {
     const handleAnalyticsUpdate = () => {
@@ -1102,12 +1104,17 @@ export default function AdminView() {
           return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
         case 'year':
           return eventDate.getFullYear() === currentYear;
+        case 'custom':
+          if (!startDateFilter && !endDateFilter) return true;
+          if (startDateFilter && !endDateFilter) return eventDateStr >= startDateFilter;
+          if (!startDateFilter && endDateFilter) return eventDateStr <= endDateFilter;
+          return eventDateStr >= startDateFilter && eventDateStr <= endDateFilter;
         case '30days':
         default:
           return true;
       }
     });
-  }, [analyticsEvents, analyticsTimeFilter]);
+  }, [analyticsEvents, analyticsTimeFilter, startDateFilter, endDateFilter]);
 
   const pageViews = filteredEventsForMetrics.filter(e => !e.customAction);
   const customEvents = filteredEventsForMetrics.filter(e => e.customAction);
@@ -1242,6 +1249,53 @@ export default function AdminView() {
       return data;
     }
 
+    if (analyticsTimeFilter === 'custom') {
+      const start = startDateFilter ? new Date(startDateFilter + 'T00:00:00') : new Date();
+      const end = endDateFilter ? new Date(endDateFilter + 'T23:59:59') : new Date();
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays <= 1) {
+        const data: { date: string; Visualizações: number; Conversões: number }[] = [];
+        for (let i = 23; i >= 0; i--) {
+          const d = new Date(end.getTime() - i * 60 * 60 * 1000);
+          const hourLabel = `${d.getHours()}:00`;
+          data.push({ date: hourLabel, Visualizações: 0, Conversões: 0 });
+        }
+        filteredEventsForMetrics.forEach(e => {
+          const evDate = new Date(e.timestamp);
+          const diffHours = Math.floor((end.getTime() - evDate.getTime()) / (60 * 60 * 1000));
+          if (diffHours >= 0 && diffHours < 24) {
+            const index = 23 - diffHours;
+            if (data[index]) {
+              if (e.customAction) data[index].Conversões += 1;
+              else data[index].Visualizações += 1;
+            }
+          }
+        });
+        return data;
+      } else {
+        const data: { date: string; fullDate: string; Visualizações: number; Conversões: number }[] = [];
+        const daysToGenerate = Math.min(diffDays, 31);
+        for (let i = daysToGenerate - 1; i >= 0; i--) {
+          const d = new Date(end.getTime() - i * 24 * 60 * 60 * 1000);
+          const dayStr = d.toISOString().split('T')[0];
+          const label = d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '');
+          data.push({ date: label, fullDate: dayStr, Visualizações: 0, Conversões: 0 });
+        }
+
+        filteredEventsForMetrics.forEach(e => {
+          const dayStr = e.timestamp.split('T')[0];
+          const found = data.find(d => d.fullDate === dayStr);
+          if (found) {
+            if (e.customAction) found.Conversões += 1;
+            else found.Visualizações += 1;
+          }
+        });
+        return data;
+      }
+    }
+
     // Default: Last 30 days
     const dailyDataMap: Record<string, { date: string; Visualizações: number; Conversões: number }> = {};
     for (let i = 29; i >= 0; i--) {
@@ -1263,7 +1317,7 @@ export default function AdminView() {
     });
 
     return Object.values(dailyDataMap);
-  }, [filteredEventsForMetrics, analyticsTimeFilter]);
+  }, [filteredEventsForMetrics, analyticsTimeFilter, startDateFilter, endDateFilter]);
 
   const dailyChartData = trendChartData;
 
@@ -1810,72 +1864,128 @@ export default function AdminView() {
                 </div>
 
                 {/* Time Filter Selector */}
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-stone-900/40 p-2.5 rounded-2xl border border-stone-850/80">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-stone-400 font-display">
-                    <Sliders className="w-3.5 h-3.5 text-[#AF4934]" />
-                    <span>Período do Relatório:</span>
+                <div className="space-y-3 bg-stone-900/40 p-4 rounded-2xl border border-stone-850/80">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-stone-400 font-display">
+                      <Sliders className="w-3.5 h-3.5 text-[#AF4934]" />
+                      <span>Período do Relatório:</span>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        onClick={() => setAnalyticsTimeFilter('realtime')}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold tracking-tight transition-all flex items-center gap-2 cursor-pointer border ${
+                          analyticsTimeFilter === 'realtime'
+                            ? 'bg-emerald-550/15 border-emerald-500/30 text-emerald-400 shadow-sm shadow-emerald-500/10'
+                            : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                        }`}
+                      >
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span>Na Hora</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => setAnalyticsTimeFilter('today')}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
+                          analyticsTimeFilter === 'today'
+                            ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
+                            : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                        }`}
+                      >
+                        No Dia (Hoje)
+                      </button>
+                      
+                      <button
+                        onClick={() => setAnalyticsTimeFilter('month')}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
+                          analyticsTimeFilter === 'month'
+                            ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
+                            : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                        }`}
+                      >
+                        Este Mês
+                      </button>
+                      
+                      <button
+                        onClick={() => setAnalyticsTimeFilter('year')}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
+                          analyticsTimeFilter === 'year'
+                            ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
+                            : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                        }`}
+                      >
+                        Este Ano
+                      </button>
+                      
+                      <button
+                        onClick={() => setAnalyticsTimeFilter('30days')}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
+                          analyticsTimeFilter === '30days'
+                            ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
+                            : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                        }`}
+                      >
+                        Tudo
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setAnalyticsTimeFilter('custom');
+                          if (!startDateFilter) {
+                            const today = new Date();
+                            const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+                            setStartDateFilter(yesterday.toISOString().split('T')[0]);
+                            setEndDateFilter(today.toISOString().split('T')[0]);
+                          }
+                        }}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
+                          analyticsTimeFilter === 'custom'
+                            ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
+                            : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+                        }`}
+                      >
+                        Período Personalizado
+                      </button>
+                    </div>
                   </div>
-                  
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <button
-                      onClick={() => setAnalyticsTimeFilter('realtime')}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold tracking-tight transition-all flex items-center gap-2 cursor-pointer border ${
-                        analyticsTimeFilter === 'realtime'
-                          ? 'bg-emerald-550/15 border-emerald-500/30 text-emerald-400 shadow-sm shadow-emerald-500/10'
-                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
-                      }`}
-                    >
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                      </span>
-                      <span>Na Hora (Ativos Agora)</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => setAnalyticsTimeFilter('today')}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
-                        analyticsTimeFilter === 'today'
-                          ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
-                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
-                      }`}
-                    >
-                      No Dia (Hoje)
-                    </button>
-                    
-                    <button
-                      onClick={() => setAnalyticsTimeFilter('month')}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
-                        analyticsTimeFilter === 'month'
-                          ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
-                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
-                      }`}
-                    >
-                      Por Mês (Este Mês)
-                    </button>
-                    
-                    <button
-                      onClick={() => setAnalyticsTimeFilter('year')}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
-                        analyticsTimeFilter === 'year'
-                          ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
-                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
-                      }`}
-                    >
-                      Por Ano (Este Ano)
-                    </button>
-                    
-                    <button
-                      onClick={() => setAnalyticsTimeFilter('30days')}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-tight transition-all cursor-pointer border ${
-                        analyticsTimeFilter === '30days'
-                          ? 'bg-[#AF4934]/15 border-[#AF4934]/30 text-[#AF4934] font-bold'
-                          : 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
-                      }`}
-                    >
-                      Últimos 30 dias (Tudo)
-                    </button>
-                  </div>
+
+                  {/* Custom Date Picker Fields */}
+                  {analyticsTimeFilter === 'custom' && (
+                    <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-stone-800/40 animate-fadeIn">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-stone-500 font-mono uppercase">Data Inicial:</span>
+                        <input
+                          type="date"
+                          value={startDateFilter}
+                          onChange={(e) => setStartDateFilter(e.target.value)}
+                          className="bg-stone-950 border border-stone-800 rounded-xl px-3 py-1.5 text-xs text-stone-200 focus:outline-none focus:border-[#AF4934] font-mono"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-stone-500 font-mono uppercase">Data Final:</span>
+                        <input
+                          type="date"
+                          value={endDateFilter}
+                          onChange={(e) => setEndDateFilter(e.target.value)}
+                          className="bg-stone-950 border border-stone-800 rounded-xl px-3 py-1.5 text-xs text-stone-200 focus:outline-none focus:border-[#AF4934] font-mono"
+                        />
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setStartDateFilter('');
+                          setEndDateFilter('');
+                        }}
+                        className="text-[10px] text-amber-500/80 hover:text-amber-500 font-mono uppercase font-bold tracking-tight cursor-pointer"
+                      >
+                        Limpar Datas
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bento Grid Stats KPIs */}
@@ -1957,6 +2067,7 @@ export default function AdminView() {
                         {analyticsTimeFilter === 'month' && 'Este Mês (dias)'}
                         {analyticsTimeFilter === 'year' && 'Este Ano (meses)'}
                         {analyticsTimeFilter === '30days' && 'Últimos 30 Dias'}
+                        {analyticsTimeFilter === 'custom' && 'Período Personalizado'}
                       </span>
                     </div>
 
