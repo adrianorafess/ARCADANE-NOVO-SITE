@@ -8,12 +8,30 @@ if (typeof window !== 'undefined') {
   const isIgnorable = (message: string, source: string) => {
     const msg = String(message || '').toLowerCase();
     const src = String(source || '').toLowerCase();
-    return !message || 
-           msg.includes('script error') || 
-           msg.includes('error') ||
-           src.includes('google') || 
-           src.includes('vlibras') || 
-           src.includes('onertravel');
+    
+    // 1. Silent suppression for standard cross-origin script errors carrying no detail
+    if (msg === 'script error' || msg === 'script error.') {
+      return true;
+    }
+    
+    // 2. Suppress errors originating from third-party scripts/assets
+    const thirdPartyDomains = [
+      'google', 'vlibras', 'onertravel', 'befly', 'translate', 
+      'gstatic', 'googleapis', 'doubleclick', 'facebook', 'facebook.net',
+      'connect.facebook', 'whatsapp', 'recaptcha', 'analytics', 'gtm'
+    ];
+    for (const domain of thirdPartyDomains) {
+      if (src.includes(domain) || msg.includes(domain)) {
+        return true;
+      }
+    }
+    
+    // 3. Suppress benign browser/extension or widget layout noises
+    if (msg.includes('resizeobserver') || msg.includes('extension')) {
+      return true;
+    }
+
+    return false;
   };
 
   window.addEventListener('error', (event) => {
@@ -34,11 +52,14 @@ if (typeof window !== 'undefined') {
       }
     }).join(' ').toLowerCase();
 
-    if (argStr.includes('script error') || 
-        argStr.includes('vlibras') || 
-        argStr.includes('google') || 
-        argStr.includes('onertravel')) {
-      return;
+    const thirdPartyKeywords = [
+      'script error', 'vlibras', 'google', 'onertravel', 'befly', 
+      'translate', 'recaptcha', 'facebook', 'whatsapp', 'gtm', 'gtag'
+    ];
+    for (const keyword of thirdPartyKeywords) {
+      if (argStr.includes(keyword)) {
+        return;
+      }
     }
     originalConsoleError.apply(console, args);
   };

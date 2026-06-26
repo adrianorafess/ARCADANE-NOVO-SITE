@@ -7,12 +7,31 @@
         var suppress = function(msg, src) {
           var m = String(msg || '').toLowerCase();
           var s = String(src || '').toLowerCase();
-          return !msg || 
-                 m.indexOf('script error') !== -1 || 
-                 m.indexOf('error') !== -1 ||
-                 s.indexOf('google') !== -1 || 
-                 s.indexOf('vlibras') !== -1 || 
-                 s.indexOf('onertravel') !== -1;
+          
+          // 1. Silent suppression for standard cross-origin script errors carrying no detail
+          if (m === 'script error' || m === 'script error.') {
+            return true;
+          }
+          
+          // 2. Suppress errors originating from third-party scripts/assets
+          var thirdPartyDomains = [
+            'google', 'vlibras', 'onertravel', 'befly', 'translate', 
+            'gstatic', 'googleapis', 'doubleclick', 'facebook', 'facebook.net',
+            'connect.facebook', 'whatsapp', 'recaptcha', 'analytics', 'gtm'
+          ];
+          for (var i = 0; i < thirdPartyDomains.length; i++) {
+            var domain = thirdPartyDomains[i];
+            if (s.indexOf(domain) !== -1 || m.indexOf(domain) !== -1) {
+              return true;
+            }
+          }
+          
+          // 3. Suppress benign browser/extension or widget layout noises
+          if (m.indexOf('resizeobserver') !== -1 || m.indexOf('extension') !== -1) {
+            return true;
+          }
+
+          return false;
         };
 
         window.addEventListener('error', function(e) {
@@ -34,11 +53,14 @@
             }
           }).join(' ').toLowerCase();
 
-          if (argStr.indexOf('script error') !== -1 || 
-              argStr.indexOf('vlibras') !== -1 || 
-              argStr.indexOf('google') !== -1 || 
-              argStr.indexOf('onertravel') !== -1) {
-            return;
+          var thirdPartyKeywords = [
+            'script error', 'vlibras', 'google', 'onertravel', 'befly', 
+            'translate', 'recaptcha', 'facebook', 'whatsapp', 'gtm', 'gtag'
+          ];
+          for (var i = 0; i < thirdPartyKeywords.length; i++) {
+            if (argStr.indexOf(thirdPartyKeywords[i]) !== -1) {
+              return;
+            }
           }
           return originalConsoleError.apply(console, arguments);
         };
