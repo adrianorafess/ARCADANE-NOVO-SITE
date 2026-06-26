@@ -80,4 +80,9 @@ export interface TripPlannerData {
 
 declare global {
   const __APP_VERSION__: string;
+  namespace JSX {
+    interface IntrinsicElements {
+      'befly-widget': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & { language?: string; 'new-tab'?: string }, HTMLElement>;
+    }
+  }
 }

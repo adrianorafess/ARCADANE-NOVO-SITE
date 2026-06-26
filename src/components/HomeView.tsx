@@ -42,21 +42,34 @@ const BeflySearchWidget = () => {
   const useRealBeflyWidget = settings.widgetType === 'befly';
 
   useEffect(() => {
-    if (useRealBeflyWidget && containerRef.current) {
-      containerRef.current.innerHTML = `
-        <div id="wrapper">
-          <befly-widget language="pt-br" new-tab="true"></befly-widget>
-        </div>
-      `;
+    if (useRealBeflyWidget) {
+      const linkId = 'befly-widget-css';
+      if (!document.getElementById(linkId)) {
+        const link = document.createElement('link');
+        link.id = linkId;
+        link.rel = 'stylesheet';
+        link.href = 'https://static.onertravel.com/widget/search/production/styles.css';
+        document.head.appendChild(link);
+      }
+
+      const scriptId = 'befly-widget-js';
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = 'https://static.onertravel.com/widget/search/production/widget-befly.js';
+        script.async = true;
+        document.body.appendChild(script);
+      }
     }
   }, [useRealBeflyWidget]);
 
   if (useRealBeflyWidget) {
     return (
-      <div 
-        ref={containerRef}
-        className="w-full min-h-[140px]" 
-      />
+      <div className="w-full min-h-[140px]">
+        <div id="wrapper">
+          <befly-widget language="pt-br" new-tab="true"></befly-widget>
+        </div>
+      </div>
     );
   }
 
