@@ -17,12 +17,48 @@ async function startServer() {
       const targetUrl = `https://api.onertravel.com/api${targetPath}`;
       const method = req.method;
       
+      // Determine the best Origin and Referer to bypass domain restrictions
+      const incomingOrigin = req.headers.origin as string || '';
+      const incomingReferer = req.headers.referer as string || '';
+      const incomingHost = req.headers.host || '';
+
+      let targetOrigin = 'https://arcadaneviagens.com.br';
+      let targetReferer = 'https://arcadaneviagens.com.br/';
+
+      // If the incoming request has any reference to arcadaneviagens.com.br, forward it exactly
+      if (
+        incomingOrigin.includes('arcadaneviagens.com.br') || 
+        incomingReferer.includes('arcadaneviagens.com.br') || 
+        incomingHost.includes('arcadaneviagens.com.br')
+      ) {
+        if (incomingOrigin) {
+          targetOrigin = incomingOrigin;
+        } else if (incomingReferer) {
+          try {
+            targetOrigin = new URL(incomingReferer).origin;
+          } catch (_) {
+            targetOrigin = incomingReferer.includes('www.') ? 'https://www.arcadaneviagens.com.br' : 'https://arcadaneviagens.com.br';
+          }
+        } else {
+          targetOrigin = incomingHost.includes('www.') ? 'https://www.arcadaneviagens.com.br' : 'https://arcadaneviagens.com.br';
+        }
+
+        if (incomingReferer) {
+          targetReferer = incomingReferer;
+        } else {
+          targetReferer = targetOrigin.endsWith('/') ? targetOrigin : `${targetOrigin}/`;
+        }
+      } else {
+        // Development/preview fallback: default to the official non-www domain
+        targetOrigin = 'https://arcadaneviagens.com.br';
+        targetReferer = 'https://arcadaneviagens.com.br/';
+      }
+
       const headers: Record<string, string> = {
         'Accept': 'application/json, text/plain, */*',
         'Content-Type': 'application/json',
-        // Impersonate the authorized production domain
-        'Origin': 'https://www.arcadaneviagens.com.br',
-        'Referer': 'https://www.arcadaneviagens.com.br/',
+        'Origin': targetOrigin,
+        'Referer': targetReferer,
         'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0'
       };
 
