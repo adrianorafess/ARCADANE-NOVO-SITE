@@ -10,6 +10,77 @@ async function startServer() {
   // Enable body parsing with a high limit to accommodate base64 compressed images
   app.use(express.json({ limit: '100mb' }));
 
+  // API Route: Proxy OnerTravel API calls to bypass domain restrictions
+  app.use('/api/onertravel/api', async (req, res) => {
+    try {
+      const targetPath = req.url; // Contains the sub-path and query parameters (e.g. "/institutionWidgetConfiguration")
+      const targetUrl = `https://api.onertravel.com/api${targetPath}`;
+      const method = req.method;
+      
+      const targetOrigin = 'https://www.arcadaneviagens.com.br';
+      const targetReferer = 'https://www.arcadaneviagens.com.br/';
+
+      const headers: Record<string, string> = {
+        'Accept': 'application/json, text/plain, */*',
+        'Content-Type': 'application/json',
+        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0'
+      };
+
+      const headersToForward = [
+        'language', 'currencie', 'currency', 'platform', 'institutionid', 'agentid', 
+        'applicationaccesstype', 'applicationname', 'x-location-href', 'fullurl',
+        'accept-language', 'authorization'
+      ];
+
+      for (const [key, value] of Object.entries(req.headers)) {
+        if (headersToForward.includes(key.toLowerCase()) && typeof value === 'string') {
+          headers[key] = value;
+        }
+      }
+
+      headers['Origin'] = targetOrigin;
+      headers['Referer'] = targetReferer;
+      headers['X-Location-href'] = targetReferer;
+      headers['FullUrl'] = targetReferer;
+
+      const fetchOptions: RequestInit = {
+        method,
+        headers,
+      };
+
+      if (['POST', 'PUT', 'PATCH'].includes(method) && req.body) {
+        fetchOptions.body = JSON.stringify(req.body);
+      }
+
+      const response = await fetch(targetUrl, fetchOptions);
+      res.status(response.status);
+      res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
+      const responseText = await response.text();
+      res.send(responseText);
+    } catch (error: any) {
+      console.error('[OnerTravel Proxy Error]:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Proxy the JS widget to rewrite window.location.hostname checks
+  app.get('/api/widget-befly.js', async (req, res) => {
+    try {
+      const response = await fetch('https://static.onertravel.com/widget/search/production/widget-befly.js');
+      let scriptCode = await response.text();
+      
+      // Replace window.location references with the authorized domain
+      scriptCode = scriptCode.replace(/window\.location\.hostname/g, '"www.arcadaneviagens.com.br"');
+      scriptCode = scriptCode.replace(/window\.location\.href/g, '"https://www.arcadaneviagens.com.br/"');
+      scriptCode = scriptCode.replace(/window\.location\.origin/g, '"https://www.arcadaneviagens.com.br"');
+      
+      res.setHeader('Content-Type', 'application/javascript');
+      res.send(scriptCode);
+    } catch (error) {
+      res.status(500).send('console.error("Failed to load BeFly widget proxy");');
+    }
+  });
+
   // API Route: Get current CMS state
   app.get('/api/get-cms-state', (req, res) => {
     try {
