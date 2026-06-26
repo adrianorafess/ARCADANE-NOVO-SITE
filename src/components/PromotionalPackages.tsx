@@ -1,3 +1,4 @@
+import { uploadImageToStorage } from '../utils/firebase';
 import React, { useState, useEffect } from 'react';
 import { Plane, MapPin, CheckCircle2, X, MessageSquare, Tag, Camera, Upload, Link, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -161,7 +162,7 @@ export default function PromotionalPackages() {
                             const file = e.target.files?.[0];
                             if (file) {
                               try {
-                                const compressedUrl = await compressImage(file, 800, 800, 0.75);
+                                const compressedUrl = await uploadImageToStorage(file);
                                 handleUpdatePromoPhoto(promo.id, compressedUrl);
                               } catch (error) {
                                 console.error("Error compressing image:", error);

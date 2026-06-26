@@ -670,9 +670,15 @@ export function getServices(): ServiceItem[] {
   return JSON.parse(data);
 }
 
-export function saveServices(services: ServiceItem[]): void {
-  localStorage.setItem(KEYS.SERVICES, JSON.stringify(services));
-  broadcastChange();
+export async function saveServices(services: ServiceItem[]): Promise<void> {
+  try {
+    await saveToFirebase(KEYS.SERVICES, services);
+    localStorage.setItem(KEYS.SERVICES, JSON.stringify(services));
+    broadcastChange();
+  } catch (error) {
+    console.error("Failed to save Services to Firebase:", error);
+    if (typeof alert !== "undefined") alert("Erro ao salvar no banco de dados.");
+  }
 }
 
 export function getPackages(): PackageItem[] {
@@ -685,9 +691,15 @@ export function getPackages(): PackageItem[] {
   return JSON.parse(data);
 }
 
-export function savePackages(packages: PackageItem[]): void {
-  localStorage.setItem(KEYS.PACKAGES, JSON.stringify(packages));
-  broadcastChange();
+export async function savePackages(packages: PackageItem[]): Promise<void> {
+  try {
+    await saveToFirebase(KEYS.PACKAGES, packages);
+    localStorage.setItem(KEYS.PACKAGES, JSON.stringify(packages));
+    broadcastChange();
+  } catch (error) {
+    console.error("Failed to save Packages to Firebase:", error);
+    if (typeof alert !== "undefined") alert("Erro ao salvar no banco de dados.");
+  }
 }
 
 export function getPromoPackages(): PromoPackage[] {
@@ -732,19 +744,14 @@ export function getPromoPackages(): PromoPackage[] {
   return parsed;
 }
 
-export function savePromoPackages(promos: PromoPackage[]): void {
+export async function savePromoPackages(promos: PromoPackage[]): Promise<void> {
   try {
+    await saveToFirebase(KEYS.PROMO_PACKAGES, promos);
     localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(promos));
     broadcastChange();
   } catch (error) {
-    console.error("Failed to save promo packages to localStorage:", error);
-    if (error instanceof Error && error.name === "QuotaExceededError") {
-      alert(
-        "Erro: Limite de armazenamento excedido! A imagem que você tentou enviar é muito grande. Nós reduzimos o tamanho automaticamente, mas se o erro persistir, use um link de imagem ou remova fotos antigas.",
-      );
-    } else {
-      alert("Erro ao salvar as alterações do pacote.");
-    }
+    console.error("Failed to save PromoPackages to Firebase:", error);
+    if (typeof alert !== 'undefined') alert("Erro ao salvar promoções no banco de dados.");
   }
 }
 
@@ -758,9 +765,15 @@ export function getBlogPosts(): BlogPost[] {
   return JSON.parse(data);
 }
 
-export function saveBlogPosts(posts: BlogPost[]): void {
-  localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(posts));
-  broadcastChange();
+export async function saveBlogPosts(posts: BlogPost[]): Promise<void> {
+  try {
+    await saveToFirebase(KEYS.BLOG_POSTS, posts);
+    localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(posts));
+    broadcastChange();
+  } catch (error) {
+    console.error("Failed to save BlogPosts to Firebase:", error);
+    if (typeof alert !== "undefined") alert("Erro ao salvar no banco de dados.");
+  }
 }
 
 export function getTestimonials(): TestimonialItem[] {
@@ -792,19 +805,14 @@ export function getTestimonials(): TestimonialItem[] {
   }
 }
 
-export function saveTestimonials(testimonials: TestimonialItem[]): void {
+export async function saveTestimonials(testimonials: TestimonialItem[]): Promise<void> {
   try {
+    await saveToFirebase(KEYS.TESTIMONIALS, testimonials);
     localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(testimonials));
     broadcastChange();
   } catch (error) {
-    console.error("Failed to save testimonials to localStorage:", error);
-    if (error instanceof Error && error.name === "QuotaExceededError") {
-      alert(
-        "Erro: Limite de armazenamento excedido! A foto que você tentou enviar é muito grande. Nós reduzimos o tamanho automaticamente, mas se o erro persistir, tente outra foto ou use um link de URL.",
-      );
-    } else {
-      alert("Erro ao salvar as alterações do depoimento.");
-    }
+    console.error("Failed to save Testimonials to Firebase:", error);
+    if (typeof alert !== 'undefined') alert("Erro ao salvar depoimentos no banco de dados.");
   }
 }
 
@@ -835,10 +843,16 @@ export function getSeoSettings(): SeoSettings {
   }
 }
 
-export function saveSeoSettings(settings: SeoSettings): void {
-  localStorage.setItem(KEYS.SEO, JSON.stringify(settings));
-  applySeoSettings(settings);
-  broadcastChange();
+export async function saveSeoSettings(settings: SeoSettings): Promise<void> {
+  try {
+    await saveToFirebase(KEYS.SEO, settings);
+    localStorage.setItem(KEYS.SEO, JSON.stringify(settings));
+    applySeoSettings(settings);
+    broadcastChange();
+  } catch (error) {
+    console.error("Failed to save SeoSettings to Firebase:", error);
+    if (typeof alert !== "undefined") alert("Erro ao salvar no banco de dados.");
+  }
 }
 
 export function getHomeSettings(): HomeSettings {
@@ -851,33 +865,14 @@ export function getHomeSettings(): HomeSettings {
   return { ...FALLBACK_HOME_SETTINGS, ...JSON.parse(data) };
 }
 
-export function saveHomeSettings(settings: HomeSettings): void {
-  localStorage.setItem(KEYS.HOME, JSON.stringify(settings));
-  broadcastChange();
-}
-
-export function getLastUpdatedTime(): string {
-  if (typeof window === "undefined") return "";
-  let revision = localStorage.getItem("arcadane_cms_revision");
-  if (!revision) {
-    const now = new Date();
-    revision = now.toISOString();
-    localStorage.setItem("arcadane_cms_revision", revision);
-  }
+export async function saveHomeSettings(settings: HomeSettings): Promise<void> {
   try {
-    const date = new Date(revision);
-    if (isNaN(date.getTime())) return "";
-
-    // Format to PT-BR: DD/MM/AAAA às HH:MM
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-
-    return `Versão do site atualizada em: ${day}/${month}/${year} às ${hours}:${minutes}`;
-  } catch (e) {
-    return "";
+    await saveToFirebase(KEYS.HOME, settings);
+    localStorage.setItem(KEYS.HOME, JSON.stringify(settings));
+    broadcastChange();
+  } catch (error) {
+    console.error("Failed to save HomeSettings to Firebase:", error);
+    if (typeof alert !== "undefined") alert("Erro ao salvar no banco de dados.");
   }
 }
 
@@ -1105,9 +1100,15 @@ export function getLuxuryItineraries(): LuxuryTrip[] {
   }
 }
 
-export function saveLuxuryItineraries(trips: LuxuryTrip[]): void {
-  localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(trips));
-  broadcastChange();
+export async function saveLuxuryItineraries(trips: LuxuryTrip[]): Promise<void> {
+  try {
+    await saveToFirebase(KEYS.LUXURY_TRIPS, trips);
+    localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(trips));
+    broadcastChange();
+  } catch (error) {
+    console.error("Failed to save LuxuryItineraries to Firebase:", error);
+    if (typeof alert !== "undefined") alert("Erro ao salvar no banco de dados.");
+  }
 }
 
 export function getFoundersPhoto(): string | null {
@@ -1179,20 +1180,22 @@ export function saveCustomCodeInjection(
 }
 
 // Reset entire database to defaults
-export function resetCmsToDefault(): void {
-  localStorage.removeItem(KEYS.SERVICES);
-  localStorage.removeItem(KEYS.PACKAGES);
-  localStorage.removeItem(KEYS.PROMO_PACKAGES);
-  localStorage.removeItem(KEYS.BLOG_POSTS);
-  localStorage.removeItem(KEYS.TESTIMONIALS);
-  localStorage.removeItem(KEYS.SEO);
-  localStorage.removeItem(KEYS.HOME);
-  localStorage.removeItem(KEYS.LUXURY_TRIPS);
-  localStorage.removeItem("arcadane_founders_photo");
-  localStorage.removeItem("arcadane_trajectory_photo");
-  localStorage.removeItem("arcadane_custom_logo");
-  applySeoSettings(DEFAULT_SEO_SETTINGS);
-  broadcastChange();
+export async function resetCmsToDefault(): Promise<void> {
+  try {
+    await saveToFirebase(KEYS.SERVICES, DEFAULT_SERVICES);
+    await saveToFirebase(KEYS.PACKAGES, DEFAULT_PACKAGES);
+    await saveToFirebase(KEYS.PROMO_PACKAGES, FALLBACK_PROMO_PACKAGES);
+    await saveToFirebase(KEYS.BLOG_POSTS, DEFAULT_BLOG_POSTS);
+    await saveToFirebase(KEYS.TESTIMONIALS, DEFAULT_TESTIMONIALS);
+    await saveToFirebase(KEYS.SEO, DEFAULT_SEO_SETTINGS);
+    await saveToFirebase(KEYS.HOME, DEFAULT_HOME_SETTINGS);
+    await saveToFirebase(KEYS.LUXURY_TRIPS, fallbackData.arcadane_cms_luxury_trips || []);
+    
+    // clear local items so they sync back
+    localStorage.clear();
+    applySeoSettings(DEFAULT_SEO_SETTINGS);
+    broadcastChange();
+  } catch(e) { console.error(e); }
 }
 
 // Apply SEO dynamically to browser tabs
@@ -1358,275 +1361,58 @@ export async function autoSyncToServer(): Promise<void> {
 
 // Web-only startup and event listeners to keep localStorage synced to project files
 export async function initializeCmsStore(): Promise<void> {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
 
-  // 1. Check if we have any data in localStorage. If we don't, or if the code revision (updatedAt) is different,
-  // initialize/overwrite with the statically bundled fallbackData. This allows chat-modified code values to instantly apply!
-  try {
-    const currentRevision = localStorage.getItem("arcadane_cms_revision");
-    const incomingRevision = (fallbackData as any).updatedAt || "initial";
-    const hasExistingData = localStorage.getItem(KEYS.SERVICES) !== null;
+  // The Firebase realtime listener acts as the Single Source of Truth and will overwrite localStorage
+  setupFirebaseRealtimeListener((key, remoteData) => {
+    let localKey = null;
+    if (key === 'services') localKey = KEYS.SERVICES;
+    else if (key === 'packages') localKey = KEYS.PACKAGES;
+    else if (key === 'promo_packages') localKey = KEYS.PROMO_PACKAGES;
+    else if (key === 'blog_posts') localKey = KEYS.BLOG_POSTS;
+    else if (key === 'testimonials') localKey = KEYS.TESTIMONIALS;
+    else if (key === 'seo_settings') localKey = KEYS.SEO;
+    else if (key === 'home_settings') localKey = KEYS.HOME;
+    else if (key === 'luxury_trips') localKey = KEYS.LUXURY_TRIPS;
+    else if (key === 'founders_photo') localKey = 'arcadane_founders_photo';
+    else if (key === 'trajectory_photo') localKey = 'arcadane_trajectory_photo';
+    else if (key === 'custom_logo') localKey = 'arcadane_custom_logo';
+    else if (key === 'bento_destinations') localKey = 'arcadane_bento_destinations';
+    else if (key === 'video_url') localKey = 'arcadane_video_url';
+    else if (key === 'search_mode') localKey = 'arcadane_search_mode';
+    else if (key === 'typewriter_endings') localKey = 'arcadane_typewriter_endings';
+    else if (key === 'seal_top_text') localKey = 'arcadane_seal_top_text';
+    else if (key === 'seal_bottom_text') localKey = 'arcadane_seal_bottom_text';
+    else if (key === 'seal_number') localKey = 'arcadane_seal_number';
+    else if (key === 'seal_label1') localKey = 'arcadane_seal_label1';
+    else if (key === 'seal_label2') localKey = 'arcadane_seal_label2';
+    else if (key === 'quiz_banner_badge') localKey = 'arcadane_quiz_banner_badge';
+    else if (key === 'quiz_banner_title') localKey = 'arcadane_quiz_banner_title';
+    else if (key === 'quiz_banner_desc') localKey = 'arcadane_quiz_banner_desc';
+    else if (key === 'custom_head_code') localKey = 'arcadane_custom_head_code';
+    else if (key === 'custom_body_start_code') localKey = 'arcadane_custom_body_start_code';
+    else if (key === 'custom_body_end_code') localKey = 'arcadane_custom_body_end_code';
+    else if (key === 'theme_settings') localKey = KEYS.THEME;
 
-    if (!hasExistingData || currentRevision !== incomingRevision) {
-      console.log(
-        `Initializing/Updating localStorage with bundled fallbackData (revision: ${incomingRevision})...`,
-      );
-
-      localStorage.setItem("arcadane_cms_revision", incomingRevision);
-
-      if (fallbackServices && fallbackServices.length > 0) {
-        localStorage.setItem(KEYS.SERVICES, JSON.stringify(fallbackServices));
+    if (localKey && remoteData !== undefined) {
+      if (remoteData === null) {
+        localStorage.removeItem(localKey);
       } else {
-        localStorage.setItem(KEYS.SERVICES, JSON.stringify(DEFAULT_SERVICES));
+        const remoteValStr = typeof remoteData === 'string' ? remoteData : JSON.stringify(remoteData);
+        localStorage.setItem(localKey, remoteValStr);
+        if (key === 'seo_settings') applySeoSettings(remoteData);
+        if (key === 'theme_settings') applyThemeSettings(remoteData);
       }
-
-      if (fallbackPackages && fallbackPackages.length > 0) {
-        localStorage.setItem(KEYS.PACKAGES, JSON.stringify(fallbackPackages));
-      } else {
-        localStorage.setItem(KEYS.PACKAGES, JSON.stringify(DEFAULT_PACKAGES));
-      }
-
-      if (fallbackPromoPackages && fallbackPromoPackages.length > 0) {
-        localStorage.setItem(
-          KEYS.PROMO_PACKAGES,
-          JSON.stringify(fallbackPromoPackages),
-        );
-      } else {
-        localStorage.setItem(
-          KEYS.PROMO_PACKAGES,
-          JSON.stringify(DEFAULT_PROMO_PACKAGES),
-        );
-      }
-
-      if (fallbackBlogPosts && fallbackBlogPosts.length > 0) {
-        localStorage.setItem(
-          KEYS.BLOG_POSTS,
-          JSON.stringify(fallbackBlogPosts),
-        );
-      } else {
-        localStorage.setItem(
-          KEYS.BLOG_POSTS,
-          JSON.stringify(DEFAULT_BLOG_POSTS),
-        );
-      }
-
-      if (fallbackTestimonials && fallbackTestimonials.length > 0) {
-        localStorage.setItem(
-          KEYS.TESTIMONIALS,
-          JSON.stringify(fallbackTestimonials),
-        );
-      } else {
-        localStorage.setItem(
-          KEYS.TESTIMONIALS,
-          JSON.stringify(DEFAULT_TESTIMONIALS),
-        );
-      }
-
-      if (fallbackSeoSettings) {
-        localStorage.setItem(
-          KEYS.SEO,
-          JSON.stringify({ ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings }),
-        );
-      } else {
-        localStorage.setItem(KEYS.SEO, JSON.stringify(DEFAULT_SEO_SETTINGS));
-      }
-
-      if (fallbackHomeSettings) {
-        localStorage.setItem(
-          KEYS.HOME,
-          JSON.stringify({ ...DEFAULT_HOME_SETTINGS, ...fallbackHomeSettings }),
-        );
-      } else {
-        localStorage.setItem(KEYS.HOME, JSON.stringify(DEFAULT_HOME_SETTINGS));
-      }
-
-      if (fallbackLuxuryTrips && fallbackLuxuryTrips.length > 0) {
-        localStorage.setItem(
-          KEYS.LUXURY_TRIPS,
-          JSON.stringify(fallbackLuxuryTrips),
-        );
-      } else {
-        localStorage.setItem(
-          KEYS.LUXURY_TRIPS,
-          JSON.stringify(DEFAULT_LUXURY_TRIPS),
-        );
-      }
-
-      if (fallbackThemeSettings) {
-        localStorage.setItem(
-          KEYS.THEME,
-          JSON.stringify({
-            ...DEFAULT_THEME_SETTINGS,
-            ...fallbackThemeSettings,
-          }),
-        );
-      } else {
-        localStorage.setItem(
-          KEYS.THEME,
-          JSON.stringify(DEFAULT_THEME_SETTINGS),
-        );
-      }
-
-      if (fallbackData.arcadane_founders_photo) {
-        localStorage.setItem(
-          "arcadane_founders_photo",
-          fallbackData.arcadane_founders_photo,
-        );
-      }
-      if (fallbackData.arcadane_trajectory_photo) {
-        localStorage.setItem(
-          "arcadane_trajectory_photo",
-          fallbackData.arcadane_trajectory_photo,
-        );
-      }
-      if ((fallbackData as any).arcadane_custom_logo) {
-        localStorage.setItem(
-          "arcadane_custom_logo",
-          (fallbackData as any).arcadane_custom_logo,
-        );
-      } else {
-        localStorage.removeItem("arcadane_custom_logo");
-      }
+      broadcastChange();
     }
-
-    // Always apply current SEO settings immediately so page title matches loaded config
-    const currentSeo = localStorage.getItem(KEYS.SEO);
-    if (currentSeo) {
-      applySeoSettings(JSON.parse(currentSeo));
-    } else {
-      applySeoSettings(
-        fallbackSeoSettings
-          ? { ...DEFAULT_SEO_SETTINGS, ...fallbackSeoSettings }
-          : DEFAULT_SEO_SETTINGS,
-      );
-    }
-
-    const currentTheme = localStorage.getItem(KEYS.THEME);
-    if (currentTheme) {
-      applyThemeSettings(JSON.parse(currentTheme));
-    } else {
-      applyThemeSettings(
-        fallbackThemeSettings
-          ? { ...DEFAULT_THEME_SETTINGS, ...fallbackThemeSettings }
-          : DEFAULT_THEME_SETTINGS,
-      );
-    }
-  } catch (err) {
-    console.warn("Failed to perform initial localStorage check:", err);
-  }
-
-  // 2. Try to fetch the latest saved state from the server.
-  // Legacy /api/get-cms-state has been disabled to prevent 404 network logs on static hosting,
-  // as Firebase Firestore now handles all robust synchronization.
-
-  // 3. Connect to Firebase Firestore for modern real-time instant synchronization!
-  try {
-    console.log(
-      "[Firebase] Setting up bidirectional Realtime Firestore Syncer...",
-    );
-    setupFirebaseRealtimeListener((key, remoteData) => {
-      if (typeof window === "undefined") return;
-
-      let localKey: string | null = null;
-      if (key === "services") localKey = KEYS.SERVICES;
-      else if (key === "packages") localKey = KEYS.PACKAGES;
-      else if (key === "promo_packages") localKey = KEYS.PROMO_PACKAGES;
-      else if (key === "blog_posts") localKey = KEYS.BLOG_POSTS;
-      else if (key === "testimonials") localKey = KEYS.TESTIMONIALS;
-      else if (key === "seo_settings") localKey = KEYS.SEO;
-      else if (key === "home_settings") localKey = KEYS.HOME;
-      else if (key === "luxury_trips") localKey = KEYS.LUXURY_TRIPS;
-      else if (key === "founders_photo") localKey = "arcadane_founders_photo";
-      else if (key === "trajectory_photo")
-        localKey = "arcadane_trajectory_photo";
-      else if (key === "custom_logo") localKey = "arcadane_custom_logo";
-      else if (key === "bento_destinations")
-        localKey = "arcadane_bento_destinations";
-      else if (key === "video_url") localKey = "arcadane_video_url";
-      else if (key === "search_mode") localKey = "arcadane_search_mode";
-      else if (key === "typewriter_endings")
-        localKey = "arcadane_typewriter_endings";
-      else if (key === "seal_top_text") localKey = "arcadane_seal_top_text";
-      else if (key === "seal_bottom_text")
-        localKey = "arcadane_seal_bottom_text";
-      else if (key === "seal_number") localKey = "arcadane_seal_number";
-      else if (key === "seal_label1") localKey = "arcadane_seal_label1";
-      else if (key === "seal_label2") localKey = "arcadane_seal_label2";
-      else if (key === "quiz_banner_badge")
-        localKey = "arcadane_quiz_banner_badge";
-      else if (key === "quiz_banner_title")
-        localKey = "arcadane_quiz_banner_title";
-      else if (key === "quiz_banner_desc")
-        localKey = "arcadane_quiz_banner_desc";
-      else if (key === "custom_head_code")
-        localKey = "arcadane_custom_head_code";
-      else if (key === "custom_body_start_code")
-        localKey = "arcadane_custom_body_start_code";
-      else if (key === "custom_body_end_code")
-        localKey = "arcadane_custom_body_end_code";
-      else if (key === "theme_settings") localKey = KEYS.THEME;
-
-      if (localKey && remoteData !== undefined) {
-        const currentVal = localStorage.getItem(localKey);
-        if (remoteData === null) {
-          if (currentVal !== null) {
-            console.log(
-              `[Firebase] Remotely cleared/reset key "${key}" detected. Removing from browser...`,
-            );
-            isSyncingFromFirebase = true;
-            try {
-              localStorage.removeItem(localKey);
-              broadcastChange();
-            } finally {
-              setTimeout(() => {
-                isSyncingFromFirebase = false;
-              }, 50);
-            }
-          }
-        } else {
-          const remoteValStr =
-            typeof remoteData === "string"
-              ? remoteData
-              : JSON.stringify(remoteData);
-          if (currentVal !== remoteValStr) {
-            console.log(
-              `[Firebase] Remotely updated key "${key}" detected. Applying to browser...`,
-            );
-            isSyncingFromFirebase = true;
-            try {
-              localStorage.setItem(localKey, remoteValStr);
-              if (key === "seo_settings") {
-                applySeoSettings(remoteData);
-              } else if (key === "theme_settings") {
-                applyThemeSettings(remoteData);
-              }
-              broadcastChange();
-            } finally {
-              setTimeout(() => {
-                isSyncingFromFirebase = false;
-              }, 50);
-            }
-          }
-        }
-      }
-    });
-  } catch (fbErr) {
-    console.warn(
-      "[Firebase] Snapshot subscriber initialization failed:",
-      fbErr,
-    );
-  }
+  });
 }
 
 if (typeof window !== "undefined") {
   initializeCmsStore();
 
-  window.addEventListener("arcadane_cms_data_changed", () => {
-    autoSyncToServer();
-  });
-  window.addEventListener("arcadane_logo_changed", () => {
-    autoSyncToServer();
-  });
+  
+  
 }
 
 // Bidirectional Forced Sync function to reconcile browser storage with Firebase & Backup Server
@@ -1804,4 +1590,38 @@ export async function forceSyncCmsState(
       error: error.message || "Unknown synchronization error",
     };
   }
+}
+
+
+export async function saveCustomLogo(url: string): Promise<void> {
+  try {
+    await saveToFirebase("custom_logo", url);
+    localStorage.setItem("arcadane_custom_logo", url);
+    window.dispatchEvent(new Event("arcadane_logo_changed"));
+    broadcastChange();
+  } catch(e) { console.error(e); }
+}
+
+export async function saveFoundersPhoto(url: string): Promise<void> {
+  try {
+    await saveToFirebase("founders_photo", url);
+    localStorage.setItem("arcadane_founders_photo", url);
+    broadcastChange();
+  } catch(e) { console.error(e); }
+}
+
+export async function saveTrajectoryPhoto(url: string): Promise<void> {
+  try {
+    await saveToFirebase("trajectory_photo", url);
+    localStorage.setItem("arcadane_trajectory_photo", url);
+    broadcastChange();
+  } catch(e) { console.error(e); }
+}
+
+export async function saveGenericSetting(key: string, localKey: string, value: any): Promise<void> {
+  try {
+    await saveToFirebase(key, value);
+    localStorage.setItem(localKey, typeof value === 'string' ? value : JSON.stringify(value));
+    broadcastChange();
+  } catch(e) { console.error(e); }
 }

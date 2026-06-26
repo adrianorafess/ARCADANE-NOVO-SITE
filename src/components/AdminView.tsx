@@ -3,7 +3,7 @@ import {
   Key, LogOut, Settings, Globe, Film, Sparkles, Briefcase, Compass, Award, 
   Heart, AlertCircle, CheckCircle, Save, Undo, Plus, Trash2, Edit3, 
   Eye, EyeOff, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag, Download, Users, Code, Palette,
-  BarChart2, TrendingUp, Monitor, Smartphone, Tablet as TabletIcon, Clock, Search, ArrowRight, Upload
+  BarChart2, TrendingUp, Monitor, Smartphone, Tablet as TabletIcon, Clock, Search, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -21,6 +21,7 @@ import {
 } from '../utils/cmsStore';
 import { ServiceItem, PackageItem, BlogPost, TestimonialItem } from '../types';
 import { compressImage } from '../utils/imageCompressor';
+import { uploadImageToStorage } from '../utils/firebase';
 import { DEFAULT_HEAD_CODE, DEFAULT_BODY_START_CODE, DEFAULT_BODY_END_CODE } from '../utils/codeInjector';
 
 // Safe JSON parser to protect against malformed localStorage content crashing state transitions
@@ -617,20 +618,15 @@ export default function AdminView() {
   const [editingTestimonial, setEditingTestimonial] = useState<TestimonialItem | null>(null);
   const [isCreatingTestimonial, setIsCreatingTestimonial] = useState(false);
 
-  // Image compressing utility
-  const compressAndSetImage = (file: File, onSuccess: (base64: string) => void) => {
-    compressImage(file, 800, 800, 0.75)
-      .then(onSuccess)
-      .catch((err) => {
-        console.warn("Compression fallback in admin:", err);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (typeof reader.result === 'string') {
-            onSuccess(reader.result);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+  // Image uploading utility (to Firebase Storage)
+  const compressAndSetImage = async (file: File, onSuccess: (url: string) => void) => {
+    try {
+      const url = await uploadImageToStorage(file);
+      onSuccess(url);
+    } catch (err) {
+      console.error("Upload failed in admin:", err);
+      showFeedback('Erro ao enviar imagem. Tente novamente.', 'error');
+    }
   };
 
   const showFeedback = (text: string, type: 'success' | 'error' = 'success') => {
@@ -683,22 +679,22 @@ export default function AdminView() {
 
     // Save typewriter endings list
     const parsedEndings = typewriterEndings.split(',').map(s => s.trim()).filter(Boolean);
-    localStorage.setItem('arcadane_typewriter_endings', JSON.stringify(parsedEndings));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('typewriter_endings', 'arcadane_typewriter_endings', parsedEndings));
 
     // Save custom seal (medallion) texts
-    localStorage.setItem('arcadane_seal_top_text', sealTopText);
-    localStorage.setItem('arcadane_seal_bottom_text', sealBottomText);
-    localStorage.setItem('arcadane_seal_number', sealNumber);
-    localStorage.setItem('arcadane_seal_label1', sealLabel1);
-    localStorage.setItem('arcadane_seal_label2', sealLabel2);
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_top_text', 'arcadane_seal_top_text', sealTopText));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_bottom_text', 'arcadane_seal_bottom_text', sealBottomText));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_number', 'arcadane_seal_number', sealNumber));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_label1', 'arcadane_seal_label1', sealLabel1));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_label2', 'arcadane_seal_label2', sealLabel2));
 
     // Save custom quiz banner texts
-    localStorage.setItem('arcadane_quiz_banner_badge', quizBannerBadge);
-    localStorage.setItem('arcadane_quiz_banner_title', quizBannerTitle);
-    localStorage.setItem('arcadane_quiz_banner_desc', quizBannerDesc);
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('quiz_banner_badge', 'arcadane_quiz_banner_badge', quizBannerBadge));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('quiz_banner_title', 'arcadane_quiz_banner_title', quizBannerTitle));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('quiz_banner_desc', 'arcadane_quiz_banner_desc', quizBannerDesc));
 
     // Save bento destinations list
-    localStorage.setItem('arcadane_bento_destinations', JSON.stringify(bentoDestinations));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('bento_destinations', 'arcadane_bento_destinations', bentoDestinations));
 
     // Dispatch reload
     window.dispatchEvent(new Event('arcadane_cms_data_changed'));
@@ -708,8 +704,13 @@ export default function AdminView() {
 
   const handleSaveLayout = (e: React.FormEvent) => {
     e.preventDefault();
-    saveHomeSettings(home);
-    showFeedback('Layout, logotipos, menus e rodapé salvos com sucesso!');
+    try {
+      saveHomeSettings(home);
+      showFeedback('Layout, logotipos, menus e rodapé salvos com sucesso!');
+    } catch (err) {
+      console.error(err);
+      showFeedback('Erro: Limite de armazenamento atingido (QuotaExceeded). Reduza o tamanho das imagens.');
+    }
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -718,26 +719,26 @@ export default function AdminView() {
     
     setLogoUploading(true);
     try {
-      const compressed = await compressImage(file, 2400, 2400, 0.95, true, true);
-      localStorage.setItem('arcadane_custom_logo', compressed);
-      setCustomLogo(compressed);
-      window.dispatchEvent(new Event('arcadane_logo_changed'));
-      window.dispatchEvent(new Event('arcadane_cms_data_changed'));
-      showFeedback('Novo logotipo PNG processado e salvo!');
+      const url = await uploadImageToStorage(file);
+      import('../utils/cmsStore').then(({ saveCustomLogo }) => {
+        saveCustomLogo(url);
+        setCustomLogo(url);
+        showFeedback('Novo logotipo enviado e salvo!');
+      });
     } catch (err) {
       console.error(err);
-      showFeedback('Erro ao processar imagem do logotipo.');
+      showFeedback('Erro ao enviar logotipo.', 'error');
     } finally {
       setLogoUploading(false);
     }
   };
 
   const handleResetLogo = () => {
-    localStorage.removeItem('arcadane_custom_logo');
-    setCustomLogo(null);
-    window.dispatchEvent(new Event('arcadane_logo_changed'));
-    window.dispatchEvent(new Event('arcadane_cms_data_changed'));
-    showFeedback('Logotipo restaurado para o padrão original!');
+    import('../utils/cmsStore').then(({ saveCustomLogo }) => {
+      saveCustomLogo('');
+      setCustomLogo(null);
+      showFeedback('Logotipo restaurado para o padrão original!');
+    });
   };
 
   const handleSaveServices = (e: React.FormEvent) => {
@@ -748,9 +749,9 @@ export default function AdminView() {
 
   const handleSaveCustomCode = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('arcadane_custom_head_code', customHeadCode);
-    localStorage.setItem('arcadane_custom_body_start_code', customBodyStartCode);
-    localStorage.setItem('arcadane_custom_body_end_code', customBodyEndCode);
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('custom_head_code', 'arcadane_custom_head_code', customHeadCode));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('custom_body_start_code', 'arcadane_custom_body_start_code', customBodyStartCode));
+    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('custom_body_end_code', 'arcadane_custom_body_end_code', customBodyEndCode));
     
     // Broadcast changes & Sync to cloud instantly
     window.dispatchEvent(new Event('arcadane_cms_data_changed'));
@@ -2638,20 +2639,22 @@ export default function AdminView() {
                             )}
                             <div className="flex gap-2">
                               <label className="bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-mono px-4 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 border border-stone-700">
-                                <Upload size={14} />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                 Enviar Imagem
                                 <input
                                   type="file"
                                   accept="image/png, image/jpeg, image/gif, image/svg+xml"
                                   className="hidden"
-                                  onChange={(e) => {
+                                  onChange={async (e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
-                                      const reader = new FileReader();
-                                      reader.onloadend = () => {
-                                        setHome({ ...home, preloaderImage: reader.result as string });
-                                      };
-                                      reader.readAsDataURL(file);
+                                      try {
+                                        const compressed = await uploadImageToStorage(file);
+                                        setHome({ ...home, preloaderImage: compressed });
+                                      } catch (err) {
+                                        console.error(err);
+                                        showFeedback('Erro ao processar imagem do preloader.');
+                                      }
                                     }
                                   }}
                                 />
@@ -3262,7 +3265,7 @@ export default function AdminView() {
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   compressAndSetImage(file, (base64) => {
-                                    localStorage.setItem('arcadane_trajectory_photo', base64);
+                                    import('../utils/cmsStore').then(({ saveTrajectoryPhoto }) => saveTrajectoryPhoto(base64));
                                     setTrajectoryPhoto(base64);
                                     window.dispatchEvent(new Event('arcadane_cms_data_changed'));
                                     showFeedback('Foto da trajetória salva com sucesso!');
@@ -3423,7 +3426,7 @@ export default function AdminView() {
                             const file = e.target.files?.[0];
                             if (file) {
                               compressAndSetImage(file, (base64) => {
-                                localStorage.setItem('arcadane_founders_photo', base64);
+                                import('../utils/cmsStore').then(({ saveFoundersPhoto }) => saveFoundersPhoto(base64));
                                 setFoundersPhoto(base64);
                                 window.dispatchEvent(new Event('arcadane_cms_data_changed'));
                                 showFeedback('Foto oficial dos fundadores salva com sucesso!');
@@ -4516,7 +4519,7 @@ export default function AdminView() {
                                   const file = e.target.files?.[0];
                                   if (file) {
                                     try {
-                                      const compressedUrl = await compressImage(file, 250, 250, 0.82);
+                                      const compressedUrl = await uploadImageToStorage(file);
                                       setEditingTestimonial({ ...editingTestimonial, imageUrl: compressedUrl });
                                     } catch (err) {
                                       console.error("Error compressing image:", err);

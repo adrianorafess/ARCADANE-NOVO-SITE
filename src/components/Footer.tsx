@@ -3,7 +3,7 @@ import { PageId } from '../types';
 import { Phone, Mail, MapPin, Instagram, ArrowRight, Compass, Sparkles, Trash2, Plus, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import ArcadaneIcon from './ArcadaneBrandIcon';
-import { getSeoSettings, getHomeSettings, saveHomeSettings, saveSeoSettings, getCustomLogo, getLastUpdatedTime } from '../utils/cmsStore';
+import { getSeoSettings, getHomeSettings, saveHomeSettings, saveSeoSettings, getCustomLogo } from '../utils/cmsStore';
 import { useRafesEditor } from './RafesVisualBuilder';
 
 interface FooterProps {
@@ -18,7 +18,6 @@ export default function Footer({ setActivePage }: FooterProps) {
   const [subscribed, setSubscribed] = useState(false);
   const [seo, setSeo] = useState(() => getSeoSettings());
   const [home, setHome] = useState(() => getHomeSettings());
-  const [lastUpdated, setLastUpdated] = useState(() => getLastUpdatedTime());
 
   useEffect(() => {
     setCustomLogo(getCustomLogo());
@@ -32,7 +31,6 @@ export default function Footer({ setActivePage }: FooterProps) {
       setSeo(getSeoSettings());
       setHome(getHomeSettings());
       setCustomLogo(getCustomLogo());
-      setLastUpdated(getLastUpdatedTime());
     };
 
     window.addEventListener('arcadane_logo_changed', handleLogoChange);
@@ -698,11 +696,6 @@ export default function Footer({ setActivePage }: FooterProps) {
               </a>
             </div>
           </div>
-          {lastUpdated && (
-            <div className="text-[8.5px] text-[#FDFBF6]/40 font-mono tracking-widest text-center mt-1 pt-2 border-t border-[#DCCFC1]/10 w-full">
-              {lastUpdated}
-            </div>
-          )}
         </div>
       </div>
 

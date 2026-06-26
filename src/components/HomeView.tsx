@@ -1,3 +1,4 @@
+import { uploadImageToStorage } from '../utils/firebase';
 import React, { useState, useEffect, useRef } from 'react';
 import { PageId, ServiceItem } from '../types';
 import { BLOG_POSTS } from '../data';
@@ -318,7 +319,7 @@ function BentoImageUploader({
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const compressedUrl = await compressImage(file, 800, 800, 0.75);
+      const compressedUrl = await uploadImageToStorage(file);
       onImageChange(index, compressedUrl);
     } catch (error) {
       console.error("Error compressing bento image:", error);
@@ -533,16 +534,15 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
     localStorage.setItem('arcadane_bento_destinations', JSON.stringify(updated));
   };
 
-  const handleBentoImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleBentoImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result && typeof event.target.result === 'string') {
-          handleUpdateBentoImage(index, event.target.result);
-        }
-      };
-      reader.readAsDataURL(file);
+      try {
+        const url = await uploadImageToStorage(file);
+        handleUpdateBentoImage(index, url);
+      } catch (err) {
+        console.error("Failed to upload bento image", err);
+      }
     }
   };
 
@@ -1695,7 +1695,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
                       const file = e.target.files?.[0];
                       if (file) {
                         try {
-                          const compressedUrl = await compressImage(file, 1000, 1000, 0.75);
+                          const compressedUrl = await uploadImageToStorage(file);
                           handleUpdateTrajectoryPhoto(compressedUrl);
                         } catch (error) {
                           console.error("Error compressing trajectory photo:", error);

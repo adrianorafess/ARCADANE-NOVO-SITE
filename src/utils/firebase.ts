@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const firebaseConfig = {
   projectId: "gen-lang-client-0011038274",
@@ -14,6 +15,18 @@ const app = initializeApp(firebaseConfig);
 const databaseId = "ai-studio-9de8ae5a-fe12-4fa2-96fa-6aa3f4ec9411";
 
 export const db = getFirestore(app, databaseId);
+export const storage = getStorage(app);
+
+export async function uploadImageToStorage(file: File): Promise<string> {
+  const timestamp = Date.now();
+  const uuid = Math.random().toString(36).substring(2, 15);
+  const extension = file.name.split('.').pop() || 'png';
+  const fileName = `uploads/${timestamp}-${uuid}.${extension}`;
+  
+  const storageRef = ref(storage, fileName);
+  await uploadBytes(storageRef, file);
+  return getDownloadURL(storageRef);
+}
 
 // Core real-time listener and synchronizer for CMS
 const COLLECTION_NAME = 'cms';

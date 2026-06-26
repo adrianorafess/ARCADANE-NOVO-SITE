@@ -1,3 +1,4 @@
+import { uploadImageToStorage } from '../utils/firebase';
 import React, { useState, useEffect, useRef } from 'react';
 import { TESTIMONIALS as DEFAULT_TESTIMONIALS } from '../data';
 import { Star, ChevronLeft, ChevronRight, Quote, Camera, Upload, Link, RotateCcw, X } from 'lucide-react';
@@ -299,7 +300,7 @@ export default function TestimonialsCarousel() {
                             const file = e.target.files?.[0];
                             if (file) {
                               try {
-                                const compressedUrl = await compressImage(file, 200, 200, 0.82);
+                                const compressedUrl = await uploadImageToStorage(file);
                                 handleUpdateTestimonialPhoto(index, compressedUrl);
                               } catch (error) {
                                 console.error("Error compressing image:", error);

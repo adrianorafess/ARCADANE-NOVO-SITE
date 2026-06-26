@@ -1,3 +1,4 @@
+import { uploadImageToStorage } from '../utils/firebase';
 import React, { useState, useEffect } from 'react';
 import { Compass, Sparkles, Shield, Heart, ArrowUpRight, Award, User, Quote, MapPin, CheckCircle, Camera, Trash2, Upload, Link } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -161,7 +162,7 @@ export default function AboutView() {
                       const file = e.target.files?.[0];
                       if (file) {
                         try {
-                          const compressedUrl = await compressImage(file, 1000, 1000, 0.75);
+                          const compressedUrl = await uploadImageToStorage(file);
                           handleUpdateFoundersPhoto(compressedUrl);
                         } catch (error) {
                           console.error("Error compressing founders photo:", error);

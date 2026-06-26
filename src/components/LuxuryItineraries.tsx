@@ -1,3 +1,4 @@
+import { uploadImageToStorage } from '../utils/firebase';
 import React, { useState, useEffect } from 'react';
 import { Compass, Calendar, ArrowUpRight, Sparkles, X, Plus, Trash2, Camera, Upload, Link, RotateCcw, CheckCircle2, Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -238,7 +239,7 @@ export default function LuxuryItineraries() {
                             const file = e.target.files?.[0];
                             if (file) {
                               try {
-                                const compressedUrl = await compressImage(file, 800, 800, 0.75);
+                                const compressedUrl = await uploadImageToStorage(file);
                                 handleUpdateTripPhoto(trip.id, compressedUrl);
                               } catch (err) {
                                 console.error("Error compressing luxury image:", err);
