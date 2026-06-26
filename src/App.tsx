@@ -13,6 +13,7 @@ import PrivacyPolicyView from './components/PrivacyPolicyView';
 import TravelQuizView from './components/TravelQuizView';
 import AdminView from './components/AdminView';
 import CustomPageView from './components/CustomPageView';
+import ErrorBoundary from './components/ErrorBoundary';
 import ExitIntentModal from './components/ExitIntentModal';
 import TravelerUtilityHub from './components/TravelerUtilityHub';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
@@ -85,6 +86,7 @@ export default function App() {
       applySeoSettings(getSeoSettings());
       applyAllCustomInjections();
       setHomeSettings(getHomeSettings());
+      setCustomLogo(getCustomLogo());
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
 
@@ -275,7 +277,9 @@ export default function App() {
             transition={{ duration: 0.28, ease: 'easeInOut' }}
             id="fade-transition-wrapper"
           >
-            {renderActiveView()}
+            <ErrorBoundary>
+              {renderActiveView()}
+            </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </main>

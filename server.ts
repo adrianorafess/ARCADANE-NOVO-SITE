@@ -57,10 +57,40 @@ async function startServer() {
       const headers: Record<string, string> = {
         'Accept': 'application/json, text/plain, */*',
         'Content-Type': 'application/json',
-        'Origin': targetOrigin,
-        'Referer': targetReferer,
         'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0'
       };
+
+      // Forward all relevant client headers needed by the BeFly widget
+      const headersToForward = [
+        'language', 'currencie', 'currency', 'platform', 'institutionid', 'agentid', 
+        'applicationaccesstype', 'applicationname', 'x-location-href', 'fullurl',
+        'accept-language', 'authorization'
+      ];
+
+      for (const [key, value] of Object.entries(req.headers)) {
+        const lowerKey = key.toLowerCase();
+        if (headersToForward.includes(lowerKey) && typeof value === 'string') {
+          headers[key] = value;
+        }
+      }
+
+      // Overwrite and rewrite headers to always impersonate the authorized www.arcadaneviagens.com.br domain
+      for (const key of Object.keys(headers)) {
+        let val = headers[key];
+        if (val.includes('arcadaneviagens.com.br') && !val.includes('www.arcadaneviagens.com.br')) {
+          val = val.replace('https://arcadaneviagens.com.br', 'https://www.arcadaneviagens.com.br');
+          val = val.replace('http://arcadaneviagens.com.br', 'https://www.arcadaneviagens.com.br');
+        }
+        if (key.toLowerCase() === 'x-location-href' || key.toLowerCase() === 'fullurl') {
+          val = 'https://www.arcadaneviagens.com.br/';
+        }
+        headers[key] = val;
+      }
+
+      headers['Origin'] = 'https://www.arcadaneviagens.com.br';
+      headers['Referer'] = 'https://www.arcadaneviagens.com.br/';
+      headers['X-Location-href'] = 'https://www.arcadaneviagens.com.br/';
+      headers['FullUrl'] = 'https://www.arcadaneviagens.com.br/';
 
       const fetchOptions: RequestInit = {
         method,
