@@ -109,6 +109,11 @@ export default function Footer({ setActivePage }: FooterProps) {
                     (e.currentTarget as HTMLImageElement).src = "/logo.svg";
                   }}
                 />
+                <div className="flex flex-col justify-end pb-4">
+                  <span className="text-[9px] text-[#F3EEE3]/40 font-mono font-medium tracking-widest whitespace-nowrap">
+                    v{__APP_VERSION__}
+                  </span>
+                </div>
               </div>
 
               {/* Editorial Address List */}

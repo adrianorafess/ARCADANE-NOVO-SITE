@@ -77,3 +77,7 @@ export interface TripPlannerData {
   travelerPhone: string;
   additionalRequests: string;
 }
+
+declare global {
+  const __APP_VERSION__: string;
+}

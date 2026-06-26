@@ -10,6 +10,9 @@ export default defineConfig(() => {
       react(), 
       tailwindcss(),
     ],
+    define: {
+      __APP_VERSION__: JSON.stringify(new Date().toLocaleString('pt-BR')),
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
