@@ -91,7 +91,6 @@ export interface HomeSettings {
   widgetPosition?: "top" | "bottom" | "left" | "right" | "middle";
 
   // Custom Dynamic Layout configurations
-  preloaderType?: "pulse" | "spin" | "flip" | "modern" | "zoom";
   footerCopyright?: string;
   footerCol1Title?: string;
   footerCol1Links?: string; // Semicolon-separated label|pageId or label|url
@@ -273,7 +272,6 @@ const DEFAULT_HOME_SETTINGS: HomeSettings = {
   widgetPosition: "middle",
 
   // Custom Dynamic Layout configurations
-  preloaderType: "pulse",
   footerCopyright:
     "© 2026 Arcadane Viagens LTDA. Todos os direitos reservados. CNPJ 48.799.471/0001-38.",
   footerCol1Title: "Destinos",

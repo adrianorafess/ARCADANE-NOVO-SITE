@@ -11,7 +11,7 @@ export default defineConfig(() => {
       tailwindcss(),
     ],
     define: {
-      __APP_VERSION__: JSON.stringify(new Date().toLocaleString('pt-BR')),
+      __APP_VERSION__: JSON.stringify(new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })),
     },
     resolve: {
       alias: {

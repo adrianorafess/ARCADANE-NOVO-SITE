@@ -709,7 +709,7 @@ export default function AdminView() {
   const handleSaveLayout = (e: React.FormEvent) => {
     e.preventDefault();
     saveHomeSettings(home);
-    showFeedback('Layout, preloader, menus e rodapé salvos com sucesso!');
+    showFeedback('Layout, logotipos, menus e rodapé salvos com sucesso!');
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2530,13 +2530,13 @@ export default function AdminView() {
               </form>
             )}
 
-            {/* Panel Layout, Logo, Menu & Preloader */}
+            {/* Panel Layout, Logo, Menu & Footer */}
             {activeTab === 'layout' && (
               <form onSubmit={handleSaveLayout} className="space-y-6 animate-fadeIn">
                 <div>
-                  <h3 className="font-display font-medium text-lg text-stone-100">Layout, Logotipo, Preloader & Menus</h3>
+                  <h3 className="font-display font-medium text-lg text-stone-100">Layout, Logotipo & Menus</h3>
                   <p className="text-stone-400 text-xs mt-1">
-                    Gerencie o estilo do preloader, faça upload do logotipo PNG, personalize os links dos menus e rodapé do site.
+                    Faça upload do logotipo PNG, personalize os links dos menus e o rodapé do site.
                   </p>
                 </div>
 
@@ -2545,7 +2545,7 @@ export default function AdminView() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="space-y-3">
                       <p className="text-xs text-stone-300 leading-relaxed font-sans">
-                        Selecione um arquivo de imagem PNG com fundo transparente para substituir o logo oficial do site. O preloader e o cabeçalho serão atualizados em tempo real!
+                        Selecione um arquivo de imagem PNG com fundo transparente para substituir o logo oficial do site. O cabeçalho será atualizado em tempo real!
                       </p>
                       <div className="flex flex-wrap gap-2.5">
                         <label className="bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-mono font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-md">
@@ -2585,29 +2585,8 @@ export default function AdminView() {
                   </div>
                 </div>
 
-                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
-                  <h4 className="text-sm font-bold font-display text-amber-500">2. Estilo do Preloader</h4>
-                  <div className="space-y-1">
-                    <label className={labelClass}>Tipo de Animação do Preloader de Luxo</label>
-                    <select
-                      value={home.preloaderType || 'modern'}
-                      onChange={(e) => setHome({ ...home, preloaderType: e.target.value as any })}
-                      className={inputClass}
-                    >
-                      <option value="modern">Carregamento Premium (Fundo Liso com Zoom e Pulsação Elegante)</option>
-                      <option value="pulse">Pulsar Elegante (Pulsação contínua e suave do logotipo)</option>
-                      <option value="spin">Giro Clássico (Giro orbital ao redor do logotipo)</option>
-                      <option value="flip">Efeito Flip (Logotipo girando em 3D de forma intermitente)</option>
-                      <option value="zoom">Aproximação Suave (Efeito de aproximação infinito no logotipo)</option>
-                    </select>
-                    <p className="text-[10px] text-stone-500 font-mono mt-0.5">
-                      Esta animação será executada sempre que um usuário abrir ou recarregar a página inicial.
-                    </p>
-                  </div>
-                </div>
-
                 <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4" id="layout-menu-labels">
-                  <h4 className="text-sm font-bold font-display text-amber-500">3. Menus de Navegação (Rótulos)</h4>
+                  <h4 className="text-sm font-bold font-display text-amber-500">2. Menus de Navegação (Rótulos)</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className={labelClass}>Link Início</label>
