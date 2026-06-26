@@ -17,7 +17,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ExitIntentModal from './components/ExitIntentModal';
 import TravelerUtilityHub from './components/TravelerUtilityHub';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
-import FloatingFlashDeals from './components/FloatingFlashDeals';
 import WhatsAppSelectorModal from './components/WhatsAppSelectorModal';
 import ArcadaneIcon from './components/ArcadaneBrandIcon';
 import RafesVisualBuilder from './components/RafesVisualBuilder';
@@ -30,7 +29,7 @@ export default function App() {
   const [activePage, setActivePage] = useState<PageId | string>(PageId.Home);
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(0);
-  const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [customLogo, setCustomLogo] = useState<string | null>(() => getCustomLogo());
   const [homeSettings, setHomeSettings] = useState<HomeSettings>(() => getHomeSettings());
 
   useEffect(() => {
@@ -290,9 +289,6 @@ export default function App() {
 
       {/* Global Pulsating WhatsApp Channel Switcher */}
       <FloatingWhatsApp />
-
-      {/* Floating red flashing deal button */}
-      <FloatingFlashDeals />
 
       {/* Elegant WhatsApp Channel Choice Modal */}
       <WhatsAppSelectorModal />

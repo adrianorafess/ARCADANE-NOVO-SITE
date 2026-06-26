@@ -1015,86 +1015,7 @@ export default function AdminView() {
   const inputClass = "w-full bg-[#1c1917]/40 border border-stone-700 focus:border-[#AF4934]/60 rounded-lg p-2.5 text-xs text-stone-100 placeholder-stone-500 focus:outline-hidden transition-all";
   const labelClass = "block text-[10.5px] font-mono uppercase tracking-wider text-[#AF4934] font-bold mb-1.5";
 
-  // Login View Renderer
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-[#0c0a09] flex items-center justify-center relative py-12 px-4 select-none overflow-hidden" id="admin-login-screen">
-        {/* Immersive background glow effects */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-secondary/5 rounded-full blur-3xl" />
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative max-w-sm w-full bg-[#181615]/95 border border-[#AF4934]/20 rounded-3xl p-8 sm:p-10 shadow-2xl text-center space-y-8 backdrop-blur-xl"
-        >
-          <div className="space-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-[#AF4934]/15 border border-[#AF4934]/30 text-brand-primary flex items-center justify-center mx-auto shadow-inner">
-              <Key className="w-7 h-7 text-[#AF4934]" />
-            </div>
-            <h1 className="font-display font-medium text-xl tracking-widest uppercase text-stone-100">Área do Administrador</h1>
-            <p className="text-[10px] uppercase font-mono tracking-wider text-[#AF4934] font-bold">Arcadane CMS Portal</p>
-          </div>
 
-          <form onSubmit={handleLogin} className="space-y-5 text-left" id="admin-login-form">
-            <div className="space-y-1">
-              <label htmlFor="admin-username" className={labelClass}>Nome do Gerente</label>
-              <input 
-                type="text" 
-                id="admin-username"
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Ex: arcadane" 
-                className={inputClass}
-                required
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <label htmlFor="admin-password" className={labelClass}>Chave de Acesso</label>
-              <div className="relative">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  id="admin-password"
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Digite sua chave de acesso" 
-                  className={`${inputClass} pr-10`}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 focus:outline-none cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {loginError && (
-              <div className="flex items-center gap-2 bg-red-950/40 border border-red-500/20 p-3 rounded-lg text-red-400 text-xs text-left leading-relaxed">
-                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-                <span>{loginError}</span>
-              </div>
-            )}
-
-            <button 
-              type="submit" 
-              className="w-full bg-[#AF4934] hover:bg-[#973a27] text-white font-medium text-xs font-display tracking-widest py-3.5 rounded-lg transition-all duration-200 uppercase cursor-pointer flex items-center justify-center gap-2 shadow-lg"
-            >
-              Autenticar e Entrar
-            </button>
-          </form>
-
-          <p className="text-[10px] text-stone-500 font-mono">
-            Acesso encriptado local de alta segurança.
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
 
   // --- Analytics Processing ---
   const filteredEventsForMetrics = useMemo(() => {
@@ -1436,6 +1357,87 @@ export default function AdminView() {
     label: eventLabelMap[id] || id,
     count
   })).sort((a, b) => b.count - a.count);
+
+  // Login View Renderer
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-[#0c0a09] flex items-center justify-center relative py-12 px-4 select-none overflow-hidden" id="admin-login-screen">
+        {/* Immersive background glow effects */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-secondary/5 rounded-full blur-3xl" />
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative max-w-sm w-full bg-[#181615]/95 border border-[#AF4934]/20 rounded-3xl p-8 sm:p-10 shadow-2xl text-center space-y-8 backdrop-blur-xl"
+        >
+          <div className="space-y-2">
+            <div className="w-16 h-16 rounded-2xl bg-[#AF4934]/15 border border-[#AF4934]/30 text-brand-primary flex items-center justify-center mx-auto shadow-inner">
+              <Key className="w-7 h-7 text-[#AF4934]" />
+            </div>
+            <h1 className="font-display font-medium text-xl tracking-widest uppercase text-stone-100">Área do Administrador</h1>
+            <p className="text-[10px] uppercase font-mono tracking-wider text-[#AF4934] font-bold">Arcadane CMS Portal</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5 text-left" id="admin-login-form">
+            <div className="space-y-1">
+              <label htmlFor="admin-username" className={labelClass}>Nome do Gerente</label>
+              <input 
+                type="text" 
+                id="admin-username"
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Ex: arcadane" 
+                className={inputClass}
+                required
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <label htmlFor="admin-password" className={labelClass}>Chave de Acesso</label>
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  id="admin-password"
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite sua chave de acesso" 
+                  className={`${inputClass} pr-10`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 focus:outline-none cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {loginError && (
+              <div className="flex items-center gap-2 bg-red-950/40 border border-red-500/20 p-3 rounded-lg text-red-400 text-xs text-left leading-relaxed">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className="w-full bg-[#AF4934] hover:bg-[#973a27] text-white font-medium text-xs font-display tracking-widest py-3.5 rounded-lg transition-all duration-200 uppercase cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+            >
+              Autenticar e Entrar
+            </button>
+          </form>
+
+          <p className="text-[10px] text-stone-500 font-mono">
+            Acesso encriptado local de alta segurança.
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0c0a09] text-stone-200 pb-20 pt-8" id="admin-cms-dashboard">

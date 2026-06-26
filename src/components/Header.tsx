@@ -25,7 +25,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isWhatsDropdownOpen, setIsWhatsDropdownOpen] = useState(false);
-  const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [customLogo, setCustomLogo] = useState<string | null>(() => getCustomLogo());
   const [logoError, setLogoError] = useState(false);
   const [home, setHome] = useState<HomeSettings>(() => getHomeSettings());
   const [customMenuPages, setCustomMenuPages] = useState<CustomPage[]>(() => getCustomPages().filter(p => p.addToMenu && p.isActive !== false && p.id !== 'destinos-vip'));

@@ -12,7 +12,7 @@ interface FooterProps {
 
 export default function Footer({ setActivePage }: FooterProps) {
   const { rafesOpen, editField } = useRafesEditor();
-  const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [customLogo, setCustomLogo] = useState<string | null>(() => getCustomLogo());
   const [logoError, setLogoError] = useState(false);
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
