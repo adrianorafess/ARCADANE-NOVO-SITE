@@ -4,39 +4,6 @@
     <!-- Inject global error interceptors as early as possible to capture and suppress third-party cross-origin Script errors -->
     <script type="text/javascript">
       (function() {
-        // Intercept XMLHttpRequest to proxy onertravel API calls
-        var originalOpen = XMLHttpRequest.prototype.open;
-        XMLHttpRequest.prototype.open = function(method, url) {
-          if (typeof url === 'string' && url.indexOf('api.onertravel.com/api') !== -1) {
-            arguments[1] = url.replace('https://api.onertravel.com/api', '/api/onertravel/api');
-          }
-          return originalOpen.apply(this, arguments);
-        };
-
-        // Intercept fetch to proxy onertravel API calls
-        var originalFetch = window.fetch;
-        window.fetch = function(input, init) {
-          var urlStr = '';
-          if (typeof input === 'string') urlStr = input;
-          else if (input instanceof URL) urlStr = input.href;
-          else if (input instanceof Request) urlStr = input.url;
-
-          if (urlStr.indexOf('api.onertravel.com/api') !== -1) {
-            var newUrl = urlStr.replace('https://api.onertravel.com/api', '/api/onertravel/api');
-            if (typeof input === 'string') return originalFetch(newUrl, init);
-            else if (input instanceof URL) return originalFetch(new URL(newUrl), init);
-            else if (input instanceof Request) {
-              return originalFetch(new Request(newUrl, input), init);
-            }
-          }
-          return originalFetch.apply(this, arguments);
-        };
-
-        // Override location getters in case the script checks window.location.hostname
-        Object.defineProperty(window, 'locationOverride', {
-          get: function() { return 'www.arcadaneviagens.com.br'; }
-        });
-
         var suppress = function(msg, src) {
           var m = String(msg || '').toLowerCase();
           var s = String(src || '').toLowerCase();
