@@ -1,3 +1,4 @@
+import { saveGenericSetting, saveCustomLogo, saveTrajectoryPhoto, saveFoundersPhoto } from '../utils/cmsStore';
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Key, LogOut, Settings, Globe, Film, Sparkles, Briefcase, Compass, Award, 
@@ -679,22 +680,22 @@ export default function AdminView() {
 
     // Save typewriter endings list
     const parsedEndings = typewriterEndings.split(',').map(s => s.trim()).filter(Boolean);
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('typewriter_endings', 'arcadane_typewriter_endings', parsedEndings));
+    saveGenericSetting('typewriter_endings', 'arcadane_typewriter_endings', parsedEndings);
 
     // Save custom seal (medallion) texts
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_top_text', 'arcadane_seal_top_text', sealTopText));
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_bottom_text', 'arcadane_seal_bottom_text', sealBottomText));
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_number', 'arcadane_seal_number', sealNumber));
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_label1', 'arcadane_seal_label1', sealLabel1));
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('seal_label2', 'arcadane_seal_label2', sealLabel2));
+    saveGenericSetting('seal_top_text', 'arcadane_seal_top_text', sealTopText);
+    saveGenericSetting('seal_bottom_text', 'arcadane_seal_bottom_text', sealBottomText);
+    saveGenericSetting('seal_number', 'arcadane_seal_number', sealNumber);
+    saveGenericSetting('seal_label1', 'arcadane_seal_label1', sealLabel1);
+    saveGenericSetting('seal_label2', 'arcadane_seal_label2', sealLabel2);
 
     // Save custom quiz banner texts
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('quiz_banner_badge', 'arcadane_quiz_banner_badge', quizBannerBadge));
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('quiz_banner_title', 'arcadane_quiz_banner_title', quizBannerTitle));
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('quiz_banner_desc', 'arcadane_quiz_banner_desc', quizBannerDesc));
+    saveGenericSetting('quiz_banner_badge', 'arcadane_quiz_banner_badge', quizBannerBadge);
+    saveGenericSetting('quiz_banner_title', 'arcadane_quiz_banner_title', quizBannerTitle);
+    saveGenericSetting('quiz_banner_desc', 'arcadane_quiz_banner_desc', quizBannerDesc);
 
     // Save bento destinations list
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('bento_destinations', 'arcadane_bento_destinations', bentoDestinations));
+    saveGenericSetting('bento_destinations', 'arcadane_bento_destinations', bentoDestinations);
 
     // Dispatch reload
     window.dispatchEvent(new Event('arcadane_cms_data_changed'));
@@ -720,11 +721,9 @@ export default function AdminView() {
     setLogoUploading(true);
     try {
       const url = await uploadImageToStorage(file);
-      import('../utils/cmsStore').then(({ saveCustomLogo }) => {
-        saveCustomLogo(url);
-        setCustomLogo(url);
-        showFeedback('Novo logotipo enviado e salvo!');
-      });
+      saveCustomLogo(url);
+      setCustomLogo(url);
+      showFeedback('Novo logotipo enviado e salvo!');
     } catch (err) {
       console.error(err);
       showFeedback('Erro ao enviar logotipo.', 'error');
@@ -734,11 +733,9 @@ export default function AdminView() {
   };
 
   const handleResetLogo = () => {
-    import('../utils/cmsStore').then(({ saveCustomLogo }) => {
-      saveCustomLogo('');
-      setCustomLogo(null);
-      showFeedback('Logotipo restaurado para o padrão original!');
-    });
+    saveCustomLogo('');
+    setCustomLogo(null);
+    showFeedback('Logotipo restaurado para o padrão original!');
   };
 
   const handleSaveServices = (e: React.FormEvent) => {
@@ -749,9 +746,9 @@ export default function AdminView() {
 
   const handleSaveCustomCode = (e: React.FormEvent) => {
     e.preventDefault();
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('custom_head_code', 'arcadane_custom_head_code', customHeadCode));
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('custom_body_start_code', 'arcadane_custom_body_start_code', customBodyStartCode));
-    import('../utils/cmsStore').then(({ saveGenericSetting }) => saveGenericSetting('custom_body_end_code', 'arcadane_custom_body_end_code', customBodyEndCode));
+    saveGenericSetting('custom_head_code', 'arcadane_custom_head_code', customHeadCode);
+    saveGenericSetting('custom_body_start_code', 'arcadane_custom_body_start_code', customBodyStartCode);
+    saveGenericSetting('custom_body_end_code', 'arcadane_custom_body_end_code', customBodyEndCode);
     
     // Broadcast changes & Sync to cloud instantly
     window.dispatchEvent(new Event('arcadane_cms_data_changed'));
@@ -3265,7 +3262,7 @@ export default function AdminView() {
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   compressAndSetImage(file, (base64) => {
-                                    import('../utils/cmsStore').then(({ saveTrajectoryPhoto }) => saveTrajectoryPhoto(base64));
+                                    saveTrajectoryPhoto(base64);
                                     setTrajectoryPhoto(base64);
                                     window.dispatchEvent(new Event('arcadane_cms_data_changed'));
                                     showFeedback('Foto da trajetória salva com sucesso!');
@@ -3426,7 +3423,7 @@ export default function AdminView() {
                             const file = e.target.files?.[0];
                             if (file) {
                               compressAndSetImage(file, (base64) => {
-                                import('../utils/cmsStore').then(({ saveFoundersPhoto }) => saveFoundersPhoto(base64));
+                                saveFoundersPhoto(base64);
                                 setFoundersPhoto(base64);
                                 window.dispatchEvent(new Event('arcadane_cms_data_changed'));
                                 showFeedback('Foto oficial dos fundadores salva com sucesso!');

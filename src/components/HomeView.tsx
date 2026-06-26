@@ -52,7 +52,7 @@ const BeflySearchWidget = () => {
         document.head.appendChild(link);
       }
 
-      const scriptId = 'befly-widget-js';
+      const scriptId = 'befly-widget-script';
       if (!document.getElementById(scriptId)) {
         const script = document.createElement('script');
         script.id = scriptId;
