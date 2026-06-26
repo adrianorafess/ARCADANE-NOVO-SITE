@@ -56,7 +56,7 @@ const BeflySearchWidget = () => {
       if (!document.getElementById(scriptId)) {
         const script = document.createElement('script');
         script.id = scriptId;
-        script.src = 'https://static.onertravel.com/widget/search/production/widget-befly.js';
+        script.src = '/api/widget-befly.js';
         script.async = true;
         document.body.appendChild(script);
       }

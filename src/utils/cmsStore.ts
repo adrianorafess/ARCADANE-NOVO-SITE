@@ -862,7 +862,12 @@ export function getHomeSettings(): HomeSettings {
     localStorage.setItem(KEYS.HOME, JSON.stringify(FALLBACK_HOME_SETTINGS));
     return FALLBACK_HOME_SETTINGS;
   }
-  return { ...FALLBACK_HOME_SETTINGS, ...JSON.parse(data) };
+  try {
+    return { ...FALLBACK_HOME_SETTINGS, ...JSON.parse(data) };
+  } catch (e) {
+    localStorage.setItem(KEYS.HOME, JSON.stringify(FALLBACK_HOME_SETTINGS));
+    return FALLBACK_HOME_SETTINGS;
+  }
 }
 
 export async function saveHomeSettings(settings: HomeSettings): Promise<void> {
@@ -884,7 +889,11 @@ export function getThemeSettings(): ThemeSettings {
     return FALLBACK_THEME_SETTINGS;
   }
   try {
+    try {
     return { ...FALLBACK_THEME_SETTINGS, ...JSON.parse(data) };
+  } catch(e) {
+    return FALLBACK_THEME_SETTINGS;
+  }
   } catch (e) {
     return FALLBACK_THEME_SETTINGS;
   }
@@ -928,7 +937,11 @@ export function getDomainSettings(): DomainSettings {
     return DEFAULT_DOMAIN_SETTINGS;
   }
   try {
+    try {
     return { ...DEFAULT_DOMAIN_SETTINGS, ...JSON.parse(data) };
+  } catch(e) {
+    return DEFAULT_DOMAIN_SETTINGS;
+  }
   } catch (e) {
     return DEFAULT_DOMAIN_SETTINGS;
   }
