@@ -33,16 +33,11 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
   const whatsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const stored = getCustomLogo();
-    if (stored) {
-      setCustomLogo(stored);
-    }
+    setCustomLogo(getCustomLogo());
     const handleLogoChange = () => {
       const updated = getCustomLogo();
       setCustomLogo(updated);
-      if (updated) {
-        setLogoError(false);
-      }
+      setLogoError(false);
     };
     window.addEventListener('arcadane_logo_changed', handleLogoChange);
     return () => {
@@ -54,6 +49,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
     const handleCmsChange = () => {
       setSeo(getSeoSettings());
       setHome(getHomeSettings());
+      setCustomLogo(getCustomLogo());
       setCustomMenuPages(getCustomPages().filter(p => p.addToMenu && p.isActive !== false && p.id !== 'destinos-vip'));
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);

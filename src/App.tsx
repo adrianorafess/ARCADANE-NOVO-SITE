@@ -63,10 +63,7 @@ export default function App() {
   }, [activePage]);
 
   useEffect(() => {
-    const logo = getCustomLogo();
-    if (logo) {
-      setCustomLogo(logo);
-    }
+    setCustomLogo(getCustomLogo());
     const handleLogoChange = () => {
       setCustomLogo(getCustomLogo());
     };

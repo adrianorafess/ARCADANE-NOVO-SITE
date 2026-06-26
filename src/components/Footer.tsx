@@ -21,21 +21,17 @@ export default function Footer({ setActivePage }: FooterProps) {
   const [lastUpdated, setLastUpdated] = useState(() => getLastUpdatedTime());
 
   useEffect(() => {
-    const stored = getCustomLogo();
-    if (stored) {
-      setCustomLogo(stored);
-    }
+    setCustomLogo(getCustomLogo());
     const handleLogoChange = () => {
       const updated = getCustomLogo();
       setCustomLogo(updated);
-      if (updated) {
-        setLogoError(false);
-      }
+      setLogoError(false);
     };
     
     const handleCmsChange = () => {
       setSeo(getSeoSettings());
       setHome(getHomeSettings());
+      setCustomLogo(getCustomLogo());
       setLastUpdated(getLastUpdatedTime());
     };
 

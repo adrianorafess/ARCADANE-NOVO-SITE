@@ -1122,7 +1122,7 @@ export async function autoSyncToServer(): Promise<void> {
 
     // Save each individual non-null key to Firebase Firestore so they are loaded immediately on Hostinger or other devices
     for (const [key, value] of Object.entries(dataToSync)) {
-      if (value !== null && value !== undefined) {
+      if (value !== undefined) {
         saveToFirebase(key, value);
       }
     }
@@ -1283,7 +1283,12 @@ export async function initializeCmsStore(): Promise<void> {
         let updated = false;
 
         const updateKey = (localKey: string, serverVal: any) => {
-          if (serverVal !== undefined && serverVal !== null) {
+          if (serverVal === null) {
+            if (localStorage.getItem(localKey) !== null) {
+              localStorage.removeItem(localKey);
+              updated = true;
+            }
+          } else if (serverVal !== undefined) {
             const currentVal = localStorage.getItem(localKey);
             const serverValStr = typeof serverVal === 'string' ? serverVal : JSON.stringify(serverVal);
             if (currentVal !== serverValStr) {
@@ -1380,26 +1385,39 @@ export async function initializeCmsStore(): Promise<void> {
       else if (key === 'custom_body_end_code') localKey = 'arcadane_custom_body_end_code';
       else if (key === 'theme_settings') localKey = KEYS.THEME;
 
-      if (localKey && remoteData !== undefined && remoteData !== null) {
+      if (localKey && remoteData !== undefined) {
         const currentVal = localStorage.getItem(localKey);
-        const remoteValStr = typeof remoteData === 'string' ? remoteData : JSON.stringify(remoteData);
-
-        if (currentVal !== remoteValStr) {
-          console.log(`[Firebase] Remotely updated key "${key}" detected. Applying to browser...`);
-
-          isSyncingFromFirebase = true;
-          try {
-            localStorage.setItem(localKey, remoteValStr);
-            if (key === 'seo_settings') {
-              applySeoSettings(remoteData);
-            } else if (key === 'theme_settings') {
-              applyThemeSettings(remoteData);
+        if (remoteData === null) {
+          if (currentVal !== null) {
+            console.log(`[Firebase] Remotely cleared/reset key "${key}" detected. Removing from browser...`);
+            isSyncingFromFirebase = true;
+            try {
+              localStorage.removeItem(localKey);
+              broadcastChange();
+            } finally {
+              setTimeout(() => {
+                isSyncingFromFirebase = false;
+              }, 50);
             }
-            broadcastChange();
-          } finally {
-            setTimeout(() => {
-              isSyncingFromFirebase = false;
-            }, 50);
+          }
+        } else {
+          const remoteValStr = typeof remoteData === 'string' ? remoteData : JSON.stringify(remoteData);
+          if (currentVal !== remoteValStr) {
+            console.log(`[Firebase] Remotely updated key "${key}" detected. Applying to browser...`);
+            isSyncingFromFirebase = true;
+            try {
+              localStorage.setItem(localKey, remoteValStr);
+              if (key === 'seo_settings') {
+                applySeoSettings(remoteData);
+              } else if (key === 'theme_settings') {
+                applyThemeSettings(remoteData);
+              }
+              broadcastChange();
+            } finally {
+              setTimeout(() => {
+                isSyncingFromFirebase = false;
+              }, 50);
+            }
           }
         }
       }
