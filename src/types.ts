@@ -1,3 +1,17 @@
+import * as React from 'react';
+
+declare global {
+  const __APP_VERSION__: string;
+}
+
+declare module 'react' {
+  namespace JSX {
+    interface IntrinsicElements {
+      'befly-widget': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & { language?: string; 'new-tab'?: string }, HTMLElement>;
+    }
+  }
+}
+
 export enum PageId {
   Home = 'home',
   Services = 'services',
@@ -78,11 +92,4 @@ export interface TripPlannerData {
   additionalRequests: string;
 }
 
-declare global {
-  const __APP_VERSION__: string;
-  namespace JSX {
-    interface IntrinsicElements {
-      'befly-widget': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & { language?: string; 'new-tab'?: string }, HTMLElement>;
-    }
-  }
-}
+

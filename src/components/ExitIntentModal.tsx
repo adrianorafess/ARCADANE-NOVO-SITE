@@ -112,7 +112,7 @@ export default function ExitIntentModal({ activePage }: ExitIntentModalProps) {
               initial={{ opacity: 0, scale: 0.94, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 30 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              transition={{ type: 'spring' as any, damping: 28, stiffness: 320 }}
               className="relative w-full max-w-xl bg-[#FBF8E8] border border-[#DCCFC1] rounded-3xl shadow-2xl p-6 sm:p-10 overflow-hidden text-left"
               id="exit-intent-card"
             >

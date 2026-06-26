@@ -1,4 +1,4 @@
-import { uploadImageToStorage } from '../utils/firebase';
+import { uploadImageToStorage } from '../utils/supabaseClient';
 import React, { useState, useEffect } from 'react';
 import { Plane, MapPin, CheckCircle2, X, MessageSquare, Tag, Camera, Upload, Link, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';

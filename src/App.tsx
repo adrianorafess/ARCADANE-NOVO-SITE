@@ -241,13 +241,13 @@ export default function App() {
       <WhatsAppSelectorModal />
 
       {/* Luxury exit intent offer popup */}
-      <ExitIntentModal activePage={activePage} />
+      <ExitIntentModal activePage={activePage as PageId} />
 
       {/* Traveler utilities assistant (Translate, A11y, VLibras, Currency, Weather) */}
       <TravelerUtilityHub />
 
       {/* Rafes Visual Builder & Quick Live Overlay System */}
-      <RafesVisualBuilder activePage={activePage} />
+      <RafesVisualBuilder activePage={activePage as PageId} />
 
     </div>
     </>

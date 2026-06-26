@@ -22,7 +22,7 @@ import {
 } from '../utils/cmsStore';
 import { ServiceItem, PackageItem, BlogPost, TestimonialItem } from '../types';
 import { compressImage } from '../utils/imageCompressor';
-import { uploadImageToStorage } from '../utils/firebase';
+import { uploadImageToStorage } from '../utils/supabaseClient';
 import { DEFAULT_HEAD_CODE, DEFAULT_BODY_START_CODE, DEFAULT_BODY_END_CODE } from '../utils/codeInjector';
 
 // Safe JSON parser to protect against malformed localStorage content crashing state transitions
@@ -444,9 +444,9 @@ export default function AdminView() {
     };
     window.addEventListener('arcadane_analytics_updated', handleAnalyticsUpdate);
 
-    let unsubFirestore: (() => void) | undefined;
+    let unsubSupabase: (() => void) | undefined;
     import('../utils/analyticsTracker').then(m => {
-      unsubFirestore = m.subscribeToFirestoreAnalytics((events) => {
+      unsubSupabase = m.subscribeToSupabaseAnalytics((events) => {
         setAnalyticsEvents((events || []).filter(e => e && typeof e.timestamp === 'string' && e.timestamp));
       });
     }).catch(err => {
@@ -455,8 +455,8 @@ export default function AdminView() {
 
     return () => {
       window.removeEventListener('arcadane_analytics_updated', handleAnalyticsUpdate);
-      if (unsubFirestore) {
-        unsubFirestore();
+      if (unsubSupabase) {
+        unsubSupabase();
       }
     };
   }, []);
@@ -1867,7 +1867,7 @@ export default function AdminView() {
                       onClick={() => {
                         if (confirm('Deseja realmente limpar TODOS os dados de tráfego reais salvos na nuvem (Firestore) e no navegador?')) {
                           import('../utils/analyticsTracker').then(async (m) => {
-                            await m.clearFirestoreAnalytics();
+                            await m.clearSupabaseAnalytics();
                             setAnalyticsEvents([]);
                             showFeedback('Estatísticas de tráfego do Firestore limpas com sucesso!', 'success');
                           });

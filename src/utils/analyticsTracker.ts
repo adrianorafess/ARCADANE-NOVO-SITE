@@ -4,8 +4,7 @@
  * in real-time, backed by an extremely realistic 30-day historical seed to ensure rich dashboards.
  */
 
-import { collection, addDoc, getDocs, query, orderBy, limit, writeBatch, onSnapshot } from 'firebase/firestore';
-import { db } from './firebase';
+import { supabase } from './supabaseClient';
 
 export interface AnalyticsEvent {
   timestamp: string; // ISO String
@@ -196,50 +195,56 @@ export function generateSeededHistory(): AnalyticsEvent[] {
 }
 
 // Helper to save a single event to Firestore in the background
-import { doc } from 'firebase/firestore';
-
-async function saveEventToFirestore(event: AnalyticsEvent) {
+async function saveEventToSupabase(event: AnalyticsEvent) {
   try {
-    const colRef = collection(db, 'analytics_events');
-    await addDoc(colRef, event);
+    const { error } = await supabase.from('analytics_events').insert([event]);
+    if (error) throw error;
   } catch (error) {
-    console.warn('[Analytics Firestore Save Warning]:', error);
+    console.warn('[Analytics Supabase Save Warning]:', error);
   }
 }
 
-// Subscribe to Firestore analytics in real-time
-export function subscribeToFirestoreAnalytics(onUpdate: (events: AnalyticsEvent[]) => void): () => void {
-  const colRef = collection(db, 'analytics_events');
-  const q = query(colRef, orderBy('timestamp', 'asc'), limit(5000));
-  
-  return onSnapshot(q, (snap) => {
-    const events: AnalyticsEvent[] = [];
-    snap.forEach((docSnap) => {
-      events.push(docSnap.data() as AnalyticsEvent);
+export function subscribeToSupabaseAnalytics(onUpdate: (events: AnalyticsEvent[]) => void): () => void {
+  // Fetch initial data
+  supabase
+    .from('analytics_events')
+    .select('*')
+    .order('timestamp', { ascending: true })
+    .limit(5000)
+    .then(({ data, error }) => {
+      if (!error && data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        onUpdate(data);
+      }
     });
-    
-    if (events.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
-      onUpdate(events);
-    } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-      onUpdate([]);
-    }
-  }, (error) => {
-    console.error('[Analytics Subscription Error]:', error);
-  });
+
+  const channel = supabase
+    .channel('public:analytics_events')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'analytics_events' },
+      (payload) => {
+        const events = getAnalyticsEvents();
+        events.push(payload.new as AnalyticsEvent);
+        if (events.length > 5000) events.shift();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+        onUpdate(events);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
-// Clear all analytics data from Firestore and local storage
-export async function clearFirestoreAnalytics(): Promise<void> {
+export async function clearSupabaseAnalytics(): Promise<void> {
   try {
-    const colRef = collection(db, 'analytics_events');
-    const snap = await getDocs(colRef);
-    const batch = writeBatch(db);
-    snap.forEach((docSnap) => {
-      batch.delete(docSnap.ref);
-    });
-    await batch.commit();
+    const { error } = await supabase
+      .from('analytics_events')
+      .delete()
+      .neq('id', 0); // Deletes all rows safely depending on RLS
+    if (error) throw error;
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
     console.error('[Analytics Clear Error]:', error);
@@ -289,7 +294,7 @@ export function trackPageView(pageId: string): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
     
     // Save to Firestore in background
-    saveEventToFirestore(newEvent);
+    saveEventToSupabase(newEvent);
     
     // Dispatch custom event to notify any active dashboards of updates
     window.dispatchEvent(new CustomEvent('arcadane_analytics_updated', { detail: newEvent }));
@@ -324,7 +329,7 @@ export function trackCustomEvent(actionName: string, pageId: string = 'home'): v
     localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
     
     // Save to Firestore in background
-    saveEventToFirestore(newEvent);
+    saveEventToSupabase(newEvent);
     
     window.dispatchEvent(new CustomEvent('arcadane_analytics_updated', { detail: newEvent }));
   } catch (error) {

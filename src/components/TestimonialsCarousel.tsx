@@ -1,4 +1,4 @@
-import { uploadImageToStorage } from '../utils/firebase';
+import { uploadImageToStorage } from '../utils/supabaseClient';
 import React, { useState, useEffect, useRef } from 'react';
 import { TESTIMONIALS as DEFAULT_TESTIMONIALS } from '../data';
 import { Star, ChevronLeft, ChevronRight, Quote, Camera, Upload, Link, RotateCcw, X } from 'lucide-react';
@@ -171,7 +171,7 @@ export default function TestimonialsCarousel() {
                   initial={{ opacity: 0, x: direction * 80, scale: 0.98 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -direction * 80, scale: 0.98 }}
-                  transition={{ type: 'spring', stiffness: 350, damping: 38 }}
+                  transition={{ type: 'spring' as any, stiffness: 350, damping: 38 }}
                   className="bg-white p-8 rounded-3xl border border-stone-100 shadow-xs text-left relative flex flex-col justify-between group hover:border-brand-primary/10 hover:shadow-lg hover:scale-[1.01] transition-all duration-300 min-h-[280px]"
                   id={`carousel-card-${index}`}
                 >

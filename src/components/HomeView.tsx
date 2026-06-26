@@ -1,4 +1,4 @@
-import { uploadImageToStorage } from '../utils/firebase';
+import { uploadImageToStorage } from '../utils/supabaseClient';
 import React, { useState, useEffect, useRef } from 'react';
 import { PageId, ServiceItem } from '../types';
 import { BLOG_POSTS } from '../data';
@@ -1971,7 +1971,7 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', duration: 0.5 }}
+              transition={{ type: 'spring' as any, duration: 0.5 }}
               className="bg-brand-dark border border-brand-border/20 text-white rounded-3xl max-w-3xl w-full mx-auto overflow-hidden shadow-2xl relative z-10 flex flex-col md:flex-row"
             >
               {/* Visual Image Banner */}

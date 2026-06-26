@@ -13,12 +13,12 @@ import {
 } from "../data";
 import fallbackData from "./cmsStoreFallback.json";
 import {
-  saveToFirebase,
-  setupFirebaseRealtimeListener,
-  loadFromFirebase,
-} from "./firebase";
+  saveToSupabase,
+  setupSupabaseRealtimeListener,
+  loadFromSupabase,
+} from "./supabaseClient";
 
-let isSyncingFromFirebase = false;
+let isSyncingFromSupabase = false;
 
 export interface SeoSettings {
   siteTitle: string;
@@ -672,11 +672,11 @@ export function getServices(): ServiceItem[] {
 
 export async function saveServices(services: ServiceItem[]): Promise<void> {
   try {
-    await saveToFirebase(KEYS.SERVICES, services);
+    await saveToSupabase(KEYS.SERVICES, services);
     localStorage.setItem(KEYS.SERVICES, JSON.stringify(services));
     broadcastChange();
   } catch (error) {
-    console.error("Failed to save Services to Firebase:", error);
+    console.error("Failed to save Services to Supabase:", error);
     if (typeof alert !== "undefined") alert("Erro ao salvar no banco de dados.");
   }
 }
@@ -693,11 +693,11 @@ export function getPackages(): PackageItem[] {
 
 export async function savePackages(packages: PackageItem[]): Promise<void> {
   try {
-    await saveToFirebase(KEYS.PACKAGES, packages);
+    await saveToSupabase(KEYS.PACKAGES, packages);
     localStorage.setItem(KEYS.PACKAGES, JSON.stringify(packages));
     broadcastChange();
   } catch (error) {
-    console.error("Failed to save Packages to Firebase:", error);
+    console.error("Failed to save Packages to Supabase:", error);
     if (typeof alert !== "undefined") alert("Erro ao salvar no banco de dados.");
   }
 }
@@ -746,7 +746,7 @@ export function getPromoPackages(): PromoPackage[] {
 
 export async function savePromoPackages(promos: PromoPackage[]): Promise<void> {
   try {
-    await saveToFirebase(KEYS.PROMO_PACKAGES, promos);
+    await saveToSupabase(KEYS.PROMO_PACKAGES, promos);
     localStorage.setItem(KEYS.PROMO_PACKAGES, JSON.stringify(promos));
     broadcastChange();
   } catch (error) {
@@ -767,7 +767,7 @@ export function getBlogPosts(): BlogPost[] {
 
 export async function saveBlogPosts(posts: BlogPost[]): Promise<void> {
   try {
-    await saveToFirebase(KEYS.BLOG_POSTS, posts);
+    await saveToSupabase(KEYS.BLOG_POSTS, posts);
     localStorage.setItem(KEYS.BLOG_POSTS, JSON.stringify(posts));
     broadcastChange();
   } catch (error) {
@@ -807,7 +807,7 @@ export function getTestimonials(): TestimonialItem[] {
 
 export async function saveTestimonials(testimonials: TestimonialItem[]): Promise<void> {
   try {
-    await saveToFirebase(KEYS.TESTIMONIALS, testimonials);
+    await saveToSupabase(KEYS.TESTIMONIALS, testimonials);
     localStorage.setItem(KEYS.TESTIMONIALS, JSON.stringify(testimonials));
     broadcastChange();
   } catch (error) {
@@ -845,7 +845,7 @@ export function getSeoSettings(): SeoSettings {
 
 export async function saveSeoSettings(settings: SeoSettings): Promise<void> {
   try {
-    await saveToFirebase(KEYS.SEO, settings);
+    await saveToSupabase(KEYS.SEO, settings);
     localStorage.setItem(KEYS.SEO, JSON.stringify(settings));
     applySeoSettings(settings);
     broadcastChange();
@@ -867,7 +867,7 @@ export function getHomeSettings(): HomeSettings {
 
 export async function saveHomeSettings(settings: HomeSettings): Promise<void> {
   try {
-    await saveToFirebase(KEYS.HOME, settings);
+    await saveToSupabase(KEYS.HOME, settings);
     localStorage.setItem(KEYS.HOME, JSON.stringify(settings));
     broadcastChange();
   } catch (error) {
@@ -1102,7 +1102,7 @@ export function getLuxuryItineraries(): LuxuryTrip[] {
 
 export async function saveLuxuryItineraries(trips: LuxuryTrip[]): Promise<void> {
   try {
-    await saveToFirebase(KEYS.LUXURY_TRIPS, trips);
+    await saveToSupabase(KEYS.LUXURY_TRIPS, trips);
     localStorage.setItem(KEYS.LUXURY_TRIPS, JSON.stringify(trips));
     broadcastChange();
   } catch (error) {
@@ -1182,14 +1182,14 @@ export function saveCustomCodeInjection(
 // Reset entire database to defaults
 export async function resetCmsToDefault(): Promise<void> {
   try {
-    await saveToFirebase(KEYS.SERVICES, DEFAULT_SERVICES);
-    await saveToFirebase(KEYS.PACKAGES, DEFAULT_PACKAGES);
-    await saveToFirebase(KEYS.PROMO_PACKAGES, FALLBACK_PROMO_PACKAGES);
-    await saveToFirebase(KEYS.BLOG_POSTS, DEFAULT_BLOG_POSTS);
-    await saveToFirebase(KEYS.TESTIMONIALS, DEFAULT_TESTIMONIALS);
-    await saveToFirebase(KEYS.SEO, DEFAULT_SEO_SETTINGS);
-    await saveToFirebase(KEYS.HOME, DEFAULT_HOME_SETTINGS);
-    await saveToFirebase(KEYS.LUXURY_TRIPS, fallbackData.arcadane_cms_luxury_trips || []);
+    await saveToSupabase(KEYS.SERVICES, DEFAULT_SERVICES);
+    await saveToSupabase(KEYS.PACKAGES, DEFAULT_PACKAGES);
+    await saveToSupabase(KEYS.PROMO_PACKAGES, FALLBACK_PROMO_PACKAGES);
+    await saveToSupabase(KEYS.BLOG_POSTS, DEFAULT_BLOG_POSTS);
+    await saveToSupabase(KEYS.TESTIMONIALS, DEFAULT_TESTIMONIALS);
+    await saveToSupabase(KEYS.SEO, DEFAULT_SEO_SETTINGS);
+    await saveToSupabase(KEYS.HOME, DEFAULT_HOME_SETTINGS);
+    await saveToSupabase(KEYS.LUXURY_TRIPS, fallbackData.arcadane_cms_luxury_trips || []);
     
     // clear local items so they sync back
     localStorage.clear();
@@ -1268,7 +1268,7 @@ function safeJsonParse(val: string | null): any {
 // Automatic synchronization from browser local storage to Firebase and Node workspace backup server
 export async function autoSyncToServer(): Promise<void> {
   if (typeof window === "undefined") return;
-  if (isSyncingFromFirebase) return;
+  if (isSyncingFromSupabase) return;
 
   try {
     const dataToSync: Record<string, any> = {
@@ -1314,7 +1314,7 @@ export async function autoSyncToServer(): Promise<void> {
     // Save each individual non-null key to Firebase Firestore so they are loaded immediately on Hostinger or other devices
     for (const [key, value] of Object.entries(dataToSync)) {
       if (value !== undefined) {
-        saveToFirebase(key, value);
+        saveToSupabase(key, value);
       }
     }
 
@@ -1364,7 +1364,7 @@ export async function initializeCmsStore(): Promise<void> {
   if (typeof window === 'undefined') return;
 
   // The Firebase realtime listener acts as the Single Source of Truth and will overwrite localStorage
-  setupFirebaseRealtimeListener((key, remoteData) => {
+  setupSupabaseRealtimeListener((key, remoteData) => {
     let localKey = null;
     if (key === 'services') localKey = KEYS.SERVICES;
     else if (key === 'packages') localKey = KEYS.PACKAGES;
@@ -1469,12 +1469,12 @@ export async function forceSyncCmsState(
       // Legacy /api/get-cms-state has been disabled to prevent 404 network logs on static hosting,
       // as Firebase Firestore now handles all robust synchronization.
 
-      // 2. Pull from Firebase Firestore
-      isSyncingFromFirebase = true;
+      // 2. Pull from Supabase Firestore
+      isSyncingFromSupabase = true;
       try {
         await Promise.all(
           Object.entries(KEYS_MAPPING).map(async ([fbKey, localKey]) => {
-            const data = await loadFromFirebase(fbKey);
+            const data = await loadFromSupabase(fbKey);
             if (data !== undefined && data !== null) {
               const currentVal = localStorage.getItem(localKey);
               const remoteValStr =
@@ -1493,7 +1493,7 @@ export async function forceSyncCmsState(
         );
       } finally {
         setTimeout(() => {
-          isSyncingFromFirebase = false;
+          isSyncingFromSupabase = false;
         }, 100);
       }
 
@@ -1544,7 +1544,7 @@ export async function forceSyncCmsState(
       await Promise.all(
         Object.entries(dataToPush).map(async ([key, value]) => {
           if (value !== null && value !== undefined) {
-            await saveToFirebase(key, value);
+            await saveToSupabase(key, value);
             updatedKeys.push(key);
           }
         }),
@@ -1595,7 +1595,7 @@ export async function forceSyncCmsState(
 
 export async function saveCustomLogo(url: string): Promise<void> {
   try {
-    await saveToFirebase("custom_logo", url);
+    await saveToSupabase("custom_logo", url);
     localStorage.setItem("arcadane_custom_logo", url);
     window.dispatchEvent(new Event("arcadane_logo_changed"));
     broadcastChange();
@@ -1604,7 +1604,7 @@ export async function saveCustomLogo(url: string): Promise<void> {
 
 export async function saveFoundersPhoto(url: string): Promise<void> {
   try {
-    await saveToFirebase("founders_photo", url);
+    await saveToSupabase("founders_photo", url);
     localStorage.setItem("arcadane_founders_photo", url);
     broadcastChange();
   } catch(e) { console.error(e); }
@@ -1612,7 +1612,7 @@ export async function saveFoundersPhoto(url: string): Promise<void> {
 
 export async function saveTrajectoryPhoto(url: string): Promise<void> {
   try {
-    await saveToFirebase("trajectory_photo", url);
+    await saveToSupabase("trajectory_photo", url);
     localStorage.setItem("arcadane_trajectory_photo", url);
     broadcastChange();
   } catch(e) { console.error(e); }
@@ -1620,7 +1620,7 @@ export async function saveTrajectoryPhoto(url: string): Promise<void> {
 
 export async function saveGenericSetting(key: string, localKey: string, value: any): Promise<void> {
   try {
-    await saveToFirebase(key, value);
+    await saveToSupabase(key, value);
     localStorage.setItem(localKey, typeof value === 'string' ? value : JSON.stringify(value));
     broadcastChange();
   } catch(e) { console.error(e); }

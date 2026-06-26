@@ -80,7 +80,7 @@ export default function WhatsAppSelectorModal() {
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            transition={{ type: 'spring' as any, damping: 25, stiffness: 350 }}
             className="relative w-full max-w-lg bg-[#FBF8E8] border border-[#DCCFC1] rounded-3xl shadow-2xl p-6 sm:p-8 overflow-hidden text-left"
             id="whatsapp-selector-inner-card"
           >

@@ -1,4 +1,4 @@
-import { uploadImageToStorage } from '../utils/firebase';
+import { uploadImageToStorage } from '../utils/supabaseClient';
 import React, { useState, useEffect } from 'react';
 import { Compass, Sparkles, Shield, Heart, ArrowUpRight, Award, User, Quote, MapPin, CheckCircle, Camera, Trash2, Upload, Link } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -45,7 +45,7 @@ export default function AboutView() {
     visible: { 
       opacity: 1, 
       y: 0, 
-      transition: { type: 'spring', stiffness: 80, damping: 15 }
+      transition: { type: 'spring' as any, stiffness: 80, damping: 15 }
     }
   };
 

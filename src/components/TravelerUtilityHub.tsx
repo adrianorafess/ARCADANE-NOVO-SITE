@@ -496,7 +496,7 @@ export default function TravelerUtilityHub() {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              transition={{ type: 'spring' as any, damping: 25, stiffness: 220 }}
               className="relative w-full max-w-md bg-[#131110] border-l border-stone-850 h-full shadow-2xl flex flex-col focus:outline-none"
               id="traveler-utilities-panel"
             >
