@@ -3,7 +3,7 @@ import {
   Key, LogOut, Settings, Globe, Film, Sparkles, Briefcase, Compass, Award, 
   Heart, AlertCircle, CheckCircle, Save, Undo, Plus, Trash2, Edit3, 
   Eye, EyeOff, FileText, Image, Phone, MapPin, Mail, Sliders, Server, Trash, HelpCircle, Tag, Download, Users, Code, Palette,
-  BarChart2, TrendingUp, Monitor, Smartphone, Tablet as TabletIcon, Clock, Search, ArrowRight
+  BarChart2, TrendingUp, Monitor, Smartphone, Tablet as TabletIcon, Clock, Search, ArrowRight, Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -2585,8 +2585,97 @@ export default function AdminView() {
                   </div>
                 </div>
 
+                <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4">
+                  <h4 className="text-sm font-bold font-display text-amber-500">2. Preloader (Tela de Carregamento)</h4>
+                  
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="preloaderEnabled"
+                      checked={home.preloaderEnabled !== false}
+                      onChange={(e) => setHome({ ...home, preloaderEnabled: e.target.checked })}
+                      className="rounded border-stone-700 bg-stone-800 text-amber-600 focus:ring-amber-500"
+                    />
+                    <label htmlFor="preloaderEnabled" className="text-sm text-stone-300 font-medium">Habilitar Preloader</label>
+                  </div>
+
+                  {home.preloaderEnabled !== false && (
+                    <>
+                      <div className="space-y-1 mt-3">
+                        <label className={labelClass}>Tipo de Preloader</label>
+                        <select
+                          value={home.preloaderType || 'icon'}
+                          onChange={(e) => setHome({ ...home, preloaderType: e.target.value as 'icon' | 'image' })}
+                          className={inputClass}
+                        >
+                          <option value="icon">Ícone Animado (Padrão)</option>
+                          <option value="image">Imagem Personalizada</option>
+                        </select>
+                      </div>
+
+                      {home.preloaderType === 'icon' || !home.preloaderType ? (
+                        <div className="space-y-1">
+                          <label className={labelClass}>Ícone do Preloader</label>
+                          <select
+                            value={home.preloaderIcon || 'airplane'}
+                            onChange={(e) => setHome({ ...home, preloaderIcon: e.target.value as any })}
+                            className={inputClass}
+                          >
+                            <option value="airplane">Avião</option>
+                            <option value="globe">Globo</option>
+                            <option value="compass">Bússola</option>
+                            <option value="suitcase">Mala</option>
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <label className={labelClass}>Imagem do Preloader</label>
+                          <div className="flex flex-col gap-3">
+                            {home.preloaderImage && (
+                              <div className="bg-stone-900/50 p-4 rounded-xl border border-stone-800 flex justify-center items-center">
+                                <img src={home.preloaderImage} alt="Preloader Preview" className="h-20 object-contain" />
+                              </div>
+                            )}
+                            <div className="flex gap-2">
+                              <label className="bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-mono px-4 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 border border-stone-700">
+                                <Upload size={14} />
+                                Enviar Imagem
+                                <input
+                                  type="file"
+                                  accept="image/png, image/jpeg, image/gif, image/svg+xml"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        setHome({ ...home, preloaderImage: reader.result as string });
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
+                              </label>
+                              {home.preloaderImage && (
+                                <button
+                                  type="button"
+                                  onClick={() => setHome({ ...home, preloaderImage: '' })}
+                                  className="text-red-400 hover:text-red-300 text-xs font-mono px-3 py-2 border border-red-900/30 rounded-xl hover:bg-red-900/20 transition-all"
+                                >
+                                  Remover
+                                </button>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-stone-500 font-mono mt-1">Recomendado: PNG ou GIF com fundo transparente.</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
                 <div className="bg-[#181615]/50 border border-stone-800/80 p-5 rounded-2xl space-y-4" id="layout-menu-labels">
-                  <h4 className="text-sm font-bold font-display text-amber-500">2. Menus de Navegação (Rótulos)</h4>
+                  <h4 className="text-sm font-bold font-display text-amber-500">3. Menus de Navegação (Rótulos)</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className={labelClass}>Link Início</label>

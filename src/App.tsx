@@ -21,12 +21,15 @@ import WhatsAppSelectorModal from './components/WhatsAppSelectorModal';
 import ArcadaneIcon from './components/ArcadaneBrandIcon';
 import RafesVisualBuilder from './components/RafesVisualBuilder';
 import { AnimatePresence, motion } from 'motion/react';
+import { Plane, Globe, Compass, Briefcase } from 'lucide-react';
 import { getSeoSettings, applySeoSettings, getCustomLogo, getHomeSettings, HomeSettings, getCustomPages } from './utils/cmsStore';
 import { applyAllCustomInjections } from './utils/codeInjector';
 import { trackPageView, trackCustomEvent } from './utils/analyticsTracker';
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageId | string>(PageId.Home);
+  const [isLoading, setIsLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
   const [customLogo, setCustomLogo] = useState<string | null>(() => getCustomLogo());
   const [homeSettings, setHomeSettings] = useState<HomeSettings>(() => getHomeSettings());
 
@@ -85,7 +88,23 @@ export default function App() {
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
 
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + Math.floor(Math.random() * 15) + 5;
+      });
+    }, 150);
+
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 1800);
+
     return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
       window.removeEventListener('arcadane_cms_data_changed', handleCmsChange);
     };
   }, []);
@@ -130,6 +149,61 @@ export default function App() {
 
   return (
     <>
+      {/* Luxury Loading Screen */}
+      <AnimatePresence>
+        {isLoading && homeSettings.preloaderEnabled !== false && (
+          <motion.div
+            key="preloader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.6, ease: [0.43, 0.13, 0.23, 0.96] } }}
+            className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-[#12100E]"
+            id="arcadane-luxury-loader"
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="flex flex-col items-center max-w-md px-6"
+            >
+              {homeSettings.preloaderType === 'image' && homeSettings.preloaderImage ? (
+                <motion.img 
+                  src={homeSettings.preloaderImage} 
+                  alt="Loading" 
+                  animate={{ scale: [0.93, 1.07, 0.93] }}
+                  transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                  className="h-32 sm:h-40 md:h-48 w-auto object-contain mb-8" 
+                />
+              ) : (
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  className="mb-8 text-amber-500"
+                >
+                  {(!homeSettings.preloaderIcon || homeSettings.preloaderIcon === 'airplane') && <Plane className="w-16 h-16 sm:w-20 sm:h-20" strokeWidth={1.5} />}
+                  {homeSettings.preloaderIcon === 'globe' && <Globe className="w-16 h-16 sm:w-20 sm:h-20" strokeWidth={1.5} />}
+                  {homeSettings.preloaderIcon === 'compass' && <Compass className="w-16 h-16 sm:w-20 sm:h-20" strokeWidth={1.5} />}
+                  {homeSettings.preloaderIcon === 'suitcase' && <Briefcase className="w-16 h-16 sm:w-20 sm:h-20" strokeWidth={1.5} />}
+                </motion.div>
+              )}
+
+              {/* Progress feedback */}
+              <div className="w-48 h-[2px] bg-white/20 rounded-full overflow-hidden relative mb-3">
+                <motion.div
+                  className="absolute top-0 left-0 h-full bg-[#fdfcf9]"
+                  style={{ width: `${progress}%` }}
+                  transition={{ ease: "easeInOut" }}
+                />
+              </div>
+
+              {/* Luxury descriptive subtitle */}
+              <p className="text-[10px] tracking-[0.3em] font-sans font-bold text-white/80 uppercase select-none animate-pulse">
+                Preparando Viagem
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="min-h-screen flex flex-col justify-between font-sans selection:bg-brand-primary/25 selection:text-brand-dark" id="applet-root">
 
       

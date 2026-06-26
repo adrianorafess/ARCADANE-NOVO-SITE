@@ -90,6 +90,12 @@ export interface HomeSettings {
   widgetType?: "befly" | "whatsapp";
   widgetPosition?: "top" | "bottom" | "left" | "right" | "middle";
 
+  // Preloader settings
+  preloaderEnabled?: boolean;
+  preloaderType?: "icon" | "image";
+  preloaderIcon?: "airplane" | "globe" | "compass" | "suitcase";
+  preloaderImage?: string;
+
   // Custom Dynamic Layout configurations
   footerCopyright?: string;
   footerCol1Title?: string;
@@ -270,6 +276,11 @@ const DEFAULT_HOME_SETTINGS: HomeSettings = {
   customTripButtonText: "Clique e fale com a Arcadane!",
   widgetType: "befly",
   widgetPosition: "middle",
+  
+  preloaderEnabled: true,
+  preloaderType: "icon",
+  preloaderIcon: "airplane",
+  preloaderImage: "",
 
   // Custom Dynamic Layout configurations
   footerCopyright:
