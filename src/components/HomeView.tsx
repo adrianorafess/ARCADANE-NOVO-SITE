@@ -54,9 +54,10 @@ const BeflySearchWidget = () => {
 
       const scriptId = 'befly-widget-script';
       if (!document.getElementById(scriptId)) {
+        const isPreview = window.location.hostname.includes('run.app') || window.location.hostname === 'localhost';
         const script = document.createElement('script');
         script.id = scriptId;
-        script.src = '/api/widget-befly.js';
+        script.src = isPreview ? '/api/widget-befly.js' : 'https://static.onertravel.com/widget/search/production/widget-befly.js';
         script.async = true;
         document.body.appendChild(script);
       }
