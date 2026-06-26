@@ -28,7 +28,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
   const [home, setHome] = useState<HomeSettings>(() => getHomeSettings());
-  const [customMenuPages, setCustomMenuPages] = useState<CustomPage[]>(() => getCustomPages().filter(p => p.addToMenu && p.isActive !== false));
+  const [customMenuPages, setCustomMenuPages] = useState<CustomPage[]>(() => getCustomPages().filter(p => p.addToMenu && p.isActive !== false && p.id !== 'destinos-vip'));
   
   const whatsRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +54,7 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
     const handleCmsChange = () => {
       setSeo(getSeoSettings());
       setHome(getHomeSettings());
-      setCustomMenuPages(getCustomPages().filter(p => p.addToMenu && p.isActive !== false));
+      setCustomMenuPages(getCustomPages().filter(p => p.addToMenu && p.isActive !== false && p.id !== 'destinos-vip'));
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
     return () => {
@@ -214,89 +214,19 @@ export default function Header({ activePage, setActivePage }: HeaderProps) {
             })}
           </nav>
 
-          {/* WhatsApp Action Button with Double channel popover dropdown */}
-          <div className="flex items-center gap-3 relative" id="header-actions" ref={whatsRef}>
-            <div className="relative">
-              <button
-                onClick={() => setIsWhatsDropdownOpen(!isWhatsDropdownOpen)}
+          {/* WhatsApp Action Button linking directly to Maria & Mariana */}
+          <div className="flex items-center gap-3 relative" id="header-actions">
+            <div>
+              <a
+                href={`https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${encodeURIComponent("Olá Maria e Mariana! Vim pelo link do site da Arcadane e gostaria de iniciar um atendimento.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 id="header-cta-whatsapp"
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer shadow-lg hover:scale-105 active:scale-95 ${
-                  isWhatsDropdownOpen ? 'bg-rose-600 text-white' : 'bg-[#25D366] hover:bg-[#128C7E] text-white'
-                }`}
-                aria-expanded={isWhatsDropdownOpen}
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer shadow-lg hover:scale-105 active:scale-95 bg-[#25D366] hover:bg-[#128C7E] text-white"
                 title="Fale Conosco pelo WhatsApp"
               >
-                {isWhatsDropdownOpen ? (
-                  <X className="w-5 h-5" />
-                ) : (
-                  <WhatsAppIcon className="w-5.5 h-5.5 fill-white text-white" />
-                )}
-              </button>
-
-              {/* Popover Dropdown containing Mateus and Maria & Mariana contacts */}
-              <AnimatePresence>
-                {isWhatsDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.92, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.92, y: 10 }}
-                    transition={{ duration: 0.18 }}
-                    className="absolute right-0 mt-3 w-72 sm:w-80 bg-stone-900 border border-stone-800 rounded-2xl shadow-2xl overflow-hidden z-50 text-left"
-                    id="header-whatsapp-dropdown"
-                  >
-                    <div className="bg-stone-950 p-4 border-b border-stone-850">
-                      <span className="text-[10px] uppercase tracking-wider text-brand-secondary font-mono font-bold block">
-                        • FALE COM UM CONSULTOR
-                      </span>
-                      <h4 className="text-white text-xs font-bold mt-1 font-display">Selecione o melhor canal:</h4>
-                    </div>
-
-                    <div className="p-3 space-y-2">
-                       <a
-                        href={`https://wa.me/${seo.contactWhatsAppMateus || '554791492704'}?text=${encodeURIComponent("Olá Mateus! Vim pelo link do site da Arcadane e gostaria de iniciar um atendimento.")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setIsWhatsDropdownOpen(false)}
-                        className="flex items-center gap-3 p-2.5 rounded-xl border border-stone-800 bg-black/25 hover:bg-brand-primary/10 hover:border-brand-primary/30 transition-all group"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-brand-primary text-white font-display font-semibold flex items-center justify-center text-xs">
-                          M
-                        </div>
-                        <div className="min-w-0 flex-grow">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-white group-hover:text-brand-secondary transition-colors">Mateus</span>
-                            <span className="text-[8px] bg-brand-primary/20 text-brand-primary px-1.5 py-0.5 rounded-full font-mono uppercase font-bold">Ativo</span>
-                          </div>
-                          <p className="text-[10px] text-stone-400 truncate mt-0.5 font-sans">
-                            Atendimento & Roteiros Personalizados
-                          </p>
-                        </div>
-                      </a>
-
-                      <a
-                        href={`https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${encodeURIComponent("Olá Maria e Mariana! Vim pelo link do site da Arcadane e gostaria de iniciar um atendimento.")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setIsWhatsDropdownOpen(false)}
-                        className="flex items-center gap-3 p-2.5 rounded-xl border border-stone-800 bg-black/25 hover:bg-brand-secondary/10 hover:border-brand-secondary/30 transition-all group"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-brand-secondary text-white font-display font-semibold flex items-center justify-center text-xs">
-                          MM
-                        </div>
-                        <div className="min-w-0 flex-grow">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-white group-hover:text-brand-secondary transition-colors">Maria e Mariana</span>
-                            <span className="text-[8px] bg-brand-secondary/20 text-brand-secondary px-1.5 py-0.5 rounded-full font-mono uppercase font-bold">Ativo</span>
-                          </div>
-                          <p className="text-[10px] text-stone-400 truncate mt-0.5 font-sans">
-                            Curadoria de Experiências & Lua de Mel
-                          </p>
-                        </div>
-                      </a>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                <WhatsAppIcon className="w-5.5 h-5.5 fill-white text-white" />
+              </a>
             </div>
 
             <button

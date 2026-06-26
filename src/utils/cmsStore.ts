@@ -136,7 +136,7 @@ export const DEFAULT_CUSTOM_PAGES: CustomPage[] = [
     content: '### Viagens Sob Medida de Altíssimo Padrão\n\nA Arcadane Viagens orgulhosamente oferece serviços de assessoria especializada para destinos altamente exclusivos no mundo todo. Desde ilhas privadas nas Maldivas até chalés de neve nos Alpes Suíços.\n\nFale conosco para desenhar a sua próxima grande aventura com a sofisticação e os detalhes impecáveis que só a Arcadane pode entregar.',
     metaDescription: 'Descubra os destinos VIP e de luxo mais exclusivos do mundo com assessoria completa Arcadane Viagens.',
     keywords: 'luxo, vip, viagens exclusivas, maldivas, alpes',
-    addToMenu: true,
+    addToMenu: false,
     menuLabel: 'Destinos VIP'
   },
   {
@@ -1071,6 +1071,17 @@ export function broadcastChange(): void {
   }
 }
 
+// Safe JSON parser to protect against malformed localStorage content crashing state transitions
+function safeJsonParse(val: string | null): any {
+  if (!val) return null;
+  try {
+    return JSON.parse(val);
+  } catch (e) {
+    console.warn('[Sync] Failed to parse JSON, returning null:', e);
+    return null;
+  }
+}
+
 // Automatic synchronization from browser local storage to Firebase and Node workspace backup server
 export async function autoSyncToServer(): Promise<void> {
   if (typeof window === 'undefined') return;
@@ -1078,23 +1089,23 @@ export async function autoSyncToServer(): Promise<void> {
 
   try {
     const dataToSync: Record<string, any> = {
-      services: JSON.parse(localStorage.getItem(KEYS.SERVICES) || 'null'),
-      packages: JSON.parse(localStorage.getItem(KEYS.PACKAGES) || 'null'),
-      promo_packages: JSON.parse(localStorage.getItem(KEYS.PROMO_PACKAGES) || 'null'),
-      blog_posts: JSON.parse(localStorage.getItem(KEYS.BLOG_POSTS) || 'null'),
-      testimonials: JSON.parse(localStorage.getItem(KEYS.TESTIMONIALS) || 'null'),
-      seo_settings: JSON.parse(localStorage.getItem(KEYS.SEO) || 'null'),
-      home_settings: JSON.parse(localStorage.getItem(KEYS.HOME) || 'null'),
-      luxury_trips: JSON.parse(localStorage.getItem(KEYS.LUXURY_TRIPS) || 'null'),
+      services: safeJsonParse(localStorage.getItem(KEYS.SERVICES)),
+      packages: safeJsonParse(localStorage.getItem(KEYS.PACKAGES)),
+      promo_packages: safeJsonParse(localStorage.getItem(KEYS.PROMO_PACKAGES)),
+      blog_posts: safeJsonParse(localStorage.getItem(KEYS.BLOG_POSTS)),
+      testimonials: safeJsonParse(localStorage.getItem(KEYS.TESTIMONIALS)),
+      seo_settings: safeJsonParse(localStorage.getItem(KEYS.SEO)),
+      home_settings: safeJsonParse(localStorage.getItem(KEYS.HOME)),
+      luxury_trips: safeJsonParse(localStorage.getItem(KEYS.LUXURY_TRIPS)),
       founders_photo: localStorage.getItem('arcadane_founders_photo'),
       trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
       custom_logo: localStorage.getItem('arcadane_custom_logo'),
       
       // Extended layout parameters for absolute multi-device synchronicity
-      bento_destinations: JSON.parse(localStorage.getItem('arcadane_bento_destinations') || 'null'),
+      bento_destinations: safeJsonParse(localStorage.getItem('arcadane_bento_destinations')),
       video_url: localStorage.getItem('arcadane_video_url'),
       search_mode: localStorage.getItem('arcadane_search_mode'),
-      typewriter_endings: JSON.parse(localStorage.getItem('arcadane_typewriter_endings') || 'null'),
+      typewriter_endings: safeJsonParse(localStorage.getItem('arcadane_typewriter_endings')),
       seal_top_text: localStorage.getItem('arcadane_seal_top_text'),
       seal_bottom_text: localStorage.getItem('arcadane_seal_bottom_text'),
       seal_number: localStorage.getItem('arcadane_seal_number'),
@@ -1106,7 +1117,7 @@ export async function autoSyncToServer(): Promise<void> {
       custom_head_code: localStorage.getItem('arcadane_custom_head_code'),
       custom_body_start_code: localStorage.getItem('arcadane_custom_body_start_code'),
       custom_body_end_code: localStorage.getItem('arcadane_custom_body_end_code'),
-      theme_settings: JSON.parse(localStorage.getItem(KEYS.THEME) || 'null')
+      theme_settings: safeJsonParse(localStorage.getItem(KEYS.THEME))
     };
 
     // Save each individual non-null key to Firebase Firestore so they are loaded immediately on Hostinger or other devices
@@ -1539,21 +1550,21 @@ export async function forceSyncCmsState(direction: 'pull' | 'push'): Promise<{ s
       console.log('[Sync] Force pushing local CMS state to server backup and Firebase...');
 
       const dataToPush = {
-        services: JSON.parse(localStorage.getItem(KEYS.SERVICES) || 'null'),
-        packages: JSON.parse(localStorage.getItem(KEYS.PACKAGES) || 'null'),
-        promo_packages: JSON.parse(localStorage.getItem(KEYS.PROMO_PACKAGES) || 'null'),
-        blog_posts: JSON.parse(localStorage.getItem(KEYS.BLOG_POSTS) || 'null'),
-        testimonials: JSON.parse(localStorage.getItem(KEYS.TESTIMONIALS) || 'null'),
-        seo_settings: JSON.parse(localStorage.getItem(KEYS.SEO) || 'null'),
-        home_settings: JSON.parse(localStorage.getItem(KEYS.HOME) || 'null'),
-        luxury_trips: JSON.parse(localStorage.getItem(KEYS.LUXURY_TRIPS) || 'null'),
+        services: safeJsonParse(localStorage.getItem(KEYS.SERVICES)),
+        packages: safeJsonParse(localStorage.getItem(KEYS.PACKAGES)),
+        promo_packages: safeJsonParse(localStorage.getItem(KEYS.PROMO_PACKAGES)),
+        blog_posts: safeJsonParse(localStorage.getItem(KEYS.BLOG_POSTS)),
+        testimonials: safeJsonParse(localStorage.getItem(KEYS.TESTIMONIALS)),
+        seo_settings: safeJsonParse(localStorage.getItem(KEYS.SEO)),
+        home_settings: safeJsonParse(localStorage.getItem(KEYS.HOME)),
+        luxury_trips: safeJsonParse(localStorage.getItem(KEYS.LUXURY_TRIPS)),
         founders_photo: localStorage.getItem('arcadane_founders_photo'),
         trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
         custom_logo: localStorage.getItem('arcadane_custom_logo'),
-        bento_destinations: JSON.parse(localStorage.getItem('arcadane_bento_destinations') || 'null'),
+        bento_destinations: safeJsonParse(localStorage.getItem('arcadane_bento_destinations')),
         video_url: localStorage.getItem('arcadane_video_url'),
         search_mode: localStorage.getItem('arcadane_search_mode'),
-        typewriter_endings: JSON.parse(localStorage.getItem('arcadane_typewriter_endings') || 'null'),
+        typewriter_endings: safeJsonParse(localStorage.getItem('arcadane_typewriter_endings')),
         seal_top_text: localStorage.getItem('arcadane_seal_top_text'),
         seal_bottom_text: localStorage.getItem('arcadane_seal_bottom_text'),
         seal_number: localStorage.getItem('arcadane_seal_number'),
@@ -1562,7 +1573,7 @@ export async function forceSyncCmsState(direction: 'pull' | 'push'): Promise<{ s
         quiz_banner_badge: localStorage.getItem('arcadane_quiz_banner_badge'),
         quiz_banner_title: localStorage.getItem('arcadane_quiz_banner_title'),
         quiz_banner_desc: localStorage.getItem('arcadane_quiz_banner_desc'),
-        theme_settings: JSON.parse(localStorage.getItem(KEYS.THEME) || 'null')
+        theme_settings: safeJsonParse(localStorage.getItem(KEYS.THEME))
       };
 
       // Push to Firebase Firestore

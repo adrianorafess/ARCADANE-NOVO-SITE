@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Compass, Calendar, ArrowUpRight, Sparkles, X, Plus, Trash2, Camera, Upload, Link, RotateCcw, CheckCircle2, Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getLuxuryItineraries, saveLuxuryItineraries, DEFAULT_LUXURY_TRIPS } from '../utils/cmsStore';
+import { getLuxuryItineraries, saveLuxuryItineraries, DEFAULT_LUXURY_TRIPS, getSeoSettings } from '../utils/cmsStore';
 import { useRafesEditor } from './RafesVisualBuilder';
 import { compressImage } from '../utils/imageCompressor';
 import { LuxuryTrip } from '../types';
@@ -10,11 +10,13 @@ export default function LuxuryItineraries() {
   const { rafesOpen, editField } = useRafesEditor();
   const [trips, setTrips] = useState<LuxuryTrip[]>(() => getLuxuryItineraries());
   const [activeEditTripId, setActiveEditTripId] = useState<string | null>(null);
+  const [seo, setSeo] = useState(() => getSeoSettings());
 
   // Sync with CMS updates
   useEffect(() => {
     const handleCmsChange = () => {
       setTrips(getLuxuryItineraries());
+      setSeo(getSeoSettings());
     };
     window.addEventListener('arcadane_cms_data_changed', handleCmsChange);
     return () => {
@@ -442,15 +444,16 @@ export default function LuxuryItineraries() {
 
                   {/* Standard CTA Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3">
-                    {/* WhatsApp Consult Button */}
-                    <button
-                      type="button"
-                      onClick={() => handleConsult(trip.waMessage)}
-                      className="w-full px-4 py-3.5 rounded-xl bg-brand-primary hover:bg-brand-chocolate active:scale-95 text-white font-display font-bold text-xs tracking-widest uppercase flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                    {/* WhatsApp Consult Button - DIRECT TO MATEUS */}
+                    <a
+                      href={`https://wa.me/${seo.contactWhatsAppMateus || '554791492704'}?text=${encodeURIComponent(trip.waMessage)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full px-4 py-3.5 rounded-xl bg-brand-primary hover:bg-brand-chocolate active:scale-95 text-white font-display font-bold text-xs tracking-widest uppercase flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer hover:no-underline decoration-none"
                     >
-                      <span>Consultor Arcadane</span>
+                      <span>Consultor Mateus</span>
                       <Navigation className="w-4 h-4 rotate-45 shrink-0" />
-                    </button>
+                    </a>
                   </div>
                 </div>
 

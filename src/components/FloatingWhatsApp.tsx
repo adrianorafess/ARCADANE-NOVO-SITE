@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, X, Check, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { getSeoSettings } from '../utils/cmsStore';
 import { trackCustomEvent } from '../utils/analyticsTracker';
 
@@ -15,162 +14,41 @@ const WhatsAppIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 );
 
 export default function FloatingWhatsApp() {
-  const [isOpen, setIsOpen] = useState(false);
   const [seo, setSeo] = useState(() => getSeoSettings());
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close when clicking outside and handle CMS updates
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
     const handleCms = () => setSeo(getSeoSettings());
-    
-    document.addEventListener('mousedown', handleClickOutside);
     window.addEventListener('arcadane_cms_data_changed', handleCms);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('arcadane_cms_data_changed', handleCms);
     };
   }, []);
 
-  const messageText = encodeURIComponent("Olá! Vim pelo link do site da Arcadane e gostaria de iniciar um atendimento para planejar minha próxima viagem.");
-
-  const contacts = [
-    {
-      name: "Mateus",
-      role: "Atendimento & Roteiros Personalizados",
-      phone: seo.contactWhatsAppMateus || "554791492704",
-      description: "Planejamento tático, voos e orçamentos.",
-      avatarBg: "bg-teal-500",
-      link: `https://wa.me/${seo.contactWhatsAppMateus || '554791492704'}?text=${messageText}`
-    },
-    {
-      name: "Maria e Mariana",
-      role: "Curadoria de Experiências & Lua de Mel",
-      phone: seo.contactWhatsAppMaria || "5547992008571",
-      description: "Hotéis boutique, pacotes cooperados e mimos exclusivos.",
-      avatarBg: "bg-rose-500",
-      link: `https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${messageText}`
-    }
-  ];
+  const handleClick = () => {
+    trackCustomEvent('whatsapp_click', 'floating_whatsapp');
+    const defaultMsg = "Olá! Vim pelo link do site da Arcadane e gostaria de iniciar um atendimento para planejar minha próxima viagem.";
+    window.dispatchEvent(new CustomEvent('open_whatsapp_modal', { detail: { message: defaultMsg } }));
+  };
 
   return (
     <div 
-      ref={containerRef}
       className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
       id="global-floating-whatsapp"
     >
-      {/* Pop up Card */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.88, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.88, y: 20 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="w-80 sm:w-88 bg-stone-900 border border-stone-800 rounded-3xl shadow-2xl overflow-hidden glass-card"
-            id="whatsapp-channel-selector"
-          >
-            {/* Header part */}
-            <div className="bg-stone-950 p-5 border-b border-stone-850 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#25D366]/10 text-[#25D366] flex items-center justify-center">
-                  <WhatsAppIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-white text-xs font-display font-black tracking-wide uppercase leading-none">Consultores Arcadane</h4>
-                  <span className="text-[10px] text-emerald-400 font-mono mt-1 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
-                    Online • Resposta imediata
-                  </span>
-                </div>
-              </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="text-stone-400 hover:text-white transition-colors p-1.5 rounded-full bg-white/5 hover:bg-white/10"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* List of custom advisors */}
-            <div className="p-4 space-y-3 bg-stone-900/60 max-h-[380px] overflow-y-auto">
-              <p className="text-[11px] text-stone-400 px-1 text-left font-sans">
-                Selecione o consultor ideal para iniciar a criação do seu roteiro dos sonhos:
-              </p>
-              
-              {contacts.map((c, index) => (
-                <a
-                  key={index}
-                  href={c.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackCustomEvent('whatsapp_click', 'floating_whatsapp')}
-                  className="block group rounded-2xl border border-stone-800 bg-black/30 hover:bg-stone-950 p-3.5 transition-all text-left relative overflow-hidden"
-                >
-                  {/* Decorative faint glow */}
-                  <div className="absolute inset-y-0 left-0 w-1 bg-[#25D366] opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                  <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-full shrink-0 ${c.avatarBg} text-white font-display font-bold text-sm flex items-center justify-center shadow-inner`}>
-                      {c.name.split(' ')[0][0]}
-                    </div>
-                    <div className="flex-grow space-y-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-white font-bold text-xs font-display">{c.name}</span>
-                        <ExternalLink className="w-3 h-3 text-stone-500 group-hover:text-[#25D366] transition-colors" />
-                      </div>
-                      <span className="text-[10px] font-semibold text-stone-300 block font-mono leading-none">
-                        {c.role}
-                      </span>
-                      <p className="text-[10px] text-stone-400 leading-relaxed font-sans pt-0.5">
-                        {c.description}
-                      </p>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-
-            {/* Footer with branding */}
-            <div className="bg-stone-950 px-5 py-3 text-center border-t border-stone-850">
-              <span className="text-[9px] tracking-[0.2em] text-stone-500 font-sans uppercase">
-                Arcadane Agência de Viagens
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Floating Main Pulsating CTA button */}
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleClick}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className={`shadow-2xl rounded-full flex items-center justify-center relative cursor-pointer group transition-all duration-300 ${
-          isOpen 
-            ? 'bg-rose-600 text-white w-14 h-14' 
-            : 'bg-[#25D366] text-white w-15 h-15'
-        }`}
-        title="Fale com a Arcadane no WhatsApp"
+        className="shadow-2xl rounded-full flex items-center justify-center relative cursor-pointer group transition-all duration-300 bg-[#25D366] text-white w-15 h-15 border-none focus:outline-hidden"
+        title="Fale com nossos consultores no WhatsApp"
         id="whatsapp-pulsating-bubble"
       >
         {/* Pulsating background ring effect */}
-        {!isOpen && (
-          <>
-            <span className="absolute -inset-1.5 rounded-full bg-[#25D366] opacity-30 animate-ping" />
-            <span className="absolute -inset-3.5 rounded-full bg-[#25D366] opacity-15 animate-ping [animation-delay:0.3s]" />
-          </>
-        )}
+        <span className="absolute -inset-1.5 rounded-full bg-[#25D366] opacity-30 animate-ping" />
+        <span className="absolute -inset-3.5 rounded-full bg-[#25D366] opacity-15 animate-ping [animation-delay:0.3s]" />
 
-        {isOpen ? (
-          <X className="w-6 h-6 animate-rotate-once" />
-        ) : (
-          <WhatsAppIcon className="w-7 h-7 drop-shadow-md text-white fill-white" />
-        )}
+        <WhatsAppIcon className="w-7 h-7 drop-shadow-md text-white fill-white" />
       </motion.button>
     </div>
   );

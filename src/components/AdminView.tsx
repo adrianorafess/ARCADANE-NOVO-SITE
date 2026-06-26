@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   BarChart, LineChart, PieChart, Line, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie 
 } from 'recharts';
-import { getAnalyticsEvents } from '../utils/analyticsTracker';
+import { getAnalyticsEvents, AnalyticsEvent } from '../utils/analyticsTracker';
 import { 
   getServices, saveServices, getPackages, savePackages, 
   getBlogPosts, saveBlogPosts, getTestimonials, saveTestimonials, 
@@ -22,6 +22,17 @@ import {
 import { ServiceItem, PackageItem, BlogPost, TestimonialItem } from '../types';
 import { compressImage } from '../utils/imageCompressor';
 import { DEFAULT_HEAD_CODE, DEFAULT_BODY_START_CODE, DEFAULT_BODY_END_CODE } from '../utils/codeInjector';
+
+// Safe JSON parser to protect against malformed localStorage content crashing state transitions
+function safeJsonParse(val: string | null): any {
+  if (!val) return null;
+  try {
+    return JSON.parse(val);
+  } catch (e) {
+    console.warn('[AdminView] Failed to parse JSON, returning null:', e);
+    return null;
+  }
+}
 
 interface SearchIndexItem {
   term: string;
@@ -416,21 +427,25 @@ export default function AdminView() {
   const [theme, setTheme] = useState<ThemeSettings>(getThemeSettings);
 
   // Analytics State
-  const [analyticsEvents, setAnalyticsEvents] = useState(() => getAnalyticsEvents());
+  const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEvent[]>(() => {
+    const raw = getAnalyticsEvents();
+    return (raw || []).filter(e => e && typeof e.timestamp === 'string' && e.timestamp);
+  });
   const [analyticsTimeFilter, setAnalyticsTimeFilter] = useState<'realtime' | 'today' | 'month' | 'year' | '30days' | 'custom'>('realtime');
   const [startDateFilter, setStartDateFilter] = useState<string>('');
   const [endDateFilter, setEndDateFilter] = useState<string>('');
 
   useEffect(() => {
     const handleAnalyticsUpdate = () => {
-      setAnalyticsEvents(getAnalyticsEvents());
+      const raw = getAnalyticsEvents();
+      setAnalyticsEvents((raw || []).filter(e => e && typeof e.timestamp === 'string' && e.timestamp));
     };
     window.addEventListener('arcadane_analytics_updated', handleAnalyticsUpdate);
 
     let unsubFirestore: (() => void) | undefined;
     import('../utils/analyticsTracker').then(m => {
       unsubFirestore = m.subscribeToFirestoreAnalytics((events) => {
-        setAnalyticsEvents(events);
+        setAnalyticsEvents((events || []).filter(e => e && typeof e.timestamp === 'string' && e.timestamp));
       });
     }).catch(err => {
       console.error('[AdminView] Failed to start Firestore real-time analytics:', err);
@@ -473,10 +488,10 @@ export default function AdminView() {
   });
 
   // Seal / Medallion custom states
-  const [sealTopText, setSealTopText] = useState(() => localStorage.getItem('arcadane_seal_top_text') || "ARCADANE CURADORIA EXCLUSIVA");
-  const [sealBottomText, setSealBottomText] = useState(() => localStorage.getItem('arcadane_seal_bottom_text') || "VIAGENS EXTRAORDINÁRIAS");
+  const [sealTopText, setSealTopText] = useState(() => localStorage.getItem('arcadane_seal_top_text') || "10 ANOS DE EXPERIÊNCIA");
+  const [sealBottomText, setSealBottomText] = useState(() => localStorage.getItem('arcadane_seal_bottom_text') || "NO MERCADO");
   const [sealNumber, setSealNumber] = useState(() => localStorage.getItem('arcadane_seal_number') || "10");
-  const [sealLabel1, setSealLabel1] = useState(() => localStorage.getItem('arcadane_seal_label1') || "ANOS DE");
+  const [sealLabel1, setSealLabel1] = useState(() => localStorage.getItem('arcadane_seal_label1') || "ANOS");
   const [sealLabel2, setSealLabel2] = useState(() => localStorage.getItem('arcadane_seal_label2') || "EXPERIÊNCIA");
 
   // Quiz Banner Custom states
@@ -757,14 +772,14 @@ export default function AdminView() {
     setIsSyncing(true);
     try {
       const dataToSync = {
-        arcadane_cms_services: JSON.parse(localStorage.getItem('arcadane_cms_services') || 'null'),
-        arcadane_cms_packages: JSON.parse(localStorage.getItem('arcadane_cms_packages') || 'null'),
-        arcadane_cms_promo_packages: JSON.parse(localStorage.getItem('arcadane_cms_promo_packages') || 'null'),
-        arcadane_cms_blog_posts: JSON.parse(localStorage.getItem('arcadane_cms_blog_posts') || 'null'),
-        arcadane_cms_testimonials: JSON.parse(localStorage.getItem('arcadane_cms_testimonials') || 'null'),
-        arcadane_cms_seo_settings: JSON.parse(localStorage.getItem('arcadane_cms_seo_settings') || 'null'),
-        arcadane_cms_home_settings: JSON.parse(localStorage.getItem('arcadane_cms_home_settings') || 'null'),
-        arcadane_cms_luxury_trips: JSON.parse(localStorage.getItem('arcadane_cms_luxury_trips') || 'null'),
+        arcadane_cms_services: safeJsonParse(localStorage.getItem('arcadane_cms_services')),
+        arcadane_cms_packages: safeJsonParse(localStorage.getItem('arcadane_cms_packages')),
+        arcadane_cms_promo_packages: safeJsonParse(localStorage.getItem('arcadane_cms_promo_packages')),
+        arcadane_cms_blog_posts: safeJsonParse(localStorage.getItem('arcadane_cms_blog_posts')),
+        arcadane_cms_testimonials: safeJsonParse(localStorage.getItem('arcadane_cms_testimonials')),
+        arcadane_cms_seo_settings: safeJsonParse(localStorage.getItem('arcadane_cms_seo_settings')),
+        arcadane_cms_home_settings: safeJsonParse(localStorage.getItem('arcadane_cms_home_settings')),
+        arcadane_cms_luxury_trips: safeJsonParse(localStorage.getItem('arcadane_cms_luxury_trips')),
         arcadane_founders_photo: localStorage.getItem('arcadane_founders_photo'),
         arcadane_trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
         arcadane_custom_logo: localStorage.getItem('arcadane_custom_logo')
@@ -796,14 +811,14 @@ export default function AdminView() {
     try {
       const dataToSync = {
         updatedAt: new Date().toISOString(),
-        arcadane_cms_services: JSON.parse(localStorage.getItem('arcadane_cms_services') || 'null'),
-        arcadane_cms_packages: JSON.parse(localStorage.getItem('arcadane_cms_packages') || 'null'),
-        arcadane_cms_promo_packages: JSON.parse(localStorage.getItem('arcadane_cms_promo_packages') || 'null'),
-        arcadane_cms_blog_posts: JSON.parse(localStorage.getItem('arcadane_cms_blog_posts') || 'null'),
-        arcadane_cms_testimonials: JSON.parse(localStorage.getItem('arcadane_cms_testimonials') || 'null'),
-        arcadane_cms_seo_settings: JSON.parse(localStorage.getItem('arcadane_cms_seo_settings') || 'null'),
-        arcadane_cms_home_settings: JSON.parse(localStorage.getItem('arcadane_cms_home_settings') || 'null'),
-        arcadane_cms_luxury_trips: JSON.parse(localStorage.getItem('arcadane_cms_luxury_trips') || 'null'),
+        arcadane_cms_services: safeJsonParse(localStorage.getItem('arcadane_cms_services')),
+        arcadane_cms_packages: safeJsonParse(localStorage.getItem('arcadane_cms_packages')),
+        arcadane_cms_promo_packages: safeJsonParse(localStorage.getItem('arcadane_cms_promo_packages')),
+        arcadane_cms_blog_posts: safeJsonParse(localStorage.getItem('arcadane_cms_blog_posts')),
+        arcadane_cms_testimonials: safeJsonParse(localStorage.getItem('arcadane_cms_testimonials')),
+        arcadane_cms_seo_settings: safeJsonParse(localStorage.getItem('arcadane_cms_seo_settings')),
+        arcadane_cms_home_settings: safeJsonParse(localStorage.getItem('arcadane_cms_home_settings')),
+        arcadane_cms_luxury_trips: safeJsonParse(localStorage.getItem('arcadane_cms_luxury_trips')),
         arcadane_founders_photo: localStorage.getItem('arcadane_founders_photo'),
         arcadane_trajectory_photo: localStorage.getItem('arcadane_trajectory_photo'),
         arcadane_custom_logo: localStorage.getItem('arcadane_custom_logo')
@@ -1091,6 +1106,7 @@ export default function AdminView() {
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
 
     return analyticsEvents.filter(e => {
+      if (!e || typeof e.timestamp !== 'string') return false;
       const eventDate = new Date(e.timestamp);
       const eventDateStr = e.timestamp.split('T')[0];
 
@@ -1129,7 +1145,7 @@ export default function AdminView() {
   const totalViews = pageViews.length;
 
   const uniqueVisitors = Array.from(new Set(pageViews.map(e => {
-    const day = e.timestamp.split('T')[0];
+    const day = e.timestamp && typeof e.timestamp === 'string' ? e.timestamp.split('T')[0] : '';
     return `${day}_${e.device}_${e.origin}_${e.age}`;
   }))).length;
 
@@ -1285,7 +1301,7 @@ export default function AdminView() {
         }
 
         filteredEventsForMetrics.forEach(e => {
-          const dayStr = e.timestamp.split('T')[0];
+          const dayStr = e.timestamp && typeof e.timestamp === 'string' ? e.timestamp.split('T')[0] : '';
           const found = data.find(d => d.fullDate === dayStr);
           if (found) {
             if (e.customAction) found.Conversões += 1;
@@ -1306,7 +1322,7 @@ export default function AdminView() {
     }
 
     filteredEventsForMetrics.forEach(e => {
-      const dayStr = e.timestamp.split('T')[0];
+      const dayStr = e.timestamp && typeof e.timestamp === 'string' ? e.timestamp.split('T')[0] : '';
       if (dailyDataMap[dayStr]) {
         if (e.customAction) {
           dailyDataMap[dayStr].Conversões += 1;
@@ -1836,7 +1852,8 @@ export default function AdminView() {
                             const actions = ['whatsapp_click', 'quiz_completed', 'search_flights'];
                             m.trackCustomEvent(actions[Math.floor(Math.random() * actions.length)], randomPage);
                           }
-                          setAnalyticsEvents(m.getAnalyticsEvents());
+                          const raw = m.getAnalyticsEvents();
+                          setAnalyticsEvents((raw || []).filter(e => e && typeof e.timestamp === 'string' && e.timestamp));
                           showFeedback('Acesso simulado registrado em tempo real!', 'success');
                         });
                       }}

@@ -160,42 +160,13 @@ export default function ExitIntentModal({ activePage }: ExitIntentModalProps) {
                   FALE DIRETAMENTE COM NOSSA EQUIPE NO WHATSAPP:
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <a
-                    href={`https://wa.me/${seo.contactWhatsAppMateus || '554791492704'}?text=${encodeURIComponent(mateusMsg)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleCloseExit}
-                    className="group relative flex flex-col justify-between p-4.5 rounded-2xl bg-white/40 border border-[#DCCFC1]/50 hover:border-[#3B5EA4]/40 hover:bg-white transition-all duration-300 text-left"
-                  >
-                    <div className="absolute top-3 right-3 text-[#25D366] font-mono text-[8px] font-bold tracking-widest flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-[#25D366] animate-ping" />
-                      ONLINE
-                    </div>
-                    <div className="space-y-3">
-                      <div className="w-9 h-9 rounded-full bg-[#3B5EA4] flex items-center justify-center text-white shrink-0">
-                        <User className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-[#AF4934] group-hover:text-[#3B5EA4] transition-colors font-display">
-                          Falar com Mateus
-                        </h4>
-                        <p className="text-[10px] text-[#6F5B4E] font-sans mt-0.5">
-                          Passagens aéreas com milhas, suporte de viagens e operacional técnico.
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] text-[#6F5B4E] font-mono mt-3 block group-hover:text-[#AF4934] transition-colors">
-                      Iniciar atendimento ➜
-                    </span>
-                  </a>
-
+                <div className="flex justify-center">
                   <a
                     href={`https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${encodeURIComponent(girlsMsg)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={handleCloseExit}
-                    className="group relative flex flex-col justify-between p-4.5 rounded-2xl bg-white/40 border border-[#DCCFC1]/50 hover:border-[#AF4934]/40 hover:bg-white transition-all duration-300 text-left"
+                    className="group relative flex flex-col justify-between p-4.5 rounded-2xl bg-white/40 border border-[#DCCFC1]/50 hover:border-[#AF4934]/40 hover:bg-white transition-all duration-300 text-left w-full max-w-sm"
                   >
                     <div className="absolute top-3 right-3 text-[#25D366] font-mono text-[8px] font-bold tracking-widest flex items-center gap-1">
                       <span className="w-1 h-1 rounded-full bg-[#25D366] animate-ping" />
@@ -284,42 +255,21 @@ export default function ExitIntentModal({ activePage }: ExitIntentModalProps) {
                   CONVERSE AGORA MESMO COM NOSSOS ESPECIALISTAS:
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Mateus */}
-                  <a
-                    href={`https://wa.me/${seo.contactWhatsAppMateus || '554791492704'}?text=${encodeURIComponent(mateusMsg)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleCloseAnnouncement}
-                    className="group relative flex flex-col justify-between p-4 rounded-xl bg-white/5 border border-stone-850 hover:border-brand-primary hover:bg-white/10 transition-all duration-300 text-left"
-                  >
-                    <div>
-                      <h4 className="text-sm font-bold text-white transition-colors font-display">
-                        Falar com Mateus
-                      </h4>
-                      <p className="text-[10px] text-stone-450 font-sans mt-0.5">
-                        Dúvidas operacionais e voos.
-                      </p>
-                    </div>
-                    <span className="text-[10px] text-[#FFAB9B] font-mono mt-3 block group-hover:text-white transition-colors">
-                      Chamar no WhatsApp ➜
-                    </span>
-                  </a>
-
+                <div className="flex justify-center">
                   {/* Maria/Mariana */}
                   <a
                     href={`https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${encodeURIComponent(girlsMsg)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={handleCloseAnnouncement}
-                    className="group relative flex flex-col justify-between p-4 rounded-xl bg-white/5 border border-stone-850 hover:border-brand-secondary hover:bg-white/10 transition-all duration-300 text-left"
+                    className="group relative flex flex-col justify-between p-4 rounded-xl bg-white/5 border border-stone-850 hover:border-brand-secondary hover:bg-white/10 transition-all duration-300 text-left w-full max-w-sm"
                   >
                     <div>
                       <h4 className="text-sm font-bold text-white transition-colors font-display">
                         Falar com Consultoria
                       </h4>
                       <p className="text-[10px] text-stone-450 font-sans mt-0.5">
-                        Roteiros e hotéis boutique.
+                        Roteiros premium e hotéis boutique.
                       </p>
                     </div>
                     <span className="text-[10px] text-[#FFAB9B] font-mono mt-3 block group-hover:text-white transition-colors">

@@ -618,10 +618,10 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
   const [theme, setTheme] = useState<ThemeSettings>(() => getThemeSettings());
 
   // Seal / Badge Custom fields
-  const [sealTopText, setSealTopText] = useState(() => localStorage.getItem('arcadane_seal_top_text') || "ARCADANE CURADORIA EXCLUSIVA");
-  const [sealBottomText, setSealBottomText] = useState(() => localStorage.getItem('arcadane_seal_bottom_text') || "VIAGENS EXTRAORDINÁRIAS");
+  const [sealTopText, setSealTopText] = useState(() => localStorage.getItem('arcadane_seal_top_text') || "10 ANOS DE EXPERIÊNCIA");
+  const [sealBottomText, setSealBottomText] = useState(() => localStorage.getItem('arcadane_seal_bottom_text') || "NO MERCADO");
   const [sealNumber, setSealNumber] = useState(() => localStorage.getItem('arcadane_seal_number') || "10");
-  const [sealLabel1, setSealLabel1] = useState(() => localStorage.getItem('arcadane_seal_label1') || "ANOS DE");
+  const [sealLabel1, setSealLabel1] = useState(() => localStorage.getItem('arcadane_seal_label1') || "ANOS");
   const [sealLabel2, setSealLabel2] = useState(() => localStorage.getItem('arcadane_seal_label2') || "EXPERIÊNCIA");
 
   // Quiz Banner Custom fields
@@ -642,10 +642,10 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
       setSeo(getSeoSettings());
       setTheme(getThemeSettings());
 
-      setSealTopText(localStorage.getItem('arcadane_seal_top_text') || "ARCADANE CURADORIA EXCLUSIVA");
-      setSealBottomText(localStorage.getItem('arcadane_seal_bottom_text') || "VIAGENS EXTRAORDINÁRIAS");
+      setSealTopText(localStorage.getItem('arcadane_seal_top_text') || "10 ANOS DE EXPERIÊNCIA");
+      setSealBottomText(localStorage.getItem('arcadane_seal_bottom_text') || "NO MERCADO");
       setSealNumber(localStorage.getItem('arcadane_seal_number') || "10");
-      setSealLabel1(localStorage.getItem('arcadane_seal_label1') || "ANOS DE");
+      setSealLabel1(localStorage.getItem('arcadane_seal_label1') || "ANOS");
       setSealLabel2(localStorage.getItem('arcadane_seal_label2') || "EXPERIÊNCIA");
 
       setQuizBannerBadge(localStorage.getItem('arcadane_quiz_banner_badge') || "EXPERIÊNCIA INTERATIVA EXCLUSIVA");
@@ -1509,67 +1509,163 @@ export default function HomeView({ setActivePage }: HomeViewProps) {
           {/* Right Column: Dynamic Corporate / Founders Trajectory Photo with Floating Gold Emblem */}
           <div className="lg:col-span-6 relative mt-6 lg:mt-0 flex items-center justify-center">
             
-            {/* Floating Gold Medallion Emblem - Redesigned as a modern, high-end luxury badge */}
-            <div className="absolute -top-6 -right-6 sm:-top-8 sm:-right-8 md:-top-10 md:-right-10 z-20 w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 bg-transparent drop-shadow-[0_10px_25px_rgba(0,0,0,0.5)] select-none animate-fade-in">
+            {/* Floating Gold Medallion Emblem - Redesigned as a smaller, premium, high-end 3D gold medal */}
+            <div className="absolute -top-4 -right-4 sm:-top-5 sm:-right-5 md:-top-6 md:-right-6 z-20 w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-transparent drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)] select-none animate-fade-in">
               <svg viewBox="0 0 200 200" className="w-full h-full filter backdrop-blur-[0.5px]">
                 <defs>
-                  <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#9A7B3E" />
-                    <stop offset="20%" stopColor="#E6C87C" />
-                    <stop offset="40%" stopColor="#FFFAD0" />
-                    <stop offset="60%" stopColor="#E6C87C" />
-                    <stop offset="80%" stopColor="#B38E46" />
-                    <stop offset="100%" stopColor="#785B24" />
+                  {/* Premium multi-stop gold gradients for ultimate realism */}
+                  <linearGradient id="gold-bevel" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FFF6BD" />
+                    <stop offset="20%" stopColor="#D1AC52" />
+                    <stop offset="40%" stopColor="#FBF5B7" />
+                    <stop offset="60%" stopColor="#AA771C" />
+                    <stop offset="80%" stopColor="#FBF5B7" />
+                    <stop offset="100%" stopColor="#6C4E10" />
                   </linearGradient>
-                  <linearGradient id="gold-light" x1="100%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#FFFDE9" />
-                    <stop offset="50%" stopColor="#D9BF7D" />
-                    <stop offset="100%" stopColor="#8A6B29" />
+                  
+                  <linearGradient id="gold-foil" x1="100%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#FFFDD0" />
+                    <stop offset="25%" stopColor="#E6C87C" />
+                    <stop offset="50%" stopColor="#B38E46" />
+                    <stop offset="75%" stopColor="#FFFDD0" />
+                    <stop offset="100%" stopColor="#8F6B23" />
                   </linearGradient>
-                  <path id="circle-text-path-top" d="M 32,100 A 68,68 0 0,1 168,100" fill="none" />
-                  <path id="circle-text-path-bottom" d="M 168,100 A 68,68 0 0,1 32,100" fill="none" />
+                  
+                  <linearGradient id="gold-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#5C4314" />
+                    <stop offset="50%" stopColor="#A47D32" />
+                    <stop offset="100%" stopColor="#3E2B08" />
+                  </linearGradient>
+
+                  <linearGradient id="gold-text-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FFFFFF" />
+                    <stop offset="30%" stopColor="#F9E79F" />
+                    <stop offset="70%" stopColor="#D4AC0D" />
+                    <stop offset="100%" stopColor="#7D6608" />
+                  </linearGradient>
+
+                  <radialGradient id="dark-radial" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#1E1A13" />
+                    <stop offset="70%" stopColor="#0B0907" />
+                    <stop offset="100%" stopColor="#020202" />
+                  </radialGradient>
+                  
+                  <path id="circle-text-path-top" d="M 33,100 A 67,67 0 0,1 167,100" fill="none" />
+                  <path id="circle-text-path-bottom" d="M 167,100 A 67,67 0 0,1 33,100" fill="none" />
                 </defs>
                 
-                {/* Outer premium concentric metallic gold rings */}
-                <circle cx="100" cy="100" r="92" fill="#090807" stroke="url(#gold-grad)" strokeWidth="3.5" />
-                <circle cx="100" cy="100" r="86" fill="transparent" stroke="url(#gold-light)" strokeWidth="1.25" strokeDasharray="5 3" />
-                <circle cx="100" cy="100" r="81" fill="transparent" stroke="url(#gold-grad)" strokeWidth="1.5" />
+                {/* 3D Outer Gold Bevel with high-contrast metallic look */}
+                <circle cx="100" cy="100" r="97" fill="url(#gold-bevel)" />
+                <circle cx="100" cy="100" r="94" fill="url(#gold-foil)" />
+                <circle cx="100" cy="100" r="91" fill="url(#gold-dark)" />
                 
-                {/* Modern Curved Texts - Styled for extreme premium feel using clean tracking-stretched sans-serif */}
-                <text className="font-sans text-[7.5px] tracking-[0.24em] font-extrabold uppercase" fill="url(#gold-light)">
+                {/* Golden middle ring band containing text */}
+                <circle cx="100" cy="100" r="88" fill="url(#gold-bevel)" />
+                <circle cx="100" cy="100" r="77" fill="url(#gold-dark)" />
+                
+                {/* Elegant Circular Text - Styled with bold black/charcoal uppercase lettering for high legibility over gold */}
+                <text className="font-sans text-[8px] tracking-[0.16em] font-black" fill="#000000" stroke="#000000" strokeWidth="0.25">
                   <textPath href="#circle-text-path-top" startOffset="50%" textAnchor="middle">
                     {sealTopText}
                   </textPath>
                 </text>
                 
-                <text className="font-sans text-[6.5px] tracking-[0.22em] font-semibold uppercase" fill="url(#gold-light)">
+                <text className="font-sans text-[8px] tracking-[0.16em] font-black" fill="#000000" stroke="#000000" strokeWidth="0.25">
                   <textPath href="#circle-text-path-bottom" startOffset="50%" textAnchor="middle">
                     {sealBottomText}
                   </textPath>
                 </text>
+
+                {/* Star embellishments along the golden circular band (Black stars as in reference) */}
+                <g fill="#000000" className="text-[9px] font-black">
+                  {/* Left-side stars */}
+                  <text x="100" y="24" textAnchor="middle" transform="rotate(-82 100 100)">★</text>
+                  <text x="100" y="24" textAnchor="middle" transform="rotate(-90 100 100)">★</text>
+                  <text x="100" y="24" textAnchor="middle" transform="rotate(-98 100 100)">★</text>
+                  
+                  {/* Right-side stars */}
+                  <text x="100" y="24" textAnchor="middle" transform="rotate(82 100 100)">★</text>
+                  <text x="100" y="24" textAnchor="middle" transform="rotate(90 100 100)">★</text>
+                  <text x="100" y="24" textAnchor="middle" transform="rotate(98 100 100)">★</text>
+                </g>
                 
-                {/* Inner Obsidian Face and Border */}
-                <circle cx="100" cy="100" r="61" fill="transparent" stroke="url(#gold-grad)" strokeWidth="1.5" />
-                <circle cx="100" cy="100" r="57" fill="#110f0e" stroke="url(#gold-light)" strokeWidth="1" />
+                {/* Inner Bezel Border */}
+                <circle cx="100" cy="100" r="74" fill="url(#gold-bevel)" />
+                <circle cx="100" cy="100" r="71" fill="url(#gold-dark)" />
                 
-                {/* 5-Star Luxury Curved Rating at the top */}
-                <text x="100" y="65" textAnchor="middle" fill="url(#gold-light)" className="font-sans text-[7.5px] tracking-[0.3em] opacity-95">
+                {/* Dark Obsidian/Charcoal sunburst inner background face */}
+                <circle cx="100" cy="100" r="68" fill="url(#dark-radial)" />
+                
+                {/* Radiating sunburst gold metallic rays */}
+                <g opacity="0.35">
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(0 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(15 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(30 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(45 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(60 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(75 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(90 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(105 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(120 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(135 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(150 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(165 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(180 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(195 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(210 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(225 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(240 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(255 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(270 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(285 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(300 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(315 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(330 100 100)" />
+                  <polygon points="100,100 95,34 105,34" fill="url(#gold-bevel)" transform="rotate(345 100 100)" />
+                </g>
+                <circle cx="100" cy="100" r="63" fill="transparent" stroke="url(#gold-bevel)" strokeWidth="0.75" strokeDasharray="3 2" opacity="0.6" />
+                
+                {/* 5-Star Luxury Rating curved */}
+                <text x="100" y="63" textAnchor="middle" fill="url(#gold-text-grad)" className="font-sans text-[7px] tracking-[0.25em] opacity-95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                   ★★★★★
                 </text>
                 
-                {/* Clean, unmistakable modern numbers centerpiece representing 10+ Years of Experience */}
-                <g fill="url(#gold-grad)" className="select-none font-sans font-black" style={{ fontFamily: '"Montserrat", "Inter", sans-serif' }}>
-                  <text x="93" y="112" textAnchor="middle" className="text-[46px] tracking-tighter">{sealNumber}</text>
-                  <text x="122" y="90" className="text-[20px] font-bold" fill="url(#gold-light)">+</text>
+                {/* Beautiful 3D extruded gold number "10" in the center */}
+                <g className="select-none font-sans font-black" style={{ fontFamily: '"Montserrat", "Inter", sans-serif' }}>
+                  {/* Extrusion Shadows */}
+                  <text x="96" y="113" textAnchor="middle" className="text-[48px] font-black tracking-tighter" fill="url(#gold-dark)" opacity="0.95">
+                    {sealNumber}
+                  </text>
+                  <text x="95" y="112" textAnchor="middle" className="text-[48px] font-black tracking-tighter" fill="#000000" opacity="0.6" stroke="#000000" strokeWidth="2">
+                    {sealNumber}
+                  </text>
+                  
+                  {/* Outer Stroke */}
+                  <text x="94" y="110" textAnchor="middle" className="text-[48px] font-black tracking-tighter" fill="#000000" stroke="#000000" strokeWidth="4" paintOrder="stroke fill">
+                    {sealNumber}
+                  </text>
+                  
+                  {/* Primary Gold Text Face */}
+                  <text x="94" y="110" textAnchor="middle" className="text-[48px] font-black tracking-tighter" fill="url(#gold-text-grad)" stroke="url(#gold-bevel)" strokeWidth="0.5" paintOrder="stroke fill">
+                    {sealNumber}
+                  </text>
+                  
+                  {/* Extruded Gold Plus Sign */}
+                  <text x="127" y="87" className="text-[20px] font-black" fill="url(#gold-dark)" opacity="0.95">+</text>
+                  <text x="126" y="86" className="text-[20px] font-black" fill="#000" stroke="#000" strokeWidth="2">+</text>
+                  <text x="125" y="84" className="text-[20px] font-black" fill="url(#gold-text-grad)" stroke="url(#gold-bevel)" strokeWidth="0.5">+</text>
                 </g>
                 
-                {/* Core description labels beneath the numbers */}
-                <text x="100" y="127" textAnchor="middle" fill="url(#gold-light)" className="font-sans text-[8.5px] font-extrabold tracking-[0.25em] uppercase">
+                {/* Centered Serif Label below the number */}
+                <text x="100" y="129" textAnchor="middle" fill="url(#gold-text-grad)" className="font-serif text-[10px] font-black tracking-[0.18em] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: '"Cinzel", "Georgia", serif' }}>
                   {sealLabel1}
                 </text>
-                <text x="100" y="139" textAnchor="middle" fill="url(#gold-grad)" className="font-sans text-[9px] font-black tracking-[0.3em] uppercase">
-                  {sealLabel2}
-                </text>
+                
+                {sealLabel2 && (
+                  <text x="100" y="141" textAnchor="middle" fill="url(#gold-text-grad)" className="font-sans text-[8px] font-black tracking-[0.2em] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                    {sealLabel2}
+                  </text>
+                )}
               </svg>
             </div>
             

@@ -12,6 +12,18 @@ export default function ContactView() {
     return () => window.removeEventListener('arcadane_cms_data_changed', handleCms);
   }, []);
 
+  const formatWhatsAppDisplay = (num: string) => {
+    if (!num) return '';
+    const cleaned = num.replace(/\D/g, '');
+    if (cleaned.startsWith('55') && cleaned.length === 13) {
+      return `+55 (${cleaned.substring(2, 4)}) ${cleaned.substring(4, 5)} ${cleaned.substring(5, 9)}-${cleaned.substring(9)}`;
+    }
+    if (cleaned.length === 11) {
+      return `+55 (${cleaned.substring(0, 2)}) ${cleaned.substring(2, 3)} ${cleaned.substring(3, 7)}-${cleaned.substring(7)}`;
+    }
+    return num;
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -93,11 +105,8 @@ export default function ContactView() {
                 </div>
                 <div className="space-y-1.5 min-w-0">
                   <span className="text-[10px] text-gray-500 font-mono uppercase font-bold tracking-wider block">WhatsApp Suporte</span>
-                  <a href={`https://wa.me/${seo.contactWhatsAppMateus || '554791492704'}?text=${encodeURIComponent("Olá Mateus! Vim pelo link do site da Arcadane e gostaria de iniciar um atendimento.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-200 block hover:text-brand-primary transition-colors font-semibold">
-                    {seo.contactWhatsAppMateus ? `+${seo.contactWhatsAppMateus}` : "+55 (47) 9149-2704"} <span className="text-gray-500 text-xs font-normal ml-0.5">(Mateus)</span>
-                  </a>
                   <a href={`https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${encodeURIComponent("Olá Maria e Mariana! Vim pelo link do site da Arcadane e gostaria de iniciar um atendimento.")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-200 block hover:text-brand-primary transition-colors font-semibold">
-                    {seo.contactWhatsAppMaria ? `+${seo.contactWhatsAppMaria}` : "+55 (47) 99200-8571"} <span className="text-gray-500 text-xs font-normal ml-0.5">(Maria & Mariana)</span>
+                    {formatWhatsAppDisplay(seo.contactWhatsAppMaria || '5547992008571')} <span className="text-gray-500 text-xs font-normal ml-0.5">(Maria & Mariana)</span>
                   </a>
                 </div>
               </li>
@@ -120,7 +129,7 @@ export default function ContactView() {
                 </div>
                 <div>
                   <span className="text-[10px] text-gray-500 font-mono uppercase font-bold uppercase tracking-wider block">Horário de Atendimento</span>
-                  <span className="text-xs text-gray-300 block mt-0.5 font-semibold">Segunda a Sexta: 09:00 às 18:30 <br />Sábados: Plantão das 09:00 às 13:00</span>
+                  <span className="text-xs text-gray-300 block mt-0.5 font-semibold">Segunda a Sexta: 09:00 às 18:30 <br />Durante sua viagem atendimento: 24h.</span>
                 </div>
               </li>
             </ul>

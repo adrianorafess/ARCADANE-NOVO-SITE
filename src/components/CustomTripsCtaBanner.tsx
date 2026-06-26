@@ -3,6 +3,7 @@ import { PageId } from '../types';
 import { Sparkles, ArrowRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getSeoSettings, getHomeSettings } from '../utils/cmsStore';
+import { trackCustomEvent } from '../utils/analyticsTracker';
 
 interface CustomTripsCtaBannerProps {
   setActivePage?: (page: PageId) => void;
@@ -74,95 +75,19 @@ export default function CustomTripsCtaBanner({ setActivePage }: CustomTripsCtaBa
 
         {/* Elegant Centered Pill Button */}
         <div className="pt-4">
-          <button
-            onClick={handleClick}
-            className="group px-10 py-4.5 rounded-full bg-white text-stone-950 font-display font-bold uppercase tracking-widest text-xs hover:bg-brand-beige transition-all duration-300 transform hover:scale-[1.05] active:scale-[0.97] cursor-pointer shadow-xl hover:shadow-white/10 flex items-center gap-2"
+          <a
+            href={`https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${encodeURIComponent(textMsg)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackCustomEvent('start_custom_trip', 'cta_banner')}
+            className="group px-10 py-4.5 rounded-full bg-white text-stone-950 font-display font-bold uppercase tracking-widest text-xs hover:bg-brand-beige transition-all duration-300 transform hover:scale-[1.05] active:scale-[0.97] cursor-pointer shadow-xl hover:shadow-white/10 flex items-center gap-2 inline-flex hover:no-underline decoration-none"
           >
             <span>COMECE POR AQUI</span>
             <ArrowRight className="w-4 h-4 text-stone-950 transition-transform group-hover:translate-x-1" />
-          </button>
+          </a>
         </div>
 
       </div>
-
-      {/* Select-Contact Modal Dialog aligned with global choices */}
-      <AnimatePresence>
-        {isContactModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsContactModalOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md"
-            />
-
-            {/* Modal Card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', duration: 0.4 }}
-              className="bg-stone-950 border border-stone-850 text-white rounded-3xl max-w-md w-full p-6 sm:p-8 overflow-hidden shadow-2xl relative z-10 space-y-6"
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setIsContactModalOpen(false)}
-                className="absolute top-4 right-4 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition-all focus:outline-hidden cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              {/* Cover Head */}
-              <div className="space-y-2 text-left">
-                <span className="text-[10px] uppercase tracking-widest text-brand-secondary font-mono font-bold block">
-                  • ATENDIMENTO EXCLUSIVO
-                </span>
-                <h3 className="font-display font-bold text-2.5xl text-white">Fale com um Consultor</h3>
-                <p className="text-xs text-stone-400 font-sans leading-relaxed">
-                  Escolha com quem gostaria de falar para iniciar seu planejamento de viagem por WhatsApp:
-                </p>
-              </div>
-
-              {/* Option Listing */}
-              <div className="space-y-3">
-                {/* Mateus */}
-                <a
-                  href={`https://wa.me/${seo.contactWhatsAppMateus || '554791492704'}?text=${encodeURIComponent(textMsg)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setIsContactModalOpen(false)}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-primary hover:bg-white/10 transition-all duration-300 group text-left"
-                >
-                  <div className="w-12 h-12 rounded-full bg-brand-primary/15 text-brand-primary flex items-center justify-center font-bold text-lg border border-brand-primary/20 shrink-0 select-none">
-                    M
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-base font-bold text-white group-hover:text-brand-secondary transition-colors">Mateus</span>
-                  </div>
-                </a>
-
-                {/* Maria & Mariana */}
-                <a
-                  href={`https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${encodeURIComponent(textMsg)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setIsContactModalOpen(false)}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-primary hover:bg-white/10 transition-all duration-300 group text-left"
-                >
-                  <div className="w-12 h-12 rounded-full bg-brand-secondary/15 text-brand-secondary flex items-center justify-center font-bold text-lg border border-brand-secondary/20 shrink-0 select-none">
-                    MM
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-base font-bold text-white group-hover:text-brand-secondary transition-colors">Maria & Mariana</span>
-                  </div>
-                </a>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
     </section>
   );

@@ -73,13 +73,13 @@ export default function PromotionalPackages() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-stone-200">
         <div className="space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20 font-mono text-[10px] uppercase tracking-widest font-bold">
-            <Tag className="w-3.5 h-3.5 text-brand-primary animate-pulse" /> Tarifas Promocionais por Tempo Limitado
+            <Tag className="w-3.5 h-3.5 text-brand-primary animate-pulse" /> Pacotes Especiais Selecionados
           </div>
           <h2 className="font-display font-black text-3xl sm:text-4.5xl text-stone-900 tracking-tight leading-tight">
-            Pacotes em Destaque & Promoção
+            Pacotes em Destaque
           </h2>
           <p className="text-sm sm:text-base text-stone-500 max-w-2xl leading-relaxed">
-            Aproveite estas tarifas especiais negociadas diretamente via operadoras e consulte o orçamento completo online. Totalmente personalizáveis para as datas que desejar.
+            Aproveite estes pacotes selecionados e consulte o orçamento completo online. Totalmente personalizáveis para as datas que desejar.
           </p>
         </div>
         
@@ -266,100 +266,21 @@ export default function PromotionalPackages() {
 
                 {/* CTA Button (WhatsApp contact) */}
                 <div className="pt-4 border-t border-stone-100 flex flex-col gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => triggerContactModal(promo)}
-                    className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary/95 text-white font-display font-bold text-[11px] tracking-widest uppercase flex items-center justify-center gap-1.5 transition-all shadow-md shadow-brand-primary/10 hover:shadow-brand-primary/20 cursor-pointer"
+                  <a
+                    href={`https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${encodeURIComponent(promo.waMessage)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary/95 text-white font-display font-bold text-[11px] tracking-widest uppercase flex items-center justify-center gap-1.5 transition-all shadow-md shadow-brand-primary/10 hover:shadow-brand-primary/20 cursor-pointer hover:no-underline decoration-none"
                   >
                     <span>Reservar via WhatsApp</span>
                     <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
-
-      {/* Select-Contact Modal Dialog for custom Promotions */}
-      <AnimatePresence>
-        {isContactModalOpen && selectedPromo && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsContactModalOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md"
-            />
-
-            {/* Modal Card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', duration: 0.4 }}
-              className="bg-brand-dark border border-brand-border/20 text-white rounded-3xl max-w-md w-full p-6 sm:p-8 overflow-hidden shadow-2xl relative z-10 space-y-6 text-left"
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setIsContactModalOpen(false)}
-                className="absolute top-4 right-4 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition-all focus:outline-hidden cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              {/* Cover Head */}
-              <div className="space-y-2">
-                <span className="text-[10px] uppercase tracking-widest text-[#DCCFC1] font-mono font-bold block">
-                  • PROMOÇÃO: {selectedPromo.title}
-                </span>
-                <h3 className="font-display font-bold text-2.5xl text-white">Consulte um de Nossos Especialistas</h3>
-                <p className="text-xs text-stone-400 font-sans leading-relaxed">
-                  Para emitir este orçamento ou alterar datas e participantes, selecione um consultor de WhatsApp para atendimento exclusivo:
-                </p>
-              </div>
-
-              {/* Option Listing */}
-              <div className="space-y-3">
-                {/* Mateus */}
-                <a
-                  href={`https://wa.me/${seo.contactWhatsAppMateus || '554791492704'}?text=${encodeURIComponent(selectedPromo.waMessage)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setIsContactModalOpen(false)}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-primary hover:bg-white/10 transition-all duration-300 group text-left"
-                >
-                  <div className="w-12 h-12 rounded-full bg-brand-primary/15 text-brand-primary flex items-center justify-center font-bold text-lg border border-brand-primary/20 shrink-0 select-none">
-                    M
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-base font-bold text-white group-hover:text-brand-secondary transition-colors">Mateus</span>
-                  </div>
-                </a>
-
-                {/* Maria & Mariana */}
-                <a
-                  href={`https://wa.me/${seo.contactWhatsAppMaria || '5547992008571'}?text=${encodeURIComponent(selectedPromo.waMessage)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setIsContactModalOpen(false)}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-primary hover:bg-white/10 transition-all duration-300 group text-left"
-                >
-                  <div className="w-12 h-12 rounded-full bg-brand-secondary/15 text-brand-secondary flex items-center justify-center font-bold text-lg border border-brand-secondary/20 shrink-0 select-none">
-                    MM
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-base font-bold text-white group-hover:text-brand-secondary transition-colors">Maria & Mariana</span>
-                  </div>
-                </a>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
     </section>
   );
 }
